@@ -10,6 +10,13 @@ def main():
     telemetry_state["ax"] = 0.12
     telemetry_state["ay"] = -0.05
     telemetry_state["az"] = 9.81
+    # sample gyro (deg/s) and mag (µT)
+    telemetry_state["gx"] = 0.5
+    telemetry_state["gy"] = -0.3
+    telemetry_state["gz"] = 0.0
+    telemetry_state["mx"] = 45.2
+    telemetry_state["my"] = 3006.1
+    telemetry_state["mz"] = 825.3
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     maybe_write_packet_from_sample(timestamp)

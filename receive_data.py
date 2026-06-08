@@ -27,6 +27,7 @@ telemetry_state = {
 	"mz": None,
 }
 telemetry_sequence = 0
+last_warning_signature = None
 
 
 def to_int16(value: int) -> int:
@@ -90,6 +91,12 @@ def parse_telemetry_line(line: str) -> tuple[str | None, float | None]:
 		"ax": r"^AX\s*=\s*([-+]?\d+(?:\.\d+)?)$",
 		"ay": r"^AY\s*=\s*([-+]?\d+(?:\.\d+)?)$",
 		"az": r"^AZ\s*=\s*([-+]?\d+(?:\.\d+)?)$",
+		"gx": r"^GX\s*=\s*([-+]?\d+(?:\.\d+)?)$",
+		"gy": r"^GY\s*=\s*([-+]?\d+(?:\.\d+)?)$",
+		"gz": r"^GZ\s*=\s*([-+]?\d+(?:\.\d+)?)$",
+		"mx": r"^MX\s*=\s*([-+]?\d+(?:\.\d+)?)$",
+		"my": r"^MY\s*=\s*([-+]?\d+(?:\.\d+)?)$",
+		"mz": r"^MZ\s*=\s*([-+]?\d+(?:\.\d+)?)$",
 		"voltage": r"^V\s*=\s*([-+]?\d+(?:\.\d+)?)$",
 	}
 
@@ -138,6 +145,36 @@ def maybe_write_packet_from_sample(timestamp: str) -> None:
 		os.replace(tmp_path, out_path)
 	except Exception:
 		print("[WARN] failed to write data.json")
+
+
+def warn_if_sample_looks_suspicious(timestamp: str) -> None:
+	global last_warning_signature
+
+	acc = [telemetry_state.get(key) for key in ("ax", "ay", "az")]
+	gyro = [telemetry_state.get(key) for key in ("gx", "gy", "gz")]
+	mag = [telemetry_state.get(key) for key in ("mx", "my", "mz")]
+	if any(value is None for value in [*acc, *gyro, *mag]):
+		return
+
+	warnings = []
+	if len(set(round(value, 6) for value in acc)) == 1:
+		warnings.append("AX/AY/AZ are identical")
+	if len(set(round(value, 6) for value in gyro)) == 1:
+		warnings.append("GX/GY/GZ are identical")
+	if len(set(round(value, 6) for value in mag)) <= 2:
+		warnings.append("MX/MY/MZ have repeated values")
+	if telemetry_state.get("voltage") == 0:
+		warnings.append("V is 0")
+
+	if not warnings:
+		return
+
+	signature = tuple(warnings)
+	if signature == last_warning_signature:
+		return
+
+	last_warning_signature = signature
+	print(f"[{timestamp}] [WARN] suspicious telemetry: {', '.join(warnings)}")
 
 
 def parse_args() -> argparse.Namespace:
@@ -214,6 +251,26 @@ def format_payload(data: bytes, use_hex: bool) -> str:
 		return f"<binary> {data.hex(' ')}"
 
 
+def write_received_data(timestamp: str, payload: bytes, formatted: str) -> None:
+	packet_hex = payload.hex(" ")
+	data_obj = {
+		"timestamp": timestamp,
+		"text": formatted,
+		"hex": packet_hex,
+		"packet_text": formatted,
+	}
+	try:
+		tmp_path = os.path.join(os.path.dirname(__file__), "data.json.tmp")
+		out_path = os.path.join(os.path.dirname(__file__), "data.json")
+		with open(tmp_path, "w", encoding="utf-8") as f:
+			json.dump(data_obj, f, ensure_ascii=False)
+			f.flush()
+			os.fsync(f.fileno())
+		os.replace(tmp_path, out_path)
+	except Exception:
+		print("[WARN] failed to write data.json")
+
+
 def main() -> None:
 	args = parse_args()
 	args.port = resolve_port(args.port)
@@ -248,25 +305,10 @@ def main() -> None:
 				field_name, field_value = parse_telemetry_line(line)
 				if field_name is not None and field_value is not None:
 					telemetry_state[field_name] = field_value
-					if field_name == "voltage":
-						maybe_write_packet_from_sample(timestamp)
+					maybe_write_packet_from_sample(timestamp)
+					warn_if_sample_looks_suspicious(timestamp)
 				else:
-					# For non-telemetry text, preserve the original behavior.
-					data_obj = {
-						"timestamp": timestamp,
-						"text": formatted,
-						"hex": payload.hex(" ")
-					}
-					try:
-						tmp_path = os.path.join(os.path.dirname(__file__), "data.json.tmp")
-						out_path = os.path.join(os.path.dirname(__file__), "data.json")
-						with open(tmp_path, "w", encoding="utf-8") as f:
-							json.dump(data_obj, f, ensure_ascii=False)
-							f.flush()
-							os.fsync(f.fileno())
-						os.replace(tmp_path, out_path)
-					except Exception:
-						print("[WARN] failed to write data.json")
+					write_received_data(timestamp, payload, formatted)
 
 	except PermissionError as exc:
 		print(f"シリアル通信エラー: {exc}")
