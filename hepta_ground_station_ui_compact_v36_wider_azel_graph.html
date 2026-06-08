@@ -807,7 +807,7 @@
 
     .telemetry-graph-body {
       display: grid;
-      grid-template-rows: 1fr 1fr;
+      grid-template-rows: 26px 1fr;
       gap: 6px;
       padding: 6px;
       text-align: left;
@@ -815,6 +815,59 @@
       align-items: stretch;
       justify-content: stretch;
       overflow: hidden;
+    }
+
+    .telemetry-graph-tabs {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+    }
+
+    .telemetry-graph-tab {
+      min-width: 0;
+      height: 26px;
+      border: 1px solid rgba(45, 70, 84, 0.86);
+      border-radius: 4px;
+      background: rgba(3, 10, 15, 0.58);
+      color: #aebfca;
+      font-size: 10.5px;
+      line-height: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+
+    .telemetry-graph-tab:hover {
+      border-color: rgba(40, 217, 232, 0.55);
+      color: #dce8f2;
+    }
+
+    .telemetry-graph-tab.active {
+      border-color: rgba(40, 217, 232, 0.82);
+      background: rgba(7, 31, 43, 0.94);
+      color: #28d9e8;
+      box-shadow: inset 0 0 0 1px rgba(40, 217, 232, 0.16);
+    }
+
+    .telemetry-graph-grid {
+      min-height: 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    .telemetry-graph-grid.graph-count-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .telemetry-graph-grid.graph-count-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .telemetry-graph-grid.graph-count-6 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
     }
 
     .telemetry-graph-box {
@@ -844,6 +897,8 @@
       color: #28d9e8;
       font-family: Consolas, Menlo, monospace;
       font-size: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .telemetry-graph-select {
@@ -1422,12 +1477,20 @@
 
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js"></script>
+  <script src="satellite.min.js"></script>
   <script>
     if (!window.satellite) {
       document.write('<script src="https://unpkg.com/satellite.js@5.0.0/dist/satellite.min.js"><\/script>');
     }
   </script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./node_modules/three/build/three.module.min.js"
+      }
+    }
+  </script>
+  <script src="natural-earth-land-110m.js"></script>
 
   <script>
     /* =========================
@@ -1534,12 +1597,8 @@
       }
     };
 
-    const tmVoltageGraphCanvas = document.getElementById("tm-voltage-graph-canvas");
-    const tmVoltageGraphContainer = document.getElementById("tm-voltage-graph-container");
-    const tmTempGraphCanvas = document.getElementById("tm-temp-graph-canvas");
-    const tmTempGraphContainer = document.getElementById("tm-temp-graph-container");
-    const tmGraph1Select = document.getElementById("tm-graph1-select");
-    const tmGraph2Select = document.getElementById("tm-graph2-select");
+    const telemetryGraphBody = document.querySelector(".telemetry-graph-body");
+    let activeTelemetryGraphTab = "power";
 
     let xbeeReader = null;
     let xbeeReadLoopActive = false;
@@ -1869,22 +1928,88 @@
       magZ: { label: "地磁気 Z", unit: "µT", defaultMin: -80, defaultMax: 80, fixed: 1 }
     };
 
+    const TELEMETRY_GRAPH_GROUPS = {
+      power: {
+        tabLabel: "温度 / 電圧",
+        keys: ["temperatureC", "voltageV"]
+      },
+      motion: {
+        tabLabel: "角速度 / 加速度",
+        keys: ["gyroX", "gyroY", "gyroZ", "accX", "accY", "accZ"]
+      },
+      magnetic: {
+        tabLabel: "地磁気",
+        keys: ["magX", "magY", "magZ"]
+      }
+    };
+
+    const TELEMETRY_GRAPH_COLORS = {
+      voltageV: { line: "rgba(40, 217, 232, 0.96)", point: "#28d9e8", shadow: "rgba(40, 217, 232, 0.45)" },
+      temperatureC: { line: "rgba(242, 164, 0, 0.96)", point: "#f2a400", shadow: "rgba(242, 164, 0, 0.45)" },
+      accX: { line: "rgba(43, 224, 95, 0.94)", point: "#2be05f", shadow: "rgba(43, 224, 95, 0.40)" },
+      accY: { line: "rgba(85, 184, 255, 0.94)", point: "#55b8ff", shadow: "rgba(85, 184, 255, 0.38)" },
+      accZ: { line: "rgba(255, 101, 101, 0.94)", point: "#ff6565", shadow: "rgba(255, 101, 101, 0.38)" },
+      gyroX: { line: "rgba(180, 140, 255, 0.94)", point: "#b48cff", shadow: "rgba(180, 140, 255, 0.38)" },
+      gyroY: { line: "rgba(255, 204, 90, 0.94)", point: "#ffcc5a", shadow: "rgba(255, 204, 90, 0.36)" },
+      gyroZ: { line: "rgba(47, 230, 190, 0.94)", point: "#2fe6be", shadow: "rgba(47, 230, 190, 0.38)" },
+      magX: { line: "rgba(91, 235, 255, 0.94)", point: "#5bebff", shadow: "rgba(91, 235, 255, 0.38)" },
+      magY: { line: "rgba(255, 150, 96, 0.94)", point: "#ff9660", shadow: "rgba(255, 150, 96, 0.38)" },
+      magZ: { line: "rgba(150, 255, 122, 0.94)", point: "#96ff7a", shadow: "rgba(150, 255, 122, 0.36)" }
+    };
+
     function initTelemetryGraphSelects() {
-      const options = Object.entries(TELEMETRY_GRAPH_ITEMS)
-        .map(([key, item]) => `<option value="${key}">${item.label}</option>`)
-        .join("");
+      if (!telemetryGraphBody) return;
 
-      if (tmGraph1Select) {
-        tmGraph1Select.innerHTML = options;
-        tmGraph1Select.value = "voltageV";
-        tmGraph1Select.addEventListener("change", drawTelemetryGraphs);
-      }
+      telemetryGraphBody.innerHTML = `
+        <div class="telemetry-graph-tabs" id="telemetry-graph-tabs"></div>
+        <div class="telemetry-graph-grid" id="telemetry-graph-grid"></div>
+      `;
 
-      if (tmGraph2Select) {
-        tmGraph2Select.innerHTML = options;
-        tmGraph2Select.value = "temperatureC";
-        tmGraph2Select.addEventListener("change", drawTelemetryGraphs);
-      }
+      const tabs = telemetryGraphBody.querySelector("#telemetry-graph-tabs");
+      const grid = telemetryGraphBody.querySelector("#telemetry-graph-grid");
+      if (!tabs || !grid) return;
+
+      Object.entries(TELEMETRY_GRAPH_GROUPS).forEach(([key, group]) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "telemetry-graph-tab";
+        button.dataset.tab = key;
+        button.textContent = group.tabLabel;
+        button.addEventListener("click", () => {
+          activeTelemetryGraphTab = key;
+          renderTelemetryGraphTab();
+          drawTelemetryGraphs();
+        });
+        tabs.appendChild(button);
+      });
+
+      renderTelemetryGraphTab();
+    }
+
+    function renderTelemetryGraphTab() {
+      if (!telemetryGraphBody) return;
+
+      const tabs = telemetryGraphBody.querySelectorAll(".telemetry-graph-tab");
+      const grid = telemetryGraphBody.querySelector("#telemetry-graph-grid");
+      const group = TELEMETRY_GRAPH_GROUPS[activeTelemetryGraphTab] || TELEMETRY_GRAPH_GROUPS.power;
+      if (!grid) return;
+
+      tabs.forEach(tab => {
+        tab.classList.toggle("active", tab.dataset.tab === activeTelemetryGraphTab);
+      });
+
+      grid.className = `telemetry-graph-grid graph-count-${group.keys.length}`;
+      grid.innerHTML = group.keys.map(key => {
+        const item = TELEMETRY_GRAPH_ITEMS[key] || TELEMETRY_GRAPH_ITEMS.voltageV;
+        return `
+          <div class="telemetry-graph-box" data-key="${key}">
+            <div class="telemetry-graph-title"><span>${item.label}</span><span>${item.unit}</span></div>
+            <div class="telemetry-graph-canvas-wrap">
+              <canvas class="telemetry-graph-canvas"></canvas>
+            </div>
+          </div>
+        `;
+      }).join("");
     }
 
     function getTelemetryValueRange(key) {
@@ -1906,12 +2031,9 @@
       return { min: min - pad, max: max + pad };
     }
 
-    function drawTelemetryGraph(graphIndex) {
-      const canvas = graphIndex === 1 ? tmVoltageGraphCanvas : tmTempGraphCanvas;
-      const container = graphIndex === 1 ? tmVoltageGraphContainer : tmTempGraphContainer;
-      const selector = graphIndex === 1 ? tmGraph1Select : tmGraph2Select;
-      const key = selector ? selector.value : (graphIndex === 1 ? "voltageV" : "temperatureC");
+    function drawTelemetryGraph(canvas, container, key) {
       const item = TELEMETRY_GRAPH_ITEMS[key] || TELEMETRY_GRAPH_ITEMS.voltageV;
+      const colors = TELEMETRY_GRAPH_COLORS[key] || TELEMETRY_GRAPH_COLORS.voltageV;
       const canvasInfo = resizeTelemetryGraphCanvas(canvas, container);
       if (!canvasInfo) return;
 
@@ -1950,12 +2072,7 @@
       ctx.lineWidth = 1;
       ctx.strokeRect(leftPad, topPad, plotW, plotH);
 
-      const guideValues = [
-        range.min,
-        (range.min + range.max) / 2,
-        range.max
-      ];
-
+      const guideValues = [range.min, (range.min + range.max) / 2, range.max];
       guideValues.forEach(v => {
         const y = yFromValue(v);
         ctx.strokeStyle = "rgba(95, 118, 132, 0.20)";
@@ -1978,9 +2095,9 @@
 
       if (points.length >= 2) {
         ctx.save();
-        ctx.strokeStyle = graphIndex === 1 ? "rgba(40, 217, 232, 0.96)" : "rgba(242, 164, 0, 0.96)";
+        ctx.strokeStyle = colors.line;
         ctx.lineWidth = 1.8;
-        ctx.shadowColor = graphIndex === 1 ? "rgba(40, 217, 232, 0.45)" : "rgba(242, 164, 0, 0.45)";
+        ctx.shadowColor = colors.shadow;
         ctx.shadowBlur = 5;
         ctx.beginPath();
         points.forEach((p, i) => {
@@ -1996,7 +2113,7 @@
       if (points.length > 0) {
         const latest = points[points.length - 1];
         ctx.save();
-        ctx.fillStyle = graphIndex === 1 ? "#28d9e8" : "#f2a400";
+        ctx.fillStyle = colors.point;
         ctx.strokeStyle = "#dce8f2";
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -2004,7 +2121,6 @@
         ctx.fill();
         ctx.stroke();
         ctx.restore();
-
       } else {
         ctx.save();
         ctx.fillStyle = "rgba(220, 232, 242, 0.58)";
@@ -2012,7 +2128,6 @@
         ctx.textAlign = "center";
         ctx.fillText("テレメトリ受信待ち", leftPad + plotW / 2, topPad + plotH / 2 + 3);
         ctx.restore();
-
       }
 
       ctx.save();
@@ -2026,8 +2141,13 @@
     }
 
     function drawTelemetryGraphs() {
-      drawTelemetryGraph(1);
-      drawTelemetryGraph(2);
+      if (!telemetryGraphBody) return;
+
+      telemetryGraphBody.querySelectorAll(".telemetry-graph-box[data-key]").forEach(box => {
+        const canvas = box.querySelector("canvas");
+        const container = box.querySelector(".telemetry-graph-canvas-wrap");
+        drawTelemetryGraph(canvas, container, box.dataset.key);
+      });
     }
 
     function resizeRssiCanvas() {
@@ -3024,6 +3144,26 @@ ${tle.line2}`;
     const antennaStatusLabel = document.getElementById("antenna-status-label");
     const graphAzLabel = document.getElementById("graph-az-label");
     const graphElLabel = document.getElementById("graph-el-label");
+    let THREE_LIB = null;
+    let ORBIT_CONTROLS_CLASS = null;
+    let antenna3dSceneState = null;
+    let antenna3dAnimationStarted = false;
+
+    Promise.all([
+      import("./node_modules/three/build/three.module.min.js"),
+      import("./node_modules/three/examples/jsm/controls/OrbitControls.js")
+    ])
+      .then(([threeModule, controlsModule]) => {
+        THREE_LIB = threeModule;
+        ORBIT_CONTROLS_CLASS = controlsModule.OrbitControls;
+        window.THREE_LIB = threeModule;
+        window.ORBIT_CONTROLS_CLASS = ORBIT_CONTROLS_CLASS;
+        startAntenna3DAnimation();
+        drawTrackingDisplays();
+      })
+      .catch((error) => {
+        console.error("Failed to load Three.js controls", error);
+      });
 
     function resizeCanvasToContainer(canvas, container) {
       if (!canvas || !container) return null;
@@ -3068,227 +3208,301 @@ ${tle.line2}`;
       };
     }
 
+    function makeAntenna3DLabel(text, color = "#dce8f2") {
+      const THREE = THREE_LIB;
+      const canvas = document.createElement("canvas");
+      canvas.width = 128;
+      canvas.height = 48;
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = "bold 24px Segoe UI, Noto Sans JP, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "rgba(3, 10, 15, 0.70)";
+      ctx.fillRect(0, 6, canvas.width, 36);
+      ctx.strokeStyle = "rgba(40, 217, 232, 0.38)";
+      ctx.strokeRect(0.5, 6.5, canvas.width - 1, 35);
+      ctx.fillStyle = color;
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true }));
+      sprite.scale.set(1.1, 0.42, 1);
+      return sprite;
+    }
+
+    function makeAntenna3DRing(radius, elevationDeg, color, opacity) {
+      const THREE = THREE_LIB;
+      const points = [];
+      const y = Math.sin(deg2rad(elevationDeg)) * radius;
+      const r = Math.cos(deg2rad(elevationDeg)) * radius;
+
+      for (let i = 0; i <= 160; i++) {
+        const a = Math.PI * 2 * i / 160;
+        points.push(new THREE.Vector3(Math.sin(a) * r, y, Math.cos(a) * r));
+      }
+
+      return new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(points),
+        new THREE.LineBasicMaterial({ color, transparent: true, opacity })
+      );
+    }
+
+    function ensureAntenna3DScene(width, height) {
+      if (!THREE_LIB || !antennaVisualCanvas) return null;
+      const THREE = THREE_LIB;
+
+      if (!antenna3dSceneState) {
+        const renderer = new THREE.WebGLRenderer({
+          canvas: antennaVisualCanvas,
+          antialias: true,
+          alpha: true
+        });
+        renderer.setClearColor(0x02080d, 1);
+
+        const scene = new THREE.Scene();
+        scene.fog = null;
+
+        const camera = new THREE.PerspectiveCamera(44, width / Math.max(height, 1), 0.1, 80);
+        camera.position.set(6.4, 4.4, 7.6);
+        camera.lookAt(0, 1.0, 0);
+
+        const controls = ORBIT_CONTROLS_CLASS
+          ? new ORBIT_CONTROLS_CLASS(camera, antennaVisualCanvas)
+          : null;
+        if (controls) {
+          controls.target.set(0, 0.95, 0);
+          controls.enableDamping = true;
+          controls.dampingFactor = 0.08;
+          controls.rotateSpeed = 0.72;
+          controls.zoomSpeed = 0.85;
+          controls.panSpeed = 0.42;
+          controls.minDistance = 3.5;
+          controls.maxDistance = 16;
+          controls.maxPolarAngle = Math.PI * 0.49;
+          controls.update();
+        }
+
+        scene.add(new THREE.AmbientLight(0x6fa8b8, 1.2));
+        const keyLight = new THREE.DirectionalLight(0xdce8f2, 2.2);
+        keyLight.position.set(3, 6, 5);
+        scene.add(keyLight);
+
+        const ground = new THREE.Mesh(
+          new THREE.CircleGeometry(5.2, 96),
+          new THREE.MeshBasicMaterial({ color: 0x113b34, transparent: true, opacity: 0.56, side: THREE.DoubleSide })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        scene.add(ground);
+
+        const grid = new THREE.GridHelper(10, 10, 0x28d9e8, 0x244654);
+        grid.material.transparent = true;
+        grid.material.opacity = 0.22;
+        scene.add(grid);
+
+        scene.add(makeAntenna3DRing(5.1, 0, 0xdce8f2, 0.38));
+        scene.add(makeAntenna3DRing(5.1, AOS_LOS_ELEVATION_THRESHOLD_DEG, 0x2be05f, 0.52));
+        scene.add(makeAntenna3DRing(5.1, 30, 0x5f7684, 0.24));
+        scene.add(makeAntenna3DRing(5.1, PASS_MIN_MAX_ELEVATION_DEG, 0xf2a400, 0.52));
+
+        [
+          ["N", 0, 5.35, "#dce8f2"],
+          ["E", 5.35, 0, "#dce8f2"],
+          ["S", 0, -5.35, "#dce8f2"],
+          ["W", -5.35, 0, "#dce8f2"]
+        ].forEach(([label, x, z, color]) => {
+          const sprite = makeAntenna3DLabel(label, color);
+          sprite.position.set(x, 0.18, z);
+          scene.add(sprite);
+        });
+
+        const gsGroup = new THREE.Group();
+        const mast = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.055, 0.075, 0.62, 24),
+          new THREE.MeshStandardMaterial({ color: 0xdce8f2, roughness: 0.45, metalness: 0.25 })
+        );
+        mast.position.y = 0.31;
+        gsGroup.add(mast);
+
+        const base = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.34, 0.42, 0.10, 40),
+          new THREE.MeshStandardMaterial({ color: 0x28d9e8, roughness: 0.36, metalness: 0.18, transparent: true, opacity: 0.42 })
+        );
+        base.position.y = 0.05;
+        gsGroup.add(base);
+
+        const dishPivot = new THREE.Group();
+        dishPivot.position.y = 0.64;
+        const dish = new THREE.Mesh(
+          new THREE.TorusGeometry(0.36, 0.018, 10, 48),
+          new THREE.MeshStandardMaterial({ color: 0xdce8f2, roughness: 0.25, metalness: 0.35 })
+        );
+        dishPivot.add(dish);
+        const feed = new THREE.Mesh(
+          new THREE.SphereGeometry(0.055, 18, 12),
+          new THREE.MeshStandardMaterial({ color: 0x28d9e8, emissive: 0x0c5660, emissiveIntensity: 1.2 })
+        );
+        feed.position.z = 0.24;
+        dishPivot.add(feed);
+        gsGroup.add(dishPivot);
+        scene.add(gsGroup);
+
+        const satGroup = new THREE.Group();
+        const satelliteMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(0.15, 32, 24),
+          new THREE.MeshStandardMaterial({ color: 0xf2a400, emissive: 0x5a3600, emissiveIntensity: 1.1 })
+        );
+        satGroup.add(satelliteMesh);
+        const satelliteHalo = new THREE.Mesh(
+          new THREE.SphereGeometry(0.28, 32, 24),
+          new THREE.MeshBasicMaterial({ color: 0xf2a400, transparent: true, opacity: 0.20 })
+        );
+        satGroup.add(satelliteHalo);
+        scene.add(satGroup);
+
+        const beam = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 1, 0)]),
+          new THREE.LineBasicMaterial({ color: 0xf2a400, transparent: true, opacity: 0.92 })
+        );
+        scene.add(beam);
+
+        const satLabel = makeAntenna3DLabel("SAT", "#fff3c7");
+        scene.add(satLabel);
+
+        const statusLabel = makeAntenna3DLabel("TLE待ち", "#8ea3af");
+        statusLabel.position.set(0, 3.0, 0);
+        scene.add(statusLabel);
+
+        antenna3dSceneState = {
+          renderer,
+          scene,
+          camera,
+          dishPivot,
+          satelliteMesh,
+          satelliteHalo,
+          satGroup,
+          beam,
+          satLabel,
+          statusLabel,
+          controls,
+          width: 0,
+          height: 0
+        };
+        window.antenna3dSceneState = antenna3dSceneState;
+      }
+
+      const state = antenna3dSceneState;
+      const dpr = window.devicePixelRatio || 1;
+      if (state.width !== width || state.height !== height || state.renderer.getPixelRatio() !== dpr) {
+        state.width = width;
+        state.height = height;
+        state.renderer.setPixelRatio(dpr);
+        state.renderer.setSize(width, height, false);
+        state.camera.aspect = width / Math.max(height, 1);
+        state.camera.updateProjectionMatrix();
+      }
+
+      return state;
+    }
+
+    function lookToAntenna3DVector(look) {
+      const THREE = THREE_LIB;
+      const az = deg2rad(look.azDeg);
+      const el = deg2rad(look.elDeg);
+      const cosEl = Math.cos(el);
+      return new THREE.Vector3(
+        Math.sin(az) * cosEl,
+        Math.sin(el),
+        Math.cos(az) * cosEl
+      ).normalize();
+    }
+
+    function startAntenna3DAnimation() {
+      if (antenna3dAnimationStarted) return;
+      antenna3dAnimationStarted = true;
+
+      function animateAntenna3D(timeMs) {
+        if (antenna3dSceneState) {
+          const pulse = 1 + Math.sin(timeMs / 420) * 0.08;
+          antenna3dSceneState.satelliteHalo.scale.setScalar(pulse);
+          if (antenna3dSceneState.controls) {
+            antenna3dSceneState.controls.update();
+          }
+          antenna3dSceneState.renderer.render(antenna3dSceneState.scene, antenna3dSceneState.camera);
+        }
+
+        requestAnimationFrame(animateAntenna3D);
+      }
+
+      requestAnimationFrame(animateAntenna3D);
+    }
+
     function drawAntennaVisual() {
-      const canvasInfo = resizeCanvasToContainer(antennaVisualCanvas, antennaVisualContainer);
-      if (!canvasInfo) return;
+      if (!antennaVisualCanvas || !antennaVisualContainer) return;
 
-      const { ctx, width, height } = canvasInfo;
-      ctx.clearRect(0, 0, width, height);
-
-      const bg = ctx.createLinearGradient(0, 0, 0, height);
-      bg.addColorStop(0, "#061926");
-      bg.addColorStop(1, "#02080d");
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, width, height);
-
+      const rect = antennaVisualContainer.getBoundingClientRect();
+      const width = Math.max(1, Math.floor(rect.width));
+      const height = Math.max(1, Math.floor(rect.height));
       const satrec = orbitMapState.satrec;
       const gs = getGroundStationSetting();
       const look = satrec ? getLookAnglesFromTle(satrec, new Date(), gs) : null;
       const displayVisible = look && look.elDeg >= TRACKING_DISPLAY_MIN_ELEVATION_DEG;
       const passVisible = look && look.elDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG;
 
-      const cx = width * 0.5;
-      const horizonY = height * 0.69;
-      const groundY = height * 0.81;
-      const skyTop = height * 0.06;
-      const skyLeft = width * 0.08;
-      const skyRight = width * 0.92;
-      const skyW = skyRight - skyLeft;
-      const skyH = horizonY - skyTop;
-      const dishBaseX = cx;
-      const dishBaseY = groundY - 6;
-      const dishRadius = Math.min(width * 0.09, height * 0.06);
-
-      function xFromAz(azDeg) {
-        return skyLeft + normalizeDeg(azDeg) / 360 * skyW;
+      if (!THREE_LIB) {
+        if (antennaAzLabel) antennaAzLabel.textContent = look ? `${look.azDeg.toFixed(1)}°` : "--";
+        if (antennaElLabel) antennaElLabel.textContent = look ? `${look.elDeg.toFixed(1)}°` : "--";
+        if (antennaRangeLabel) antennaRangeLabel.textContent = look ? `${look.rangeKm.toFixed(0)} km` : "--";
+        if (antennaStatusLabel) antennaStatusLabel.textContent = look ? "3D読込中" : "--";
+        return;
       }
 
-      function yFromEl(elDeg) {
-        const clampedEl = clamp(elDeg, -5, 90);
-        const norm = (clampedEl + 5) / 95;
-        return horizonY - norm * skyH;
-      }
-
-      // sky / grid area
-      ctx.save();
-      ctx.fillStyle = "rgba(12, 30, 42, 0.35)";
-      ctx.fillRect(skyLeft, skyTop, skyW, skyH);
-      ctx.restore();
-
-      // elevation guide lines
-      ctx.save();
-      [0, 5, 30, 70, 90].forEach((el) => {
-        const y = yFromEl(el);
-        ctx.strokeStyle = el === AOS_LOS_ELEVATION_THRESHOLD_DEG
-          ? "rgba(43, 224, 95, 0.42)"
-          : (el === PASS_MIN_MAX_ELEVATION_DEG ? "rgba(242, 164, 0, 0.36)" : "rgba(95, 118, 132, 0.30)");
-        ctx.lineWidth = (el === AOS_LOS_ELEVATION_THRESHOLD_DEG || el === PASS_MIN_MAX_ELEVATION_DEG) ? 1.5 : 1;
-        ctx.setLineDash((el === AOS_LOS_ELEVATION_THRESHOLD_DEG || el === PASS_MIN_MAX_ELEVATION_DEG) ? [5, 5] : [3, 5]);
-        ctx.beginPath();
-        ctx.moveTo(skyLeft, y);
-        ctx.lineTo(skyRight, y);
-        ctx.stroke();
-
-        ctx.fillStyle = el === AOS_LOS_ELEVATION_THRESHOLD_DEG ? "rgba(43, 224, 95, 0.85)" : (el === PASS_MIN_MAX_ELEVATION_DEG ? "rgba(242, 164, 0, 0.78)" : "rgba(220, 232, 242, 0.56)");
-        ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
-        ctx.textAlign = "left";
-        ctx.fillText(`El ${el}°`, skyLeft + 4, y - 4);
-      });
-      ctx.setLineDash([]);
-
-      // azimuth guides
-      [0, 90, 180, 270, 360].forEach((az) => {
-        const x = xFromAz(az === 360 ? 0 : az);
-        ctx.strokeStyle = "rgba(95, 118, 132, 0.20)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(x, skyTop);
-        ctx.lineTo(x, horizonY);
-        ctx.stroke();
-      });
-      ctx.restore();
-
-      // horizon / ground
-      ctx.save();
-      ctx.strokeStyle = "rgba(220, 232, 242, 0.72)";
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.moveTo(skyLeft, horizonY);
-      ctx.lineTo(skyRight, horizonY);
-      ctx.stroke();
-
-      ctx.fillStyle = "rgba(20, 58, 50, 0.45)";
-      ctx.beginPath();
-      ctx.moveTo(skyLeft - 12, horizonY);
-      ctx.lineTo(skyRight + 12, horizonY);
-      ctx.lineTo(width, height);
-      ctx.lineTo(0, height);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-
-      // azimuth labels
-      ctx.save();
-      ctx.fillStyle = "rgba(220, 232, 242, 0.72)";
-      ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("N", xFromAz(0), horizonY + 14);
-      ctx.fillText("E", xFromAz(90), horizonY + 14);
-      ctx.fillText("S", xFromAz(180), horizonY + 14);
-      ctx.fillText("W", xFromAz(270), horizonY + 14);
-      ctx.restore();
-
-      // antenna body (bigger)
-      ctx.save();
-      ctx.strokeStyle = "rgba(220, 232, 242, 0.88)";
-      ctx.fillStyle = "rgba(40, 217, 232, 0.18)";
-      ctx.lineWidth = 2.2;
-      ctx.beginPath();
-      ctx.moveTo(dishBaseX - 18, groundY);
-      ctx.lineTo(dishBaseX, groundY - 38);
-      ctx.lineTo(dishBaseX + 18, groundY);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.ellipse(dishBaseX, dishBaseY, dishRadius, dishRadius * 0.52, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(dishBaseX, groundY - 38);
-      ctx.lineTo(dishBaseX, groundY - 10);
-      ctx.stroke();
-      ctx.restore();
+      const THREE = THREE_LIB;
+      const state = ensureAntenna3DScene(width, height);
+      if (!state) return;
 
       if (!look) {
-        ctx.save();
-        ctx.fillStyle = "rgba(220, 232, 242, 0.72)";
-        ctx.font = "13px Segoe UI, Noto Sans JP, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("TLEを反映してください", cx, height * 0.36);
-        ctx.restore();
+        state.satGroup.visible = false;
+        state.beam.visible = false;
+        state.satLabel.visible = false;
+        state.statusLabel.visible = true;
+        state.statusLabel.material.opacity = 1;
 
         if (antennaAzLabel) antennaAzLabel.textContent = "--";
         if (antennaElLabel) antennaElLabel.textContent = "--";
         if (antennaRangeLabel) antennaRangeLabel.textContent = "--";
         if (antennaStatusLabel) antennaStatusLabel.textContent = "--";
+        state.renderer.render(state.scene, state.camera);
         return;
       }
 
-      if (!displayVisible) {
-        ctx.save();
-        ctx.fillStyle = "rgba(220, 232, 242, 0.66)";
-        ctx.font = "12px Segoe UI, Noto Sans JP, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("El 0°以上で衛星を表示", cx, height * 0.38);
-        ctx.restore();
+      const direction = lookToAntenna3DVector(look);
+      const rangeScale = clamp(look.rangeKm / 420, 3.3, 6.2);
+      const satPos = direction.clone().multiplyScalar(rangeScale);
+      const gsTip = new THREE.Vector3(0, 0.64, 0);
+      const activeColor = passVisible ? 0x2be05f : (displayVisible ? 0xf2a400 : 0x8ea3af);
 
-        if (antennaAzLabel) antennaAzLabel.textContent = `${look.azDeg.toFixed(1)}°`;
-        if (antennaElLabel) antennaElLabel.textContent = `${look.elDeg.toFixed(1)}°`;
-        if (antennaRangeLabel) antennaRangeLabel.textContent = `${look.rangeKm.toFixed(0)} km`;
-        if (antennaStatusLabel) antennaStatusLabel.textContent = "地平線下";
-        return;
-      }
-
-      const sx = xFromAz(look.azDeg);
-      const sy = yFromEl(look.elDeg);
-
-      // beam and dish pointing direction
-      ctx.save();
-      ctx.strokeStyle = passVisible ? "rgba(43, 224, 95, 0.90)" : "rgba(242, 164, 0, 0.82)";
-      ctx.fillStyle = passVisible ? "rgba(43, 224, 95, 0.16)" : "rgba(242, 164, 0, 0.14)";
-      ctx.lineWidth = 2.4;
-      ctx.shadowColor = passVisible ? "rgba(43, 224, 95, 0.55)" : "rgba(242, 164, 0, 0.45)";
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.moveTo(dishBaseX, dishBaseY - 4);
-      ctx.lineTo(sx, sy);
-      ctx.stroke();
-      ctx.restore();
-
-      // highlight around satellite point
-      ctx.save();
-      const satColor = passVisible ? "#2be05f" : "#f2a400";
-      ctx.fillStyle = satColor;
-      ctx.strokeStyle = "#fff3c7";
-      ctx.lineWidth = 1.6;
-      ctx.shadowColor = satColor;
-      ctx.shadowBlur = 14;
-      ctx.beginPath();
-      ctx.arc(sx, sy, 7, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(sx, sy, 13, 0, Math.PI * 2);
-      ctx.strokeStyle = passVisible ? "rgba(43, 224, 95, 0.35)" : "rgba(242, 164, 0, 0.28)";
-      ctx.stroke();
-      ctx.restore();
-
-      // antenna face marker rotated visually toward satellite
-      const beamAngle = Math.atan2(sy - (dishBaseY - 4), sx - dishBaseX);
-      ctx.save();
-      ctx.translate(dishBaseX, dishBaseY - 4);
-      ctx.rotate(beamAngle + Math.PI / 2);
-      ctx.strokeStyle = "rgba(220, 232, 242, 0.95)";
-      ctx.fillStyle = "rgba(220, 232, 242, 0.10)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, dishRadius * 0.82, dishRadius * 0.34, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-
-      // live text near satellite
-      ctx.save();
-      ctx.fillStyle = "rgba(220, 232, 242, 0.86)";
-      ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
-      ctx.textAlign = sx < cx ? "left" : "right";
-      const tx = sx < cx ? sx + 10 : sx - 10;
-      ctx.fillText(`SAT  El ${look.elDeg.toFixed(1)}°`, tx, sy - 10);
-      ctx.restore();
+      state.satGroup.visible = true;
+      state.beam.visible = true;
+      state.satLabel.visible = true;
+      state.statusLabel.visible = false;
+      state.satGroup.position.copy(satPos);
+      state.satLabel.position.copy(satPos).add(new THREE.Vector3(0, 0.42, 0));
+      state.satelliteMesh.material.color.setHex(activeColor);
+      state.satelliteMesh.material.emissive.setHex(activeColor === 0x8ea3af ? 0x1d2c35 : activeColor);
+      state.satelliteHalo.material.color.setHex(activeColor);
+      state.satelliteHalo.material.opacity = passVisible ? 0.28 : 0.18;
+      state.beam.material.color.setHex(activeColor);
+      state.beam.material.opacity = displayVisible ? 0.92 : 0.38;
+      state.beam.geometry.setFromPoints([gsTip, satPos]);
+      state.dishPivot.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), direction);
 
       if (antennaAzLabel) antennaAzLabel.textContent = `${look.azDeg.toFixed(1)}°`;
       if (antennaElLabel) antennaElLabel.textContent = `${look.elDeg.toFixed(1)}°`;
       if (antennaRangeLabel) antennaRangeLabel.textContent = `${look.rangeKm.toFixed(0)} km`;
-      if (antennaStatusLabel) antennaStatusLabel.textContent = passVisible ? "AOS中" : "El 0〜5°";
+      if (antennaStatusLabel) antennaStatusLabel.textContent = displayVisible ? (passVisible ? "AOS中" : "El 0〜5°") : "地平線下";
+
+      state.renderer.render(state.scene, state.camera);
     }
 
     function refineGraphElevationCrossing(satrec, gs, t1, t2, thresholdDeg, targetDirection) {
@@ -3653,26 +3867,10 @@ ${tle.line2}`;
       message: "TLE読込待ち"
     };
 
-    const SIMPLE_WORLD_LAND = [
-      // North America
-      [[-168, 72], [-140, 70], [-125, 58], [-123, 48], [-108, 31], [-97, 25], [-82, 25], [-67, 45], [-52, 48], [-62, 58], [-94, 72], [-130, 74]],
-      // South America
-      [[-82, 12], [-70, 8], [-52, -5], [-35, -20], [-43, -55], [-64, -54], [-75, -35], [-81, -10]],
-      // Greenland
-      [[-52, 83], [-22, 75], [-33, 60], [-55, 59], [-73, 68]],
-      // Europe + Asia
-      [[-10, 36], [5, 55], [32, 70], [70, 72], [100, 62], [135, 56], [170, 64], [178, 50], [140, 34], [120, 18], [100, 6], [75, 8], [45, 26], [25, 36], [5, 36]],
-      // Africa
-      [[-18, 35], [8, 36], [34, 30], [51, 10], [43, -12], [30, -34], [14, -35], [-5, -20], [-17, 5]],
-      // Australia
-      [[112, -11], [136, -10], [154, -26], [146, -43], [119, -35]],
-      // Antarctica
-      [[-180, -72], [-120, -76], [-60, -73], [0, -78], [60, -72], [120, -76], [180, -72], [180, -90], [-180, -90]],
-      // Japan area accent
-      [[128, 32], [132, 35], [137, 38], [142, 43], [145, 44], [143, 36], [138, 33], [132, 31]],
-      // Southeast Asia islands rough
-      [[96, 7], [116, 8], [126, 0], [122, -8], [105, -6]]
-    ];
+    // Natural Earth public domain vector data; usable commercially without attribution.
+    const WORLD_LAND_POLYGONS = Array.isArray(window.NATURAL_EARTH_LAND_110M)
+      ? window.NATURAL_EARTH_LAND_110M
+      : [];
 
     function resizeOrbitMapCanvas() {
       if (!orbitMapCanvas || !orbitMapContainer) return;
@@ -3805,6 +4003,150 @@ ${tle.line2}`;
       }
     }
 
+    function lonLatToMapXYContinuous(lon, lat, width, height) {
+      const leftLon = orbitMapView.centerLon - orbitMapView.lonSpan / 2;
+      const x = (lon - leftLon) / orbitMapView.lonSpan * width;
+      const y = (orbitMapView.centerLat + orbitMapView.latSpan / 2 - lat) / orbitMapView.latSpan * height;
+      return { x, y };
+    }
+
+    function unwrapPolygonLongitudes(poly) {
+      if (!poly || poly.length === 0) return [];
+
+      const unwrapped = [];
+      let offset = 0;
+      let previousLon = poly[0][0];
+
+      poly.forEach(([lon, lat], index) => {
+        let adjustedLon = lon + offset;
+
+        if (index > 0) {
+          while (adjustedLon - previousLon > 180) {
+            offset -= 360;
+            adjustedLon = lon + offset;
+          }
+          while (adjustedLon - previousLon < -180) {
+            offset += 360;
+            adjustedLon = lon + offset;
+          }
+        }
+
+        unwrapped.push([adjustedLon, lat]);
+        previousLon = adjustedLon;
+      });
+
+      return unwrapped;
+    }
+
+    function isAntarcticaMainPolygon(poly) {
+      if (!poly || poly.length === 0) return false;
+
+      const lats = poly.map(([, lat]) => lat);
+      const lons = poly.map(([lon]) => lon);
+      return Math.min(...lats) <= -89.5
+        && Math.max(...lats) < -55
+        && Math.max(...lons) - Math.min(...lons) >= 359;
+    }
+
+    function drawAntarcticaLandCap(ctx, poly, width, height) {
+      const coastline = unwrapPolygonLongitudes(poly.filter(([, lat]) => lat > -89.5));
+
+      if (coastline.length < 3) return;
+
+      const leftLon = orbitMapView.centerLon - orbitMapView.lonSpan / 2;
+      const rightLon = orbitMapView.centerLon + orbitMapView.lonSpan / 2;
+      const shiftedCoastlines = [];
+      const closedCoastline = [
+        ...coastline,
+        [coastline[0][0] + 360, coastline[0][1]]
+      ];
+
+      for (let shift = -720; shift <= 720; shift += 360) {
+        shiftedCoastlines.push(closedCoastline.map(([lon, lat]) => [lon + shift, lat]));
+      }
+
+      function coastlineLatAt(lon) {
+        let bestLat = null;
+
+        shiftedCoastlines.forEach(points => {
+          for (let i = 1; i < points.length; i++) {
+            const [lonA, latA] = points[i - 1];
+            const [lonB, latB] = points[i];
+            const minLon = Math.min(lonA, lonB);
+            const maxLon = Math.max(lonA, lonB);
+            if (lon < minLon || lon > maxLon || maxLon === minLon) continue;
+
+            const t = (lon - lonA) / (lonB - lonA);
+            const lat = latA + (latB - latA) * t;
+            if (bestLat === null || lat > bestLat) bestLat = lat;
+          }
+        });
+
+        return bestLat;
+      }
+
+      const sampleCount = Math.max(160, Math.ceil(width / 2));
+      const capPoints = [];
+      let lastLat = -72;
+
+      for (let i = 0; i <= sampleCount; i++) {
+        const lon = leftLon + (rightLon - leftLon) * i / sampleCount;
+        const lat = coastlineLatAt(lon);
+        if (lat !== null) lastLat = lat;
+        capPoints.push([lon, lastLat]);
+      }
+
+      ctx.beginPath();
+      capPoints.forEach(([lon, lat], index) => {
+        const p = lonLatToMapXYContinuous(lon, lat, width, height);
+        if (index === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      const rightBottom = lonLatToMapXYContinuous(rightLon, -90, width, height);
+      const leftBottom = lonLatToMapXYContinuous(leftLon, -90, width, height);
+      ctx.lineTo(rightBottom.x, rightBottom.y);
+      ctx.lineTo(leftBottom.x, leftBottom.y);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      capPoints.forEach(([lon, lat], index) => {
+        const p = lonLatToMapXYContinuous(lon, lat, width, height);
+        if (index === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.stroke();
+    }
+
+    function drawLandPolygon(ctx, poly, width, height) {
+      if (isAntarcticaMainPolygon(poly)) {
+        drawAntarcticaLandCap(ctx, poly, width, height);
+        return;
+      }
+
+      const unwrapped = unwrapPolygonLongitudes(poly);
+      if (unwrapped.length < 3) return;
+
+      const minLon = Math.min(...unwrapped.map(([lon]) => lon));
+      const maxLon = Math.max(...unwrapped.map(([lon]) => lon));
+      const leftLon = orbitMapView.centerLon - orbitMapView.lonSpan / 2;
+      const rightLon = orbitMapView.centerLon + orbitMapView.lonSpan / 2;
+
+      for (let shift = -720; shift <= 720; shift += 360) {
+        if (maxLon + shift < leftLon || minLon + shift > rightLon) continue;
+
+        ctx.beginPath();
+        unwrapped.forEach(([lon, lat], i) => {
+          const p = lonLatToMapXYContinuous(lon + shift, lat, width, height);
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        });
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
     function drawWorldMap(ctx, width, height) {
       ctx.clearRect(0, 0, width, height);
 
@@ -3861,22 +4203,14 @@ ${tle.line2}`;
       ctx.stroke();
       ctx.restore();
 
-      // rough land masses
+      // Natural Earth land polygons
       ctx.save();
       ctx.fillStyle = "rgba(34, 76, 67, 0.72)";
       ctx.strokeStyle = "rgba(98, 180, 153, 0.45)";
       ctx.lineWidth = 1;
 
-      SIMPLE_WORLD_LAND.forEach(poly => {
-        ctx.beginPath();
-        poly.forEach(([lon, lat], i) => {
-          const p = lonLatToMapXY(lon, lat, width, height);
-          if (i === 0) ctx.moveTo(p.x, p.y);
-          else ctx.lineTo(p.x, p.y);
-        });
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
+      WORLD_LAND_POLYGONS.forEach(poly => {
+        drawLandPolygon(ctx, poly, width, height);
       });
       ctx.restore();
     }
