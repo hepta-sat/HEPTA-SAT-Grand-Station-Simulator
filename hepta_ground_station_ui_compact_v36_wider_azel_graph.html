@@ -1,0 +1,4147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HEPTA Ground Station</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #050b10;
+      color: #dce8f2;
+      font-family: "Segoe UI", "Noto Sans JP", sans-serif;
+      overflow: hidden;
+    }
+
+    .app {
+      width: 100vw;
+      height: 100vh;
+      padding: 8px;
+      display: grid;
+      grid-template-rows: 28px 1fr 34px;
+      gap: 8px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border: 1px solid #1d2c35;
+      background: #081219;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: 50% 50%;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .top-area {
+      display: grid;
+      grid-template-columns: 26% 34% 40%;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .bottom-area {
+      display: grid;
+      grid-template-columns: 17% 16% 9% 32% 26%;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .panel {
+      border: 1px solid #1d2c35;
+      background:
+        linear-gradient(180deg, rgba(14, 28, 38, 0.96), rgba(5, 13, 18, 0.96));
+      border-radius: 4px;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-title {
+      height: 30px;
+      padding: 6px 10px;
+      border-bottom: 1px solid #1d2c35;
+      color: #c8d8e3;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .panel-body {
+      flex: 1;
+      padding: 10px;
+      color: #5f7684;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 0;
+    }
+
+    .top-left {
+      display: grid;
+      grid-template-rows: 1fr;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .orbit-panel {
+      display: grid;
+      grid-template-rows: 30px 1fr;
+      min-height: 0;
+    }
+
+    .orbit-map-placeholder {
+      position: relative;
+      padding: 0;
+      color: #5f7684;
+      font-size: 13px;
+      display: block;
+      min-height: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(40, 217, 232, 0.08), transparent 58%),
+        linear-gradient(180deg, rgba(5, 18, 28, 0.98), rgba(2, 8, 12, 0.98));
+    }
+
+    .orbit-map-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .orbit-map-overlay {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 7px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .orbit-map-controls {
+      position: absolute;
+      top: 7px;
+      right: 8px;
+      display: flex;
+      gap: 6px;
+      pointer-events: auto;
+      z-index: 3;
+    }
+
+    .orbit-map-mode-button {
+      height: 26px;
+      padding: 0 10px;
+      border: 1px solid rgba(40, 217, 232, 0.55);
+      border-radius: 4px;
+      background: rgba(3, 10, 15, 0.76);
+      color: #dce8f2;
+      font-size: 11px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(40, 217, 232, 0.15);
+    }
+
+    .orbit-map-mode-button:hover {
+      border-color: #28d9e8;
+      background: rgba(7, 25, 36, 0.9);
+    }
+
+    .orbit-map-chip {
+      min-width: 0;
+      border: 1px solid rgba(45, 70, 84, 0.9);
+      background: rgba(3, 10, 15, 0.68);
+      border-radius: 3px;
+      padding: 4px 6px;
+      color: #b8c8d4;
+      font-size: 10.5px;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .orbit-map-chip span {
+      color: #28d9e8;
+      font-family: Consolas, Menlo, monospace;
+    }
+
+    .pass-info {
+      min-height: 0;
+      height: 100%;
+      display: grid;
+      grid-template-rows: 1fr 1fr 1fr;
+      gap: 6px;
+      background: transparent;
+      overflow: visible;
+    }
+
+    .pass-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #1d2c35;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.22);
+      gap: 6px;
+      min-width: 0;
+      min-height: 0;
+      height: 100%;
+    }
+
+    .pass-label {
+      font-size: 12px;
+      color: #8ea3af;
+      writing-mode: horizontal-tb;
+    }
+
+    .pass-time {
+      font-size: 17px;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .antenna-area {
+      display: grid;
+      grid-template-columns: 42% 58%;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .footer {
+      border: 1px solid #1d2c35;
+      background: #081219;
+      display: grid;
+      grid-template-columns: 1.2fr 1.8fr;
+      align-items: center;
+      color: #b8c8d4;
+      font-size: 13px;
+    }
+
+    .footer-item {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border-right: 1px solid #1d2c35;
+      white-space: nowrap;
+    }
+
+    .footer-item:last-child {
+      border-right: none;
+    }
+    .footer-port-control {
+      gap: 8px;
+      justify-content: flex-start;
+      overflow: hidden;
+    }
+
+    .footer-port-control .port-name {
+      display: inline;
+      min-height: 0;
+      max-width: 50%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .footer-port-control .status-dot,
+    .footer-port-control #port-status-text {
+      display: none;
+    }
+
+    .footer-port-control .gs-button {
+      width: auto;
+      min-width: 86px;
+      height: 24px;
+      padding: 0 10px;
+      font-size: 11px;
+    }
+
+
+    .green {
+      color: #2be05f;
+    }
+
+    .cyan {
+      color: #28d9e8;
+    }
+
+    .red {
+      color: #ff3b3b;
+    }
+
+    .orange {
+      color: #f2a400;
+    }
+
+
+
+    /* ===== Tracking Visual / Az-El Graph ===== */
+
+    .tracking-body {
+      position: relative;
+      display: block;
+      padding: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(40, 217, 232, 0.09), transparent 58%),
+        linear-gradient(180deg, rgba(5, 18, 28, 0.98), rgba(2, 8, 12, 0.98));
+    }
+
+    .tracking-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .tracking-overlay {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 7px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .tracking-chip {
+      min-width: 0;
+      border: 1px solid rgba(45, 70, 84, 0.9);
+      background: rgba(3, 10, 15, 0.68);
+      border-radius: 3px;
+      padding: 4px 6px;
+      color: #b8c8d4;
+      font-size: 10.5px;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tracking-chip span {
+      color: #28d9e8;
+      font-family: Consolas, Menlo, monospace;
+    }
+
+    .graph-overlay {
+      position: absolute;
+      top: 7px;
+      left: 8px;
+      right: 8px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .azel-split-body {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 5px;
+      padding: 3px 2px;
+    }
+
+    .mini-graph-box {
+      position: relative;
+      min-height: 0;
+      border: 1px solid rgba(45, 70, 84, 0.8);
+      border-radius: 4px;
+      overflow: hidden;
+      background: rgba(3, 10, 15, 0.35);
+      display: grid;
+      grid-template-rows: 16px 1fr;
+    }
+
+    .mini-graph-title {
+      display: flex;
+      align-items: center;
+      padding: 0 7px;
+      font-size: 10px;
+      color: #c8d8e3;
+      border-bottom: 1px solid rgba(45, 70, 84, 0.65);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .mini-graph-canvas-wrap {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .mini-graph-overlay {
+      position: absolute;
+      top: 3px;
+      right: 4px;
+      pointer-events: none;
+    }
+
+    .mini-graph-overlay .tracking-chip {
+      font-size: 9px;
+      padding: 2px 4px;
+    }
+
+    /* ===== Setting UI ===== */
+
+    .setting-single-body {
+      display: block;
+      text-align: left;
+      color: #c8d8e3;
+      overflow: hidden;
+    }
+
+    .setting-block {
+      border: 1px solid rgba(45, 70, 84, 0.8);
+      background: rgba(3, 10, 15, 0.45);
+      border-radius: 4px;
+      padding: 6px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .compact-setting {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+      padding: 0;
+      overflow: visible;
+    }
+
+    .port-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 5px;
+      font-size: 12px;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #555;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.15);
+    }
+
+    .status-dot.connected {
+      background: #2be05f;
+      box-shadow: 0 0 10px rgba(43, 224, 95, 0.6);
+    }
+
+    .status-dot.selected {
+      background: #f2a400;
+      box-shadow: 0 0 10px rgba(242, 164, 0, 0.55);
+    }
+
+    .status-dot.disconnected {
+      background: #555;
+    }
+
+    .port-name {
+      display: block;
+      color: #28d9e8;
+      font-family: monospace;
+      font-size: 11px;
+      line-height: 1.25;
+      word-break: break-all;
+      min-height: 18px;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 7px;
+    }
+
+    .tle-button-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .gs-button {
+      width: 100%;
+      height: 30px;
+      border: 1px solid #284456;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #123449, #0b2230);
+      color: #dce8f2;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .gs-button:hover {
+      border-color: #2b9dff;
+      background: linear-gradient(180deg, #164463, #0b2c40);
+    }
+
+    .gs-button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .gs-button.danger {
+      background: linear-gradient(180deg, #3a1b1b, #241010);
+      border-color: #5a2a2a;
+    }
+
+    .gs-button.danger:hover {
+      border-color: #ff4d4d;
+    }
+
+    .small-note {
+      display: none;
+    }
+
+
+
+    /* ===== RSSI / Communication Status ===== */
+
+    .link-status-body {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 8px;
+      padding: 8px;
+      text-align: left;
+      color: #c8d8e3;
+      align-items: stretch;
+      justify-content: stretch;
+    }
+
+    .link-status-card {
+      min-height: 0;
+      border: 1px solid rgba(45, 70, 84, 0.82);
+      border-radius: 4px;
+      background: rgba(3, 10, 15, 0.45);
+      padding: 7px 8px;
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 4px;
+      overflow: hidden;
+    }
+
+    .link-status-label {
+      color: #8ea3af;
+      font-size: 10.5px;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+
+    .link-status-value-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .link-status-value {
+      color: #28d9e8;
+      font-family: Consolas, Menlo, monospace;
+      font-size: 20px;
+      line-height: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .link-status-unit {
+      color: #8ea3af;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .link-status-sub {
+      color: #8ea3af;
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rssi-graph-wrap {
+      position: relative;
+      min-height: 0;
+      height: 100%;
+      margin-top: 5px;
+      border: 1px solid rgba(45, 70, 84, 0.65);
+      border-radius: 3px;
+      overflow: hidden;
+      background: rgba(2, 8, 12, 0.42);
+    }
+
+    .rssi-graph-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+
+    /* ===== Packet Monitor ===== */
+
+    .packet-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 8px;
+      text-align: left;
+      color: #c8d8e3;
+      align-items: stretch;
+      justify-content: stretch;
+      overflow: hidden;
+    }
+
+    .packet-format-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr 1fr 1.15fr 0.95fr 1.35fr 0.95fr;
+      border: 1px solid rgba(45, 70, 84, 0.85);
+      border-radius: 4px;
+      overflow: hidden;
+      background: rgba(3, 10, 15, 0.45);
+      min-height: 0;
+    }
+
+    .packet-cell {
+      min-width: 0;
+      padding: 4px 4px;
+      border-right: 1px solid rgba(45, 70, 84, 0.7);
+      display: grid;
+      grid-template-rows: auto auto;
+      gap: 2px;
+      align-items: center;
+      justify-items: center;
+    }
+
+    .packet-cell:last-child {
+      border-right: none;
+    }
+
+    .packet-cell-label {
+      color: #8ea3af;
+      font-size: 8.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .packet-cell-value {
+      color: #dce8f2;
+      font-family: Consolas, Menlo, monospace;
+      font-size: 10.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .packet-meta-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 5px;
+    }
+
+    .packet-meta-card {
+      min-width: 0;
+      border: 1px solid rgba(45, 70, 84, 0.8);
+      border-radius: 4px;
+      background: rgba(3, 10, 15, 0.45);
+      padding: 5px 6px;
+      overflow: hidden;
+    }
+
+    .packet-meta-label {
+      color: #8ea3af;
+      font-size: 9px;
+      white-space: nowrap;
+    }
+
+    .packet-meta-value {
+      color: #28d9e8;
+      font-family: Consolas, Menlo, monospace;
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+
+
+    .packet-payload-row,
+    .tm-value-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      min-height: 0;
+    }
+
+    .packet-payload-card,
+    .tm-value-card {
+      min-width: 0;
+      border: 1px solid rgba(45, 70, 84, 0.8);
+      border-radius: 4px;
+      background: rgba(3, 10, 15, 0.45);
+      padding: 5px 6px;
+      overflow: hidden;
+    }
+
+    .packet-payload-label,
+    .tm-value-label {
+      color: #8ea3af;
+      font-size: 9px;
+      white-space: nowrap;
+    }
+
+    .packet-payload-value,
+    .tm-value-main {
+      color: #28d9e8;
+      font-family: Consolas, Menlo, monospace;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .tm-value-body {
+      display: block;
+      text-align: left;
+      color: #c8d8e3;
+      padding: 8px;
+      overflow: hidden;
+    }
+
+    .tm-value-grid {
+      height: 100%;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto repeat(11, minmax(0, 1fr));
+      gap: 3px;
+    }
+
+    .tm-status-card,
+    .tm-value-card {
+      min-width: 0;
+      border: 1px solid rgba(45, 70, 84, 0.8);
+      border-radius: 4px;
+      background: rgba(3, 10, 15, 0.45);
+      padding: 3px 5px;
+      overflow: hidden;
+    }
+
+    .tm-status-card {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .tm-value-card {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .tm-status-label,
+    .tm-value-label {
+      color: #8ea3af;
+      font-size: 8.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tm-status-main,
+    .tm-value-main {
+      color: #28d9e8;
+      font-family: Consolas, Menlo, monospace;
+      font-size: 10.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 0;
+    }
+
+    .tm-status-main.power-save {
+      color: #f2a400;
+    }
+
+    .tm-status-main.normal {
+      color: #2be05f;
+    }
+
+    .tm-value-sub {
+      display: none;
+    }
+
+    .telemetry-graph-body {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 6px;
+      padding: 6px;
+      text-align: left;
+      color: #c8d8e3;
+      align-items: stretch;
+      justify-content: stretch;
+      overflow: hidden;
+    }
+
+    .telemetry-graph-box {
+      position: relative;
+      min-height: 0;
+      border: 1px solid rgba(45, 70, 84, 0.8);
+      border-radius: 4px;
+      overflow: hidden;
+      background: rgba(3, 10, 15, 0.35);
+      display: grid;
+      grid-template-rows: 18px 1fr;
+    }
+
+    .telemetry-graph-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 7px;
+      font-size: 10px;
+      color: #c8d8e3;
+      border-bottom: 1px solid rgba(45, 70, 84, 0.65);
+      background: rgba(255, 255, 255, 0.03);
+      white-space: nowrap;
+    }
+
+    .telemetry-graph-title span {
+      color: #28d9e8;
+      font-family: Consolas, Menlo, monospace;
+      font-size: 10px;
+    }
+
+    .telemetry-graph-select {
+      width: min(132px, calc(100% - 38px));
+      height: 19px;
+      border: 1px solid rgba(45, 70, 84, 0.9);
+      border-radius: 3px;
+      background: #081219;
+      color: #dce8f2;
+      font-size: 11px;
+      line-height: 19px;
+      padding: 0 4px;
+      outline: none;
+    }
+
+    .telemetry-graph-select option {
+      font-size: 12px;
+      background: #081219;
+      color: #dce8f2;
+    }
+
+    .telemetry-graph-canvas-wrap {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .telemetry-graph-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .packet-log {
+      min-height: 0;
+      border: 1px solid rgba(45, 70, 84, 0.8);
+      border-radius: 4px;
+      background: rgba(2, 8, 12, 0.42);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .packet-log-header {
+      padding: 4px 6px;
+      border-bottom: 1px solid rgba(45, 70, 84, 0.65);
+      color: #8ea3af;
+      font-size: 8.5px;
+      background: rgba(255, 255, 255, 0.03);
+      white-space: nowrap;
+    }
+
+    .packet-log-list {
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex: 1;
+    }
+
+    .packet-log-row {
+      padding: 3px 6px;
+      border-bottom: 1px solid rgba(45, 70, 84, 0.35);
+      color: #c8d8e3;
+      font-family: Consolas, Menlo, monospace;
+      font-size: 10px;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .packet-log-row.packet-log-ng {
+      color: #ff9a9a;
+    }
+
+    .packet-ok {
+      color: #2be05f;
+    }
+
+    .packet-ng {
+      color: #ff3b3b;
+    }
+
+    .packet-wait {
+      color: #8ea3af;
+      padding: 7px;
+      font-size: 10px;
+      text-align: center;
+    }
+
+
+    /* ===== Command Send / TX Command Log ===== */
+
+    .command-body {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 6px;
+      padding: 7px 10px 7px 7px;
+      text-align: left;
+      color: #c8d8e3;
+      align-items: stretch;
+      justify-content: stretch;
+      overflow: hidden;
+    }
+
+    .command-input-area {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 58px;
+      gap: 4px;
+      min-height: 0;
+      padding-right: 2px;
+    }
+
+    .command-input {
+      width: 100%;
+      height: 26px;
+      background: #081219;
+      border: 1px solid #263946;
+      color: #dce8f2;
+      border-radius: 3px;
+      padding: 0 6px;
+      font-size: 10.5px;
+      font-family: Consolas, Menlo, monospace;
+      outline: none;
+      min-width: 0;
+    }
+
+    .command-input:focus {
+      border-color: #1e8cff;
+      box-shadow: 0 0 0 1px rgba(30, 140, 255, 0.3);
+    }
+
+    .command-send-button {
+      height: 26px;
+      font-size: 10.5px;
+      padding: 0 4px;
+      min-width: 0;
+    }
+
+    .command-log {
+      min-height: 0;
+      border: 1px solid rgba(45, 70, 84, 0.8);
+      border-radius: 4px;
+      background: rgba(2, 8, 12, 0.42);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .command-log-header,
+    .command-log-row {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .command-log-header {
+      padding: 3px 5px;
+      border-bottom: 1px solid rgba(45, 70, 84, 0.65);
+      color: #8ea3af;
+      font-size: 8.5px;
+      background: rgba(255, 255, 255, 0.03);
+      white-space: nowrap;
+    }
+
+    .command-log-list {
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex: 1;
+    }
+
+    .command-log-row {
+      padding: 3px 5px;
+      border-bottom: 1px solid rgba(45, 70, 84, 0.35);
+      color: #c8d8e3;
+      font-family: Consolas, Menlo, monospace;
+      font-size: 10px;
+      line-height: 1.25;
+      white-space: nowrap;
+    }
+
+    .command-log-time {
+      color: #8ea3af;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .command-log-command {
+      color: #28d9e8;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .command-wait {
+      color: #8ea3af;
+      padding: 7px;
+      font-size: 10px;
+      text-align: center;
+    }
+
+    /* ===== TLE Setting ===== */
+
+    .tle-body {
+      display: grid;
+      grid-template-rows: 24px 40px 30px minmax(160px, 1fr) 14px;
+      gap: 8px;
+      align-items: stretch;
+      justify-content: stretch;
+      text-align: left;
+      color: #c8d8e3;
+      overflow: hidden;
+      padding: 8px;
+    }
+
+    .tle-radio-group {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      min-height: 0;
+    }
+
+    .tle-radio-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: #c8d8e3;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .tle-radio-option input {
+      accent-color: #28d9e8;
+      margin: 0;
+    }
+
+    .tle-textarea {
+      width: 100%;
+      height: 100%;
+      resize: none;
+      background: #081219;
+      border: 1px solid #263946;
+      color: #dce8f2;
+      border-radius: 3px;
+      padding: 5px 6px;
+      font-size: 9.2px;
+      font-family: "Consolas", "Menlo", monospace;
+      outline: none;
+      line-height: 1.35;
+      white-space: pre;
+      overflow: hidden;
+      display: block;
+    }
+
+    .tle-textarea:focus {
+      border-color: #1e8cff;
+      box-shadow: 0 0 0 1px rgba(30, 140, 255, 0.3);
+    }
+
+    .tle-button-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+      margin: 0;
+      min-height: 0;
+    }
+
+    .tle-status {
+      display: block;
+      min-height: 14px;
+      font-size: 10.5px;
+      color: #8ea3af;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <header class="header">
+      HEPTA Ground Station（衛星用・環境地上局ソフトウェア）
+    </header>
+
+    <main class="main">
+
+      <!-- 上段 -->
+      <section class="top-area">
+
+        <!-- 左上 -->
+        <div class="top-left">
+
+          <!-- TLE入力 -->
+          <div class="panel">
+            <div class="panel-title">TLE入力 / 軌道選択</div>
+
+            <div class="panel-body tle-body">
+
+              <div class="tle-radio-group">
+                <label class="tle-radio-option">
+                  <input type="radio" name="tle-source" value="custom">
+                  Custom
+                </label>
+
+                <label class="tle-radio-option">
+                  <input type="radio" name="tle-source" value="sat1" checked>
+                  SAT1
+                </label>
+              </div>
+
+              <textarea id="tle-input" class="tle-textarea" spellcheck="false" wrap="off"></textarea>
+
+              <div class="tle-button-row">
+                <button class="gs-button" id="apply-tle-button">TLE反映</button>
+              </div>
+
+              <div class="pass-info">
+                <div class="pass-box">
+                  <div class="pass-label green">AOS予測</div>
+                  <div class="pass-time green" id="aos-time">--:--:--</div>
+                </div>
+
+                <div class="pass-box">
+                  <div class="pass-label">現在時刻</div>
+                  <div class="pass-time" id="current-time">--:--:--</div>
+                </div>
+
+                <div class="pass-box">
+                  <div class="pass-label red">LOS予測</div>
+                  <div class="pass-time red" id="los-time">--:--:--</div>
+                </div>
+              </div>
+
+              <div class="tle-status" id="tle-status"></div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 中央：地図 -->
+        <div class="panel orbit-panel">
+          <div class="panel-title">軌道マップ（地球地図）</div>
+
+          <div class="orbit-map-placeholder" id="orbit-map-container">
+            <canvas id="orbit-map-canvas" class="orbit-map-canvas"></canvas>
+            <div class="orbit-map-controls">
+              <button class="orbit-map-mode-button" id="orbit-map-mode-button">衛星付近を拡大</button>
+            </div>
+            <div class="orbit-map-overlay">
+              <div class="orbit-map-chip">GS <span id="orbit-map-gs-label">--</span></div>
+              <div class="orbit-map-chip">SAT <span id="orbit-map-sat-label">--</span></div>
+              <div class="orbit-map-chip">Period <span id="orbit-map-period-label">--</span></div>
+              <div class="orbit-map-chip">AOS/LOS <span>El ≥ 5° / Max ≥ 70°</span></div>
+            </div>
+          </div>
+
+
+        </div>
+
+        <!-- 右上 -->
+        <div class="antenna-area">
+          <div class="panel">
+            <div class="panel-title">衛星・アンテナ追尾ビジュアル</div>
+            <div class="panel-body tracking-body" id="antenna-visual-container">
+              <canvas id="antenna-visual-canvas" class="tracking-canvas"></canvas>
+              <div class="tracking-overlay">
+                <div class="tracking-chip">Az <span id="antenna-az-label">--</span></div>
+                <div class="tracking-chip">El <span id="antenna-el-label">--</span></div>
+                <div class="tracking-chip">Range <span id="antenna-range-label">--</span></div>
+                <div class="tracking-chip">Status <span id="antenna-status-label">--</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">方位角 / 仰角グラフ</div>
+            <div class="panel-body tracking-body azel-split-body" id="azel-graph-panel">
+              <div class="mini-graph-box">
+                <div class="mini-graph-title">方位角</div>
+                <div class="mini-graph-canvas-wrap" id="az-graph-container">
+                  <canvas id="az-graph-canvas" class="tracking-canvas"></canvas>
+                  <div class="mini-graph-overlay">
+                    <div class="tracking-chip">現在方位角 <span id="graph-az-label">--</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="mini-graph-box">
+                <div class="mini-graph-title">仰角</div>
+                <div class="mini-graph-canvas-wrap" id="el-graph-container">
+                  <canvas id="el-graph-canvas" class="tracking-canvas"></canvas>
+                  <div class="mini-graph-overlay">
+                    <div class="tracking-chip">現在仰角 <span id="graph-el-label">--</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- 下段 -->
+      <section class="bottom-area">
+
+        <div class="panel">
+          <div class="panel-title">受信強度 / 通信状態</div>
+          <div class="panel-body link-status-body">
+            <div class="link-status-card">
+              <div class="link-status-label">RSSI</div>
+              <div style="min-height:0; display:grid; grid-template-rows:auto 1fr; gap:5px;">
+                <div class="link-status-value-row">
+                  <div class="link-status-value" id="rssi-value">--</div>
+                  <div class="link-status-unit">dBm</div>
+                </div>
+                <div class="rssi-graph-wrap" id="rssi-graph-container">
+                  <canvas id="rssi-graph-canvas" class="rssi-graph-canvas"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="link-status-card">
+              <div class="link-status-label">受信コマンド数（このパス）</div>
+              <div>
+                <div class="link-status-value-row">
+                  <div class="link-status-value" id="rx-command-count">0</div>
+                  <div class="link-status-unit">cmd</div>
+                </div>
+                <div class="link-status-sub" id="rx-command-note">AOSごとにリセット</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">受信パケット（16進データ）</div>
+          <div class="panel-body packet-body">
+            <div class="packet-log">
+              <div class="packet-log-header">受信HEXログ（1パケット1行）</div>
+              <div class="packet-log-list" id="packet-log-list">
+                <div class="packet-wait">パケット受信待ち</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">テレメトリ値</div>
+          <div class="panel-body tm-value-body">
+            <div class="tm-value-grid">
+              <div class="tm-status-card">
+                <div class="tm-status-label">状態</div>
+                <div class="tm-status-main" id="tm-mode-value">--</div>
+              </div>
+
+              <div class="tm-value-card">
+                <div class="tm-value-label">電圧</div>
+                <div class="tm-value-main" id="tm-voltage-value">-- V</div>
+                <div class="tm-value-sub" id="tm-voltage-raw">raw: -- --</div>
+              </div>
+              <div class="tm-value-card">
+                <div class="tm-value-label">温度</div>
+                <div class="tm-value-main" id="tm-temp-value">-- °C</div>
+                <div class="tm-value-sub" id="tm-temp-raw">raw: -- --</div>
+              </div>
+
+              <div class="tm-value-card">
+                <div class="tm-value-label">Acc X</div>
+                <div class="tm-value-main" id="tm-acc-x-value">--</div>
+              </div>
+              <div class="tm-value-card">
+                <div class="tm-value-label">Acc Y</div>
+                <div class="tm-value-main" id="tm-acc-y-value">--</div>
+              </div>
+              <div class="tm-value-card">
+                <div class="tm-value-label">Acc Z</div>
+                <div class="tm-value-main" id="tm-acc-z-value">--</div>
+              </div>
+
+              <div class="tm-value-card">
+                <div class="tm-value-label">Gyro X</div>
+                <div class="tm-value-main" id="tm-gyro-x-value">--</div>
+              </div>
+              <div class="tm-value-card">
+                <div class="tm-value-label">Gyro Y</div>
+                <div class="tm-value-main" id="tm-gyro-y-value">--</div>
+              </div>
+              <div class="tm-value-card">
+                <div class="tm-value-label">Gyro Z</div>
+                <div class="tm-value-main" id="tm-gyro-z-value">--</div>
+              </div>
+
+              <div class="tm-value-card">
+                <div class="tm-value-label">Mag X</div>
+                <div class="tm-value-main" id="tm-mag-x-value">--</div>
+              </div>
+              <div class="tm-value-card">
+                <div class="tm-value-label">Mag Y</div>
+                <div class="tm-value-main" id="tm-mag-y-value">--</div>
+              </div>
+              <div class="tm-value-card">
+                <div class="tm-value-label">Mag Z</div>
+                <div class="tm-value-main" id="tm-mag-z-value">--</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">テレメトリ　リアルタイムグラフ</div>
+          <div class="panel-body telemetry-graph-body">
+            <div class="telemetry-graph-box">
+              <div class="telemetry-graph-title">
+                <span>上段</span>
+                <select class="telemetry-graph-select" id="tm-graph1-select"></select>
+              </div>
+              <div class="telemetry-graph-canvas-wrap" id="tm-voltage-graph-container">
+                <canvas id="tm-voltage-graph-canvas" class="telemetry-graph-canvas"></canvas>
+              </div>
+            </div>
+
+            <div class="telemetry-graph-box">
+              <div class="telemetry-graph-title">
+                <span>下段</span>
+                <select class="telemetry-graph-select" id="tm-graph2-select"></select>
+              </div>
+              <div class="telemetry-graph-canvas-wrap" id="tm-temp-graph-container">
+                <canvas id="tm-temp-graph-canvas" class="telemetry-graph-canvas"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">コマンド送信 / 送信コマンド一覧</div>
+          <div class="panel-body command-body">
+            <div class="command-input-area">
+              <input id="command-input" class="command-input" type="text" placeholder="コマンド入力欄 例: a / b / c" autocomplete="off">
+              <button class="gs-button command-send-button" id="command-send-button">送信</button>
+            </div>
+
+            <div class="command-log">
+              <div class="command-log-header">
+                <div>時間</div>
+                <div>送信コマンド</div>
+              </div>
+              <div class="command-log-list" id="command-log-list">
+                <div class="command-wait">送信コマンド待ち</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- 最下部 -->
+    <footer class="footer">
+      <div class="footer-item">
+        接続状態：<span class="red" id="footer-connection-status">● 未接続</span>
+      </div>
+
+      <div class="footer-item footer-port-control" id="footer-port">
+        ポート：<span class="port-name" id="selected-port-name">未接続</span>
+        <span id="port-status-dot" class="status-dot disconnected"></span>
+        <span id="port-status-text">未接続</span>
+        <button class="gs-button" id="select-port-button">ポート選択</button>
+        <button class="gs-button" id="connect-port-button">接続</button>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js"></script>
+  <script>
+    if (!window.satellite) {
+      document.write('<script src="https://unpkg.com/satellite.js@5.0.0/dist/satellite.min.js"><\/script>');
+    }
+  </script>
+
+  <script>
+    /* =========================
+       Internal Ground Station
+    ========================= */
+
+    const INTERNAL_GROUND_STATION = {
+      name: "FUKUI-GS",
+      lat: 36.0641,
+      lon: 136.2196,
+      alt: 50
+    };
+
+    function getGroundStationSetting() {
+      return INTERNAL_GROUND_STATION;
+    }
+
+    // AOS/LOS表示に使う最低仰角。
+    // パスは最大仰角70deg以上のものだけを採用し、AOS/LOS時刻はEl 5deg交差で表示する。
+    const AOS_LOS_ELEVATION_THRESHOLD_DEG = 5;
+    const PASS_MIN_MAX_ELEVATION_DEG = 70;
+    const TRACKING_DISPLAY_MIN_ELEVATION_DEG = 0;
+
+    // テレメトリ・受信パケット等を画面に反映する最低仰角。
+    // 見た目のレイアウトは変えず、内部的にEl 30deg未満では受信データを表示しない。
+    const TELEMETRY_DISPLAY_MIN_ELEVATION_DEG = 0;
+
+    /* =========================
+       XBee Serial Port
+    ========================= */
+
+    let xbeePort = null;
+    let xbeeWriter = null;
+
+    const XBEE_BAUD_RATE = 9600;
+
+    const portStatusDot = document.getElementById("port-status-dot");
+    const portStatusText = document.getElementById("port-status-text");
+    const selectedPortName = document.getElementById("selected-port-name");
+
+    const footerConnectionStatus = document.getElementById("footer-connection-status");
+    const footerPort = document.getElementById("footer-port");
+
+    const selectPortButton = document.getElementById("select-port-button");
+    const connectPortButton = document.getElementById("connect-port-button");
+    // 切断・テスト送信ボタンはUIから削除
+
+    const rssiValueEl = document.getElementById("rssi-value");
+    const rssiGraphCanvas = document.getElementById("rssi-graph-canvas");
+    const rssiGraphContainer = document.getElementById("rssi-graph-container");
+    const rxCommandCountEl = document.getElementById("rx-command-count");
+    const rxCommandNoteEl = document.getElementById("rx-command-note");
+
+    const commandInput = document.getElementById("command-input");
+    const commandSendButton = document.getElementById("command-send-button");
+    const commandLogList = document.getElementById("command-log-list");
+    let commandLogHistory = [];
+
+    const packetUi = {
+      header: document.getElementById("pkt-header"),
+      satId: document.getElementById("pkt-sat-id"),
+      type: document.getElementById("pkt-type"),
+      seq: document.getElementById("pkt-seq"),
+      len: document.getElementById("pkt-len"),
+      payload: document.getElementById("pkt-payload"),
+      checksum: document.getElementById("pkt-checksum"),
+      typeLabel: document.getElementById("pkt-type-label"),
+      checkResult: document.getElementById("pkt-check-result"),
+      lastTime: document.getElementById("pkt-last-time"),
+      payloadVoltage: document.getElementById("pkt-payload-voltage"),
+      payloadTemp: document.getElementById("pkt-payload-temp"),
+      tmModeValue: document.getElementById("tm-mode-value"),
+      tmVoltageValue: document.getElementById("tm-voltage-value"),
+      tmVoltageRaw: document.getElementById("tm-voltage-raw"),
+      tmTempValue: document.getElementById("tm-temp-value"),
+      tmTempRaw: document.getElementById("tm-temp-raw"),
+      tmAccXValue: document.getElementById("tm-acc-x-value"),
+      tmAccYValue: document.getElementById("tm-acc-y-value"),
+      tmAccZValue: document.getElementById("tm-acc-z-value"),
+      tmGyroXValue: document.getElementById("tm-gyro-x-value"),
+      tmGyroYValue: document.getElementById("tm-gyro-y-value"),
+      tmGyroZValue: document.getElementById("tm-gyro-z-value"),
+      tmMagXValue: document.getElementById("tm-mag-x-value"),
+      tmMagYValue: document.getElementById("tm-mag-y-value"),
+      tmMagZValue: document.getElementById("tm-mag-z-value"),
+      logList: document.getElementById("packet-log-list")
+    };
+
+    const TELEMETRY_PACKET = {
+      // 全体形式：7E | Sat ID | Type | Seq(2B) | Len | Payload | Checksum
+      // HK Payload：
+      //   Mode(1B) | Voltage[mV](2B) | Temperature[0.1 degC](2B)
+      //   Acc XYZ[0.01 m/s^2](int16 x3)
+      //   Gyro XYZ[0.1 deg/s](int16 x3)
+      //   Mag XYZ[0.1 uT](int16 x3)
+      // Payload length = 23 byte
+      header: 0x7E,
+      satId: 0x01,
+      types: {
+        0x10: "HK Telemetry",
+        0x20: "Mission Data",
+        0x30: "Command ACK",
+        0x40: "Event Log"
+      }
+    };
+
+    const tmVoltageGraphCanvas = document.getElementById("tm-voltage-graph-canvas");
+    const tmVoltageGraphContainer = document.getElementById("tm-voltage-graph-container");
+    const tmTempGraphCanvas = document.getElementById("tm-temp-graph-canvas");
+    const tmTempGraphContainer = document.getElementById("tm-temp-graph-container");
+    const tmGraph1Select = document.getElementById("tm-graph1-select");
+    const tmGraph2Select = document.getElementById("tm-graph2-select");
+
+    let xbeeReader = null;
+    let xbeeReadLoopActive = false;
+    let rxCommandCount = 0;
+    let activePassResetKey = null;
+    let serialTextBuffer = "";
+    let rssiHistory = [];
+
+    let packetByteBuffer = [];
+    let packetLogHistory = [];
+    let telemetryHistory = [];
+
+    function byteToHex(byte) {
+      return Number(byte & 0xFF).toString(16).toUpperCase().padStart(2, "0");
+    }
+
+    function bytesToHex(bytes) {
+      return Array.from(bytes).map(byteToHex).join(" ");
+    }
+
+    function calculatePacketChecksum(bytesWithoutHeaderAndChecksum) {
+      // 教材用の簡易チェックサム：Sat ID〜Payloadまでの1 byte加算値の下位8 bit。
+      return bytesWithoutHeaderAndChecksum.reduce((sum, byte) => (sum + byte) & 0xFF, 0);
+    }
+
+    function parseTelemetryPacket(rawBytes) {
+      const payloadLength = rawBytes[5];
+      const payloadStart = 6;
+      const payloadEnd = payloadStart + payloadLength;
+      const checksum = rawBytes[payloadEnd];
+      const checkTarget = rawBytes.slice(1, payloadEnd);
+      const expectedChecksum = calculatePacketChecksum(checkTarget);
+      const packetType = rawBytes[2];
+      const sequence = (rawBytes[3] << 8) | rawBytes[4];
+
+      return {
+        rawBytes,
+        header: rawBytes[0],
+        satId: rawBytes[1],
+        packetType,
+        packetTypeLabel: TELEMETRY_PACKET.types[packetType] || "Unknown",
+        sequence,
+        payloadLength,
+        payload: rawBytes.slice(payloadStart, payloadEnd),
+        checksum,
+        expectedChecksum,
+        checksumOk: checksum === expectedChecksum
+      };
+    }
+
+    function readInt16BE(highByte, lowByte) {
+      const value = ((highByte & 0xFF) << 8) | (lowByte & 0xFF);
+      return value >= 0x8000 ? value - 0x10000 : value;
+    }
+
+    function decodeMode(modeByte) {
+      if (modeByte === 0x00) return { text: "NORMAL", className: "normal" };
+      if (modeByte === 0x01) return { text: "POWER SAVE", className: "power-save" };
+      return { text: `UNKNOWN(${byteToHex(modeByte)})`, className: "" };
+    }
+
+    function decodeHkPayload(payload) {
+      // HK Telemetry payload format（教材用）
+      // Payload[0]    : 衛星状態 0x00=NORMAL, 0x01=POWER SAVE
+      // Payload[1-2]  : 電圧 mV, uint16, big-endian 例 3.89 V = 3890 = 0x0F32
+      // Payload[3-4]  : 温度 0.1 degC, int16, big-endian 例 23.2 degC = 232 = 0x00E8
+      // Payload[5-10] : 加速度XYZ 0.01 m/s^2, int16 x3
+      // Payload[11-16]: 角速度XYZ 0.1 deg/s, int16 x3
+      // Payload[17-22]: 地磁気XYZ 0.1 uT, int16 x3
+      if (!payload || payload.length < 23) return null;
+
+      const mode = decodeMode(payload[0]);
+      const voltageRaw = ((payload[1] & 0xFF) << 8) | (payload[2] & 0xFF);
+      const temperatureRaw = readInt16BE(payload[3], payload[4]);
+
+      const accXRaw = readInt16BE(payload[5], payload[6]);
+      const accYRaw = readInt16BE(payload[7], payload[8]);
+      const accZRaw = readInt16BE(payload[9], payload[10]);
+
+      const gyroXRaw = readInt16BE(payload[11], payload[12]);
+      const gyroYRaw = readInt16BE(payload[13], payload[14]);
+      const gyroZRaw = readInt16BE(payload[15], payload[16]);
+
+      const magXRaw = readInt16BE(payload[17], payload[18]);
+      const magYRaw = readInt16BE(payload[19], payload[20]);
+      const magZRaw = readInt16BE(payload[21], payload[22]);
+
+      return {
+        modeText: mode.text,
+        modeClassName: mode.className,
+
+        voltageRaw,
+        voltageV: voltageRaw / 1000,
+        voltageHex: `${byteToHex(payload[1])} ${byteToHex(payload[2])}`,
+
+        temperatureRaw,
+        temperatureC: temperatureRaw / 10,
+        temperatureHex: `${byteToHex(payload[3])} ${byteToHex(payload[4])}`,
+
+        accX: accXRaw / 100,
+        accY: accYRaw / 100,
+        accZ: accZRaw / 100,
+
+        gyroX: gyroXRaw / 10,
+        gyroY: gyroYRaw / 10,
+        gyroZ: gyroZRaw / 10,
+
+        magX: magXRaw / 10,
+        magY: magYRaw / 10,
+        magZ: magZRaw / 10
+      };
+    }
+
+    function setTelemetryText(el, text) {
+      if (el) el.textContent = text;
+    }
+
+    function updateDecodedTelemetryDisplay(packet) {
+      const decoded = packet && packet.packetType === 0x10 ? decodeHkPayload(packet.payload) : null;
+
+      if (!decoded) {
+        return;
+      }
+
+      if (packetUi.tmModeValue) {
+        packetUi.tmModeValue.textContent = decoded.modeText;
+        packetUi.tmModeValue.className = `tm-status-main ${decoded.modeClassName}`.trim();
+      }
+
+      setTelemetryText(packetUi.tmVoltageValue, `${decoded.voltageV.toFixed(2)} V`);
+      setTelemetryText(packetUi.tmVoltageRaw, `raw: ${decoded.voltageHex} = ${decoded.voltageRaw} mV`);
+      setTelemetryText(packetUi.tmTempValue, `${decoded.temperatureC.toFixed(1)} °C`);
+      setTelemetryText(packetUi.tmTempRaw, `raw: ${decoded.temperatureHex} = ${decoded.temperatureRaw} /10`);
+
+      setTelemetryText(packetUi.tmAccXValue, `${decoded.accX.toFixed(2)} m/s²`);
+      setTelemetryText(packetUi.tmAccYValue, `${decoded.accY.toFixed(2)} m/s²`);
+      setTelemetryText(packetUi.tmAccZValue, `${decoded.accZ.toFixed(2)} m/s²`);
+
+      setTelemetryText(packetUi.tmGyroXValue, `${decoded.gyroX.toFixed(1)} °/s`);
+      setTelemetryText(packetUi.tmGyroYValue, `${decoded.gyroY.toFixed(1)} °/s`);
+      setTelemetryText(packetUi.tmGyroZValue, `${decoded.gyroZ.toFixed(1)} °/s`);
+
+      setTelemetryText(packetUi.tmMagXValue, `${decoded.magX.toFixed(1)} µT`);
+      setTelemetryText(packetUi.tmMagYValue, `${decoded.magY.toFixed(1)} µT`);
+      setTelemetryText(packetUi.tmMagZValue, `${decoded.magZ.toFixed(1)} µT`);
+
+      telemetryHistory.push({
+        time: Date.now(),
+        modeText: decoded.modeText,
+        voltageV: decoded.voltageV,
+        temperatureC: decoded.temperatureC,
+        accX: decoded.accX,
+        accY: decoded.accY,
+        accZ: decoded.accZ,
+        gyroX: decoded.gyroX,
+        gyroY: decoded.gyroY,
+        gyroZ: decoded.gyroZ,
+        magX: decoded.magX,
+        magY: decoded.magY,
+        magZ: decoded.magZ
+      });
+      if (telemetryHistory.length > 1200) telemetryHistory = telemetryHistory.slice(-1200);
+      drawTelemetryGraphs();
+    }
+
+    function updatePacketDisplay(packet) {
+      if (!packet || !packetUi.logList) return;
+
+      const nowText = formatTime(new Date());
+      if (packetUi.header) packetUi.header.textContent = byteToHex(packet.header);
+      if (packetUi.satId) packetUi.satId.textContent = byteToHex(packet.satId);
+      if (packetUi.type) packetUi.type.textContent = byteToHex(packet.packetType);
+      if (packetUi.seq) packetUi.seq.textContent = packet.sequence.toString(16).toUpperCase().padStart(4, "0").replace(/(..)/g, "$1 ").trim();
+      if (packetUi.len) packetUi.len.textContent = byteToHex(packet.payloadLength);
+      if (packetUi.payload) packetUi.payload.textContent = packet.payload.length ? bytesToHex(packet.payload) : "--";
+      if (packetUi.checksum) packetUi.checksum.textContent = byteToHex(packet.checksum);
+      if (packetUi.typeLabel) packetUi.typeLabel.textContent = packet.packetTypeLabel;
+      if (packetUi.checkResult) {
+        packetUi.checkResult.textContent = packet.checksumOk ? "OK" : `NG exp:${byteToHex(packet.expectedChecksum)}`;
+        packetUi.checkResult.className = `packet-meta-value ${packet.checksumOk ? "packet-ok" : "packet-ng"}`;
+      }
+      if (packetUi.lastTime) packetUi.lastTime.textContent = nowText;
+
+      updateDecodedTelemetryDisplay(packet);
+
+      packetLogHistory.unshift({
+        hex: bytesToHex(packet.rawBytes),
+        ok: packet.checksumOk
+      });
+      packetLogHistory = packetLogHistory.slice(0, 8);
+
+      packetUi.logList.innerHTML = packetLogHistory.map(row => `
+        <div class="packet-log-row ${row.ok ? "" : "packet-log-ng"}" title="${row.hex}">${row.hex}</div>
+      `).join("");
+    }
+
+    function getCurrentSatelliteElevationDegForTelemetryGate() {
+      try {
+        if (!orbitMapState || !orbitMapState.satrec) return null;
+        const look = getLookAnglesFromTle(orbitMapState.satrec, new Date(), getGroundStationSetting());
+        if (!look || !Number.isFinite(look.elDeg)) return null;
+        return look.elDeg;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function isTelemetryDisplayAllowed() {
+      const elevationDeg = getCurrentSatelliteElevationDegForTelemetryGate();
+      return elevationDeg !== null && elevationDeg >= TELEMETRY_DISPLAY_MIN_ELEVATION_DEG;
+    }
+
+    function clearTelemetryReceiveDisplaysForLowElevation() {
+      if (rssiValueEl) rssiValueEl.textContent = "--";
+
+      if (packetUi.tmModeValue) {
+        packetUi.tmModeValue.textContent = "--";
+        packetUi.tmModeValue.className = "tm-status-main";
+      }
+
+      setTelemetryText(packetUi.tmVoltageValue, "-- V");
+      setTelemetryText(packetUi.tmTempValue, "-- °C");
+      setTelemetryText(packetUi.tmAccXValue, "--");
+      setTelemetryText(packetUi.tmAccYValue, "--");
+      setTelemetryText(packetUi.tmAccZValue, "--");
+      setTelemetryText(packetUi.tmGyroXValue, "--");
+      setTelemetryText(packetUi.tmGyroYValue, "--");
+      setTelemetryText(packetUi.tmGyroZValue, "--");
+      setTelemetryText(packetUi.tmMagXValue, "--");
+      setTelemetryText(packetUi.tmMagYValue, "--");
+      setTelemetryText(packetUi.tmMagZValue, "--");
+
+      telemetryHistory = [];
+      packetLogHistory = [];
+      packetByteBuffer = [];
+      serialTextBuffer = "";
+
+      if (packetUi.logList) {
+        packetUi.logList.innerHTML = '<div class="packet-wait">パケット受信待ち</div>';
+      }
+
+      drawTelemetryGraphs();
+    }
+
+    let telemetryGateWasAllowed = null;
+
+    function updateTelemetryReceiveGate() {
+      const allowed = isTelemetryDisplayAllowed();
+
+      if (!allowed && telemetryGateWasAllowed !== false) {
+        clearTelemetryReceiveDisplaysForLowElevation();
+      }
+
+      telemetryGateWasAllowed = allowed;
+    }
+
+    function handleReceivedSerialBytes(value) {
+      if (!value || value.length === 0) return;
+      if (!isTelemetryDisplayAllowed()) return;
+
+      packetByteBuffer.push(...Array.from(value));
+      if (packetByteBuffer.length > 1024) packetByteBuffer = packetByteBuffer.slice(-1024);
+
+      while (packetByteBuffer.length >= 7) {
+        const headerIndex = packetByteBuffer.indexOf(TELEMETRY_PACKET.header);
+
+        if (headerIndex < 0) {
+          packetByteBuffer = [];
+          return;
+        }
+
+        if (headerIndex > 0) {
+          packetByteBuffer.splice(0, headerIndex);
+        }
+
+        if (packetByteBuffer.length < 7) return;
+
+        const payloadLength = packetByteBuffer[5];
+        const totalLength = 7 + payloadLength;
+
+        if (payloadLength > 64) {
+          packetByteBuffer.shift();
+          continue;
+        }
+
+        if (packetByteBuffer.length < totalLength) return;
+
+        const rawPacket = packetByteBuffer.slice(0, totalLength);
+        packetByteBuffer.splice(0, totalLength);
+
+        const packet = parseTelemetryPacket(rawPacket);
+        updatePacketDisplay(packet);
+      }
+    }
+
+    function resizeTelemetryGraphCanvas(canvas, container) {
+      if (!canvas || !container) return null;
+
+      const rect = container.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(1, Math.floor(rect.width));
+      const height = Math.max(1, Math.floor(rect.height));
+
+      if (canvas.width !== Math.floor(width * dpr) || canvas.height !== Math.floor(height * dpr)) {
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+      }
+
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, width, height };
+    }
+
+    const TELEMETRY_GRAPH_ITEMS = {
+      voltageV: { label: "電圧", unit: "V", defaultMin: 3.0, defaultMax: 4.3, fixed: 2 },
+      temperatureC: { label: "温度", unit: "°C", defaultMin: 0, defaultMax: 40, fixed: 1 },
+      accX: { label: "加速度 X", unit: "m/s²", defaultMin: -12, defaultMax: 12, fixed: 2 },
+      accY: { label: "加速度 Y", unit: "m/s²", defaultMin: -12, defaultMax: 12, fixed: 2 },
+      accZ: { label: "加速度 Z", unit: "m/s²", defaultMin: -12, defaultMax: 12, fixed: 2 },
+      gyroX: { label: "角速度 X", unit: "°/s", defaultMin: -250, defaultMax: 250, fixed: 1 },
+      gyroY: { label: "角速度 Y", unit: "°/s", defaultMin: -250, defaultMax: 250, fixed: 1 },
+      gyroZ: { label: "角速度 Z", unit: "°/s", defaultMin: -250, defaultMax: 250, fixed: 1 },
+      magX: { label: "地磁気 X", unit: "µT", defaultMin: -80, defaultMax: 80, fixed: 1 },
+      magY: { label: "地磁気 Y", unit: "µT", defaultMin: -80, defaultMax: 80, fixed: 1 },
+      magZ: { label: "地磁気 Z", unit: "µT", defaultMin: -80, defaultMax: 80, fixed: 1 }
+    };
+
+    function initTelemetryGraphSelects() {
+      const options = Object.entries(TELEMETRY_GRAPH_ITEMS)
+        .map(([key, item]) => `<option value="${key}">${item.label}</option>`)
+        .join("");
+
+      if (tmGraph1Select) {
+        tmGraph1Select.innerHTML = options;
+        tmGraph1Select.value = "voltageV";
+        tmGraph1Select.addEventListener("change", drawTelemetryGraphs);
+      }
+
+      if (tmGraph2Select) {
+        tmGraph2Select.innerHTML = options;
+        tmGraph2Select.value = "temperatureC";
+        tmGraph2Select.addEventListener("change", drawTelemetryGraphs);
+      }
+    }
+
+    function getTelemetryValueRange(key) {
+      const item = TELEMETRY_GRAPH_ITEMS[key] || TELEMETRY_GRAPH_ITEMS.voltageV;
+      const recent = telemetryHistory.slice(-120);
+      const values = recent
+        .map(p => p[key])
+        .filter(v => Number.isFinite(v));
+
+      if (values.length === 0) {
+        return { min: item.defaultMin, max: item.defaultMax };
+      }
+
+      let min = Math.min(...values, item.defaultMin);
+      let max = Math.max(...values, item.defaultMax);
+      const defaultSpan = Math.max(item.defaultMax - item.defaultMin, 1);
+      const span = Math.max(max - min, defaultSpan * 0.20);
+      const pad = span * 0.12;
+      return { min: min - pad, max: max + pad };
+    }
+
+    function drawTelemetryGraph(graphIndex) {
+      const canvas = graphIndex === 1 ? tmVoltageGraphCanvas : tmTempGraphCanvas;
+      const container = graphIndex === 1 ? tmVoltageGraphContainer : tmTempGraphContainer;
+      const selector = graphIndex === 1 ? tmGraph1Select : tmGraph2Select;
+      const key = selector ? selector.value : (graphIndex === 1 ? "voltageV" : "temperatureC");
+      const item = TELEMETRY_GRAPH_ITEMS[key] || TELEMETRY_GRAPH_ITEMS.voltageV;
+      const canvasInfo = resizeTelemetryGraphCanvas(canvas, container);
+      if (!canvasInfo) return;
+
+      const { ctx, width, height } = canvasInfo;
+      ctx.clearRect(0, 0, width, height);
+
+      const bg = ctx.createLinearGradient(0, 0, 0, height);
+      bg.addColorStop(0, "#061926");
+      bg.addColorStop(1, "#02080d");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+
+      const leftPad = 34;
+      const rightPad = 7;
+      const topPad = 7;
+      const bottomPad = 13;
+      const plotW = Math.max(1, width - leftPad - rightPad);
+      const plotH = Math.max(1, height - topPad - bottomPad);
+      const nowMs = Date.now();
+      const windowMs = 10 * 60 * 1000;
+
+      telemetryHistory = telemetryHistory.filter(p => nowMs - p.time <= windowMs);
+
+      const range = getTelemetryValueRange(key);
+
+      function xFromTime(time) {
+        return leftPad + plotW * clamp((time - (nowMs - windowMs)) / windowMs, 0, 1);
+      }
+
+      function yFromValue(value) {
+        return topPad + plotH * (1 - clamp((value - range.min) / Math.max(range.max - range.min, 0.0001), 0, 1));
+      }
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(95, 118, 132, 0.30)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(leftPad, topPad, plotW, plotH);
+
+      const guideValues = [
+        range.min,
+        (range.min + range.max) / 2,
+        range.max
+      ];
+
+      guideValues.forEach(v => {
+        const y = yFromValue(v);
+        ctx.strokeStyle = "rgba(95, 118, 132, 0.20)";
+        ctx.beginPath();
+        ctx.moveTo(leftPad, y);
+        ctx.lineTo(leftPad + plotW, y);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(220, 232, 242, 0.58)";
+        ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(v.toFixed(item.fixed === 2 ? 1 : 0), leftPad - 3, y + 3);
+      });
+      ctx.restore();
+
+      const points = telemetryHistory.map(p => ({
+        time: p.time,
+        value: p[key]
+      })).filter(p => Number.isFinite(p.value));
+
+      if (points.length >= 2) {
+        ctx.save();
+        ctx.strokeStyle = graphIndex === 1 ? "rgba(40, 217, 232, 0.96)" : "rgba(242, 164, 0, 0.96)";
+        ctx.lineWidth = 1.8;
+        ctx.shadowColor = graphIndex === 1 ? "rgba(40, 217, 232, 0.45)" : "rgba(242, 164, 0, 0.45)";
+        ctx.shadowBlur = 5;
+        ctx.beginPath();
+        points.forEach((p, i) => {
+          const x = xFromTime(p.time);
+          const y = yFromValue(p.value);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (points.length > 0) {
+        const latest = points[points.length - 1];
+        ctx.save();
+        ctx.fillStyle = graphIndex === 1 ? "#28d9e8" : "#f2a400";
+        ctx.strokeStyle = "#dce8f2";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(xFromTime(latest.time), yFromValue(latest.value), 3.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+      } else {
+        ctx.save();
+        ctx.fillStyle = "rgba(220, 232, 242, 0.58)";
+        ctx.font = "9px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("テレメトリ受信待ち", leftPad + plotW / 2, topPad + plotH / 2 + 3);
+        ctx.restore();
+
+      }
+
+      ctx.save();
+      ctx.fillStyle = "rgba(220, 232, 242, 0.50)";
+      ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("10分前", leftPad, height - 3);
+      ctx.textAlign = "right";
+      ctx.fillText("現在", leftPad + plotW, height - 3);
+      ctx.restore();
+    }
+
+    function drawTelemetryGraphs() {
+      drawTelemetryGraph(1);
+      drawTelemetryGraph(2);
+    }
+
+    function resizeRssiCanvas() {
+      if (!rssiGraphCanvas || !rssiGraphContainer) return null;
+
+      const rect = rssiGraphContainer.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(1, Math.floor(rect.width));
+      const height = Math.max(1, Math.floor(rect.height));
+
+      if (rssiGraphCanvas.width !== Math.floor(width * dpr) || rssiGraphCanvas.height !== Math.floor(height * dpr)) {
+        rssiGraphCanvas.width = Math.floor(width * dpr);
+        rssiGraphCanvas.height = Math.floor(height * dpr);
+        rssiGraphCanvas.style.width = `${width}px`;
+        rssiGraphCanvas.style.height = `${height}px`;
+      }
+
+      const ctx = rssiGraphCanvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, width, height };
+    }
+
+    function drawRssiGraph() {
+      const canvasInfo = resizeRssiCanvas();
+      if (!canvasInfo) return;
+
+      const { ctx, width, height } = canvasInfo;
+      ctx.clearRect(0, 0, width, height);
+
+      const bg = ctx.createLinearGradient(0, 0, 0, height);
+      bg.addColorStop(0, "#061926");
+      bg.addColorStop(1, "#02080d");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+
+      const leftPad = 24;
+      const rightPad = 5;
+      const topPad = 5;
+      const bottomPad = 11;
+      const plotW = Math.max(1, width - leftPad - rightPad);
+      const plotH = Math.max(1, height - topPad - bottomPad);
+      const nowMs = Date.now();
+      const windowMs = 3 * 60 * 1000;
+      const minDbm = -100;
+      const maxDbm = -40;
+
+      rssiHistory = rssiHistory.filter(p => nowMs - p.time <= windowMs);
+
+      function xFromTime(time) {
+        return leftPad + plotW * clamp((time - (nowMs - windowMs)) / windowMs, 0, 1);
+      }
+
+      function yFromRssi(rssi) {
+        return topPad + plotH * (1 - clamp((rssi - minDbm) / (maxDbm - minDbm), 0, 1));
+      }
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(95, 118, 132, 0.30)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(leftPad, topPad, plotW, plotH);
+
+      [-40, -60, -80, -100].forEach(v => {
+        const y = yFromRssi(v);
+        ctx.strokeStyle = "rgba(95, 118, 132, 0.22)";
+        ctx.beginPath();
+        ctx.moveTo(leftPad, y);
+        ctx.lineTo(leftPad + plotW, y);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(220, 232, 242, 0.58)";
+        ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(String(v), leftPad - 3, y + 3);
+      });
+      ctx.restore();
+
+      if (rssiHistory.length >= 2) {
+        ctx.save();
+        ctx.strokeStyle = "rgba(40, 217, 232, 0.96)";
+        ctx.lineWidth = 1.8;
+        ctx.shadowColor = "rgba(40, 217, 232, 0.45)";
+        ctx.shadowBlur = 5;
+        ctx.beginPath();
+        rssiHistory.forEach((p, i) => {
+          const x = xFromTime(p.time);
+          const y = yFromRssi(p.rssi);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (rssiHistory.length > 0) {
+        const latest = rssiHistory[rssiHistory.length - 1];
+        ctx.save();
+        ctx.fillStyle = "#28d9e8";
+        ctx.strokeStyle = "#dce8f2";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(xFromTime(latest.time), yFromRssi(latest.rssi), 3.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      } else {
+        ctx.save();
+        ctx.fillStyle = "rgba(220, 232, 242, 0.58)";
+        ctx.font = "9px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("RSSIデータ待ち", leftPad + plotW / 2, topPad + plotH / 2 + 3);
+        ctx.restore();
+      }
+
+      ctx.save();
+      ctx.fillStyle = "rgba(220, 232, 242, 0.50)";
+      ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("3分前", leftPad, height - 3);
+      ctx.textAlign = "right";
+      ctx.fillText("現在", leftPad + plotW, height - 3);
+      ctx.restore();
+    }
+
+    function updateRssiDisplay(rssiDbm) {
+      const hasValue = rssiDbm !== null && Number.isFinite(rssiDbm);
+      if (rssiValueEl) rssiValueEl.textContent = hasValue ? String(Math.round(rssiDbm)) : "--";
+
+      if (hasValue) {
+        rssiHistory.push({ time: Date.now(), rssi: rssiDbm });
+        if (rssiHistory.length > 600) rssiHistory = rssiHistory.slice(-600);
+      }
+
+      drawRssiGraph();
+    }
+
+    function updateRxCommandCountDisplay() {
+      if (rxCommandCountEl) rxCommandCountEl.textContent = String(rxCommandCount);
+    }
+
+    function resetRxCommandCount(reasonText) {
+      rxCommandCount = 0;
+      updateRxCommandCountDisplay();
+      if (rxCommandNoteEl) rxCommandNoteEl.textContent = reasonText || "AOSごとにリセット";
+    }
+
+    function incrementRxCommandCount() {
+      rxCommandCount += 1;
+      updateRxCommandCountDisplay();
+      if (rxCommandNoteEl) rxCommandNoteEl.textContent = `最終受信 ${formatTime(new Date())}`;
+    }
+
+    function updateRssiFromReceivedText(text) {
+      // 透明モードではXBeeのRSSIは自動では流れないため、
+      // 機体側や試験用ログに RSSI=-64 / RSSI:-64 / DB=40 のような文字列が含まれる場合のみ反映する。
+      const directMatch = text.match(/RSSI\s*[:=]\s*(-?\d{2,3})/i);
+      if (directMatch) {
+        updateRssiDisplay(Number(directMatch[1]));
+        return;
+      }
+
+      const dbMatch = text.match(/\bDB\s*[:=]\s*([0-9A-Fa-f]{2})\b/);
+      if (dbMatch) {
+        const dbValue = parseInt(dbMatch[1], 16);
+        if (Number.isFinite(dbValue)) updateRssiDisplay(-dbValue);
+      }
+    }
+
+    function handleReceivedSerialText(text) {
+      if (!text) return;
+      if (!isTelemetryDisplayAllowed()) return;
+
+      serialTextBuffer += text;
+      updateRssiFromReceivedText(text);
+
+      const lines = serialTextBuffer.split(/\r?\n/);
+      serialTextBuffer = lines.pop() || "";
+
+      let counted = 0;
+      lines.forEach(line => {
+        if (line.trim().length > 0) counted += 1;
+      });
+
+      // 改行なしのデータでも、受信チャンクが来たことはカウントできるようにする。
+      if (counted === 0 && text.trim().length > 0 && serialTextBuffer.length > 0) {
+        counted = 1;
+        serialTextBuffer = "";
+      }
+
+      for (let i = 0; i < counted; i++) incrementRxCommandCount();
+    }
+
+
+    function updateCommandLog(commandText) {
+      if (!commandLogList) return;
+
+      commandLogHistory.unshift({
+        time: formatTime(new Date()),
+        command: commandText
+      });
+      commandLogHistory = commandLogHistory.slice(0, 8);
+
+      commandLogList.innerHTML = commandLogHistory.map(row => `
+        <div class="command-log-row" title="${row.command.replace(/"/g, '&quot;')}">
+          <div class="command-log-time">${row.time}</div>
+          <div class="command-log-command">${row.command}</div>
+        </div>
+      `).join("");
+    }
+
+    async function sendXbeeCommand() {
+      if (!commandInput) return;
+
+      const commandText = commandInput.value.trim();
+      if (!commandText) {
+        alert("送信するコマンドを入力してください。");
+        return;
+      }
+
+      if (!xbeePort || !xbeeWriter) {
+        alert("XBeeポートに接続してから送信してください。");
+        return;
+      }
+
+      try {
+        const encoder = new TextEncoder();
+        await xbeeWriter.write(encoder.encode(`${commandText}\n`));
+        updateCommandLog(commandText);
+        commandInput.value = "";
+        commandInput.focus();
+      } catch (error) {
+        console.error(error);
+        alert("コマンド送信に失敗しました。");
+      }
+    }
+
+    if (commandSendButton) {
+      commandSendButton.addEventListener("click", sendXbeeCommand);
+    }
+
+    if (commandInput) {
+      commandInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          sendXbeeCommand();
+        }
+      });
+    }
+
+    async function startXbeeReadLoop() {
+      if (!xbeePort || !xbeePort.readable || xbeeReadLoopActive) return;
+
+      xbeeReadLoopActive = true;
+      const decoder = new TextDecoder();
+      xbeeReader = xbeePort.readable.getReader();
+
+      try {
+        while (xbeeReadLoopActive) {
+          const { value, done } = await xbeeReader.read();
+          if (done) break;
+          if (value) {
+            handleReceivedSerialBytes(value);
+            handleReceivedSerialText(decoder.decode(value, { stream: true }));
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        try {
+          if (xbeeReader) xbeeReader.releaseLock();
+        } catch (error) {
+          console.error(error);
+        }
+        xbeeReader = null;
+        xbeeReadLoopActive = false;
+      }
+    }
+
+    function updatePassBasedRxReset() {
+      const now = new Date();
+      const aos = currentPass.aosDate;
+      const los = currentPass.losDate;
+
+      if (!aos || !los) return;
+
+      const inPass = now >= aos && now <= los;
+      const passKey = String(aos.getTime());
+
+      if (inPass && activePassResetKey !== passKey) {
+        activePassResetKey = passKey;
+        resetRxCommandCount("新しいパスでリセット");
+      }
+
+      if (!inPass && activePassResetKey === passKey && now > los) {
+        activePassResetKey = null;
+      }
+    }
+
+    setInterval(updatePassBasedRxReset, 1000);
+    setInterval(updateTelemetryReceiveGate, 1000);
+    setInterval(drawRssiGraph, 1000);
+    setInterval(drawTelemetryGraphs, 1000);
+    updateRssiDisplay(null);
+    initTelemetryGraphSelects();
+    drawTelemetryGraphs();
+    updateRxCommandCountDisplay();
+
+    function setPortDot(status) {
+      portStatusDot.classList.remove("connected", "selected", "disconnected");
+
+      if (status === "connected") {
+        portStatusDot.classList.add("connected");
+      } else if (status === "selected") {
+        portStatusDot.classList.add("selected");
+      } else {
+        portStatusDot.classList.add("disconnected");
+      }
+    }
+
+    function updatePortStatus(status, text) {
+      if (status === "connected") {
+        setPortDot("connected");
+        portStatusText.textContent = text || "接続中";
+        portStatusText.className = "green";
+
+        footerConnectionStatus.textContent = "● 接続中";
+        footerConnectionStatus.className = "green";
+      } else if (status === "selected") {
+        setPortDot("selected");
+        portStatusText.textContent = text || "選択済み";
+        portStatusText.className = "orange";
+
+        footerConnectionStatus.textContent = "● 未接続";
+        footerConnectionStatus.className = "red";
+      } else {
+        setPortDot("disconnected");
+        portStatusText.textContent = text || "未接続";
+        portStatusText.className = "";
+
+        footerConnectionStatus.textContent = "● 未接続";
+        footerConnectionStatus.className = "red";
+      }
+    }
+
+    function updateFooterPort(text) {
+      if (selectedPortName) {
+        selectedPortName.textContent = text;
+      }
+    }
+
+    function getPortDisplayName(port) {
+      const info = port.getInfo();
+
+      if (info.usbVendorId || info.usbProductId) {
+        const vendorId = info.usbVendorId
+          ? `VID:${info.usbVendorId.toString(16).toUpperCase()}`
+          : "VID:unknown";
+
+        const productId = info.usbProductId
+          ? `PID:${info.usbProductId.toString(16).toUpperCase()}`
+          : "PID:unknown";
+
+        return `USB Serial (${vendorId}, ${productId})`;
+      }
+
+      return "Serial Port";
+    }
+
+    selectPortButton.addEventListener("click", async () => {
+      try {
+        if (!("serial" in navigator)) {
+          alert("このブラウザはWeb Serial APIに対応していません。ChromeまたはEdgeを使用してください。");
+          return;
+        }
+
+        xbeePort = await navigator.serial.requestPort();
+
+        const portName = getPortDisplayName(xbeePort);
+
+        selectedPortName.textContent = portName;
+        updatePortStatus("selected", "選択済み");
+        updateFooterPort(portName);
+
+      } catch (error) {
+        console.error(error);
+        updatePortStatus("disconnected", "ポート選択キャンセル");
+        selectedPortName.textContent = "未選択";
+        updateFooterPort("未選択");
+      }
+    });
+
+    connectPortButton.addEventListener("click", async () => {
+      try {
+        if (!xbeePort) {
+          alert("先にポートを選択してください。");
+          return;
+        }
+
+        await xbeePort.open({ baudRate: XBEE_BAUD_RATE });
+
+        xbeeWriter = xbeePort.writable.getWriter();
+
+        const portName = getPortDisplayName(xbeePort);
+
+        updatePortStatus("connected", "接続中");
+        selectedPortName.textContent = portName;
+        updateFooterPort(`${portName} / 9600 bps`);
+        startXbeeReadLoop();
+
+      } catch (error) {
+        console.error(error);
+        updatePortStatus("disconnected", "接続失敗");
+        alert("XBeeポートへの接続に失敗しました。");
+      }
+    });
+
+    /* =========================
+       TLE Generator
+    ========================= */
+
+    const tleSourceRadios = document.querySelectorAll('input[name="tle-source"]');
+    const tleInput = document.getElementById("tle-input");
+    const tleStatus = document.getElementById("tle-status");
+
+    const applyTleButton = document.getElementById("apply-tle-button");
+
+    const aosTimeEl = document.getElementById("aos-time");
+    const currentTimeEl = document.getElementById("current-time");
+    const losTimeEl = document.getElementById("los-time");
+
+    let currentTle = {
+      name: "SAT1",
+      line1: "",
+      line2: ""
+    };
+
+    let currentPass = {
+      aosDate: null,
+      losDate: null
+    };
+
+    // Az/Elグラフは、パスの見え始め・見え終わりを少し広く見るため、
+    // 仰角5degを描画開始・終了の基準にする。
+    const AZEL_GRAPH_EDGE_ELEVATION_DEG = TRACKING_DISPLAY_MIN_ELEVATION_DEG;
+
+    let azelGraphWindowCache = {
+      key: "",
+      startDate: null,
+      endDate: null
+    };
+
+    function pad2(n) {
+      return String(n).padStart(2, "0");
+    }
+
+    function formatTime(date) {
+      return `${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
+    }
+
+    function formatDateTime(date) {
+      return `${pad2(date.getMonth() + 1)}/${pad2(date.getDate())} ${formatTime(date)}`;
+    }
+
+    function setPassTimes(aosDate, losDate) {
+      currentPass.aosDate = aosDate || null;
+      currentPass.losDate = losDate || null;
+      if (aosTimeEl) aosTimeEl.textContent = aosDate ? formatDateTime(aosDate) : "--:--:--";
+      if (losTimeEl) losTimeEl.textContent = losDate ? formatDateTime(losDate) : "--:--:--";
+    }
+
+    function setPassStatus(message, className = "") {
+      if (!tleStatus) return;
+      tleStatus.textContent = message || "";
+      tleStatus.className = `tle-status ${className}`.trim();
+    }
+
+    function setPassTimesCalculating() {
+      if (aosTimeEl) aosTimeEl.textContent = "計算中";
+      if (losTimeEl) losTimeEl.textContent = "計算中";
+    }
+
+    function extractTleLines(text) {
+      const lines = text
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+      const line1 = lines.find(line => line.startsWith("1 ")) || "";
+      const line2 = lines.find(line => line.startsWith("2 ")) || "";
+
+      return { line1, line2 };
+    }
+
+    function waitForSatelliteJs(timeoutMs = 5000) {
+      return new Promise((resolve, reject) => {
+        const start = Date.now();
+
+        const timer = setInterval(() => {
+          if (window.satellite) {
+            clearInterval(timer);
+            resolve(window.satellite);
+            return;
+          }
+
+          if (Date.now() - start > timeoutMs) {
+            clearInterval(timer);
+            reject(new Error("satellite.js を読み込めませんでした。インターネット接続を確認してください。"));
+          }
+        }, 100);
+      });
+    }
+
+    function updateCurrentClock() {
+      if (currentTimeEl) {
+        currentTimeEl.textContent = formatTime(new Date());
+      }
+    }
+
+    setInterval(updateCurrentClock, 1000);
+    updateCurrentClock();
+
+    function tleChecksum(line) {
+      let sum = 0;
+
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+
+        if (c >= "0" && c <= "9") {
+          sum += Number(c);
+        } else if (c === "-") {
+          sum += 1;
+        }
+      }
+
+      return String(sum % 10);
+    }
+
+    function addChecksum(line) {
+      const base = line.padEnd(68, " ").slice(0, 68);
+      return base + tleChecksum(base);
+    }
+
+    function dateToTleEpoch(date) {
+      const year = date.getUTCFullYear();
+      const yy = String(year % 100).padStart(2, "0");
+
+      const start = Date.UTC(year, 0, 1, 0, 0, 0);
+      const dayOfYear = (date.getTime() - start) / 86400000 + 1;
+
+      const ddd = dayOfYear.toFixed(8).padStart(12, "0");
+
+      return yy + ddd;
+    }
+
+    function julianDate(date) {
+      return date.getTime() / 86400000 + 2440587.5;
+    }
+
+    function gmstDeg(date) {
+      const jd = julianDate(date);
+      const t = (jd - 2451545.0) / 36525.0;
+
+      let gmst =
+        280.46061837 +
+        360.98564736629 * (jd - 2451545.0) +
+        0.000387933 * t * t -
+        (t * t * t) / 38710000.0;
+
+      gmst = ((gmst % 360) + 360) % 360;
+      return gmst;
+    }
+
+    function deg2rad(deg) {
+      return deg * Math.PI / 180;
+    }
+
+    function rad2deg(rad) {
+      return rad * 180 / Math.PI;
+    }
+
+    function normalizeDeg(deg) {
+      return ((deg % 360) + 360) % 360;
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function centralAngleForElevation(earthRadiusKm, orbitRadiusKm, elevationDeg) {
+      const el = deg2rad(elevationDeg);
+      return Math.acos((earthRadiusKm / orbitRadiusKm) * Math.cos(el)) - el;
+    }
+
+    function dot(a, b) {
+      return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    }
+
+    function cross(a, b) {
+      return [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+      ];
+    }
+
+    function norm(v) {
+      return Math.sqrt(dot(v, v));
+    }
+
+    function unit(v) {
+      const n = norm(v);
+      return [v[0] / n, v[1] / n, v[2] / n];
+    }
+
+    function scale(v, s) {
+      return [v[0] * s, v[1] * s, v[2] * s];
+    }
+
+    function add(a, b) {
+      return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+    }
+
+    function latLonToUnitEcef(latDeg, lonDeg) {
+      const lat = deg2rad(latDeg);
+      const lon = deg2rad(lonDeg);
+
+      return [
+        Math.cos(lat) * Math.cos(lon),
+        Math.cos(lat) * Math.sin(lon),
+        Math.sin(lat)
+      ];
+    }
+
+    function destinationLatLon(latDeg, lonDeg, bearingDeg, angularDistanceRad) {
+      const lat1 = deg2rad(latDeg);
+      const lon1 = deg2rad(lonDeg);
+      const brg = deg2rad(bearingDeg);
+      const d = angularDistanceRad;
+
+      const lat2 = Math.asin(
+        Math.sin(lat1) * Math.cos(d) +
+        Math.cos(lat1) * Math.sin(d) * Math.cos(brg)
+      );
+
+      const lon2 = lon1 + Math.atan2(
+        Math.sin(brg) * Math.sin(d) * Math.cos(lat1),
+        Math.cos(d) - Math.sin(lat1) * Math.sin(lat2)
+      );
+
+      return {
+        lat: rad2deg(lat2),
+        lon: normalizeDeg(rad2deg(lon2))
+      };
+    }
+
+    function ecefToEciUnit(rEcef, date) {
+      const theta = deg2rad(gmstDeg(date));
+
+      return [
+        Math.cos(theta) * rEcef[0] - Math.sin(theta) * rEcef[1],
+        Math.sin(theta) * rEcef[0] + Math.cos(theta) * rEcef[1],
+        rEcef[2]
+      ];
+    }
+
+    function makeOrbitNormalForInclination(rHat, inclinationDeg) {
+      const inc = deg2rad(inclinationDeg);
+      const c = Math.cos(inc);
+      const s = Math.sin(inc);
+
+      const x = rHat[0];
+      const y = rHat[1];
+      const z = rHat[2];
+
+      const rho = Math.sqrt(x * x + y * y);
+
+      if (rho < 1e-6) {
+        return [s, 0, c];
+      }
+
+      const d = -c * z;
+      const alpha = d / rho;
+      const betaSq = Math.max(0, s * s - alpha * alpha);
+      const beta = Math.sqrt(betaSq);
+
+      const ex = x / rho;
+      const ey = y / rho;
+
+      const px = -ey;
+      const py = ex;
+
+      return unit([
+        alpha * ex + beta * px,
+        alpha * ey + beta * py,
+        c
+      ]);
+    }
+
+    function argumentOfLatitudeDeg(rHat, hHat) {
+      const node = unit([-hHat[1], hHat[0], 0]);
+      const yAxis = cross(hHat, node);
+
+      const x = dot(rHat, node);
+      const y = dot(rHat, yAxis);
+
+      return normalizeDeg(rad2deg(Math.atan2(y, x)));
+    }
+
+    function raanFromH(hHat) {
+      return normalizeDeg(rad2deg(Math.atan2(hHat[0], -hHat[1])));
+    }
+
+    function buildSat1TleForAos(baseDate, gsLat, gsLon) {
+      const earthRadiusKm = 6378.137;
+      const altitudeKm = 540.0;
+      const inclinationDeg = 98.0;
+      const mu = 398600.4418;
+
+      const semiMajorAxisKm = earthRadiusKm + altitudeKm;
+      const meanMotionRadSec = Math.sqrt(mu / Math.pow(semiMajorAxisKm, 3));
+      const meanMotionRevDay = meanMotionRadSec * 86400 / (2 * Math.PI);
+
+      const secondsToAos = 10;
+      const aosDate = new Date(baseDate.getTime() + secondsToAos * 1000);
+
+      /*
+        SAT1開発試験用TLE：
+        - 表示上のAOSはEl 5degで、約10秒後に来るようにする
+        - その後、地上局のほぼ真上を通るようにして最大El 70deg以上を満たしやすくする
+        - 高度540km / 軌道傾斜角98deg / 円軌道近似
+        - TLE epochは現在時刻 baseDate
+      */
+      const targetCentralAngle = centralAngleForElevation(
+        earthRadiusKm,
+        semiMajorAxisKm,
+        AOS_LOS_ELEVATION_THRESHOLD_DEG
+      );
+
+      const secondsFromAosToMax = targetCentralAngle / meanMotionRadSec;
+      const maxElDate = new Date(baseDate.getTime() + (secondsToAos + secondsFromAosToMax) * 1000);
+      const losDate = new Date(maxElDate.getTime() + secondsFromAosToMax * 1000);
+
+      const rMaxEcef = latLonToUnitEcef(gsLat, gsLon);
+      const rMaxEci = unit(ecefToEciUnit(rMaxEcef, maxElDate));
+
+      const hHat = makeOrbitNormalForInclination(rMaxEci, inclinationDeg);
+      const qHat = unit(cross(hHat, rMaxEci));
+
+      const deltaM = meanMotionRadSec * (secondsToAos + secondsFromAosToMax);
+
+      const rEpoch = unit(add(
+        scale(rMaxEci, Math.cos(deltaM)),
+        scale(qHat, -Math.sin(deltaM))
+      ));
+
+      const raanDeg = raanFromH(hHat);
+      const meanAnomalyDeg = argumentOfLatitudeDeg(rEpoch, hHat);
+
+      const eccentricity = "0001000";
+      const argPerigeeDeg = 0.0;
+
+      const satNum = "99999";
+      const epoch = dateToTleEpoch(baseDate);
+
+      const line1Base =
+        `1 ${satNum}U 26001A   ${epoch}  .00000000  00000-0  00000-0 0  999`;
+
+      const line2Base =
+        `2 ${satNum} ` +
+        `${inclinationDeg.toFixed(4).padStart(8, " ")} ` +
+        `${raanDeg.toFixed(4).padStart(8, " ")} ` +
+        `${eccentricity} ` +
+        `${argPerigeeDeg.toFixed(4).padStart(8, " ")} ` +
+        `${meanAnomalyDeg.toFixed(4).padStart(8, " ")} ` +
+        `${meanMotionRevDay.toFixed(8).padStart(11, " ")}    01`;
+
+      return {
+        name: "SAT1",
+        line1: addChecksum(line1Base),
+        line2: addChecksum(line2Base),
+        aosDate,
+        losDate,
+        altitudeKm,
+        inclinationDeg,
+        meanMotionRevDay,
+        groundStation: {
+          name: INTERNAL_GROUND_STATION.name,
+          lat: gsLat,
+          lon: gsLon
+        }
+      };
+    }
+
+    function generateSat1Tle() {
+      const now = new Date();
+      const gs = getGroundStationSetting();
+
+      const tle = buildSat1TleForAos(now, gs.lat, gs.lon);
+
+      currentTle = {
+        name: "SAT1",
+        line1: tle.line1,
+        line2: tle.line2
+      };
+
+      resetTrackingForTleChange();
+
+      tleInput.value = `${tle.line1}
+${tle.line2}`;
+
+      setPassTimesCalculating();
+      setPassStatus(`SAT1生成：El ${AOS_LOS_ELEVATION_THRESHOLD_DEG}° / 最大El ${PASS_MIN_MAX_ELEVATION_DEG}°以上のパスを計算中...`, "cyan");
+
+      (async () => {
+        try {
+          await waitForSatelliteJs();
+          const result = findNextPassBySgp4(tle.line1, tle.line2, getGroundStationSetting());
+          setPassTimes(result.aosDate, result.losDate);
+          setPassStatus("", "");
+          await refreshOrbitMap();
+        } catch (error) {
+          console.error(error);
+          setPassTimes(null, null);
+          setPassStatus(`エラー：${error.message}`, "red");
+          await refreshOrbitMap();
+        }
+      })();
+    }
+
+    function getElevationDegFromTle(satrec, date, gs) {
+      const pv = satellite.propagate(satrec, date);
+
+      if (!pv || !pv.position) {
+        return null;
+      }
+
+      const gmst = satellite.gstime(date);
+      const positionEcf = satellite.eciToEcf(pv.position, gmst);
+      const observerGd = {
+        longitude: satellite.degreesToRadians(gs.lon),
+        latitude: satellite.degreesToRadians(gs.lat),
+        height: (gs.alt || 0) / 1000
+      };
+
+      const lookAngles = satellite.ecfToLookAngles(observerGd, positionEcf);
+      return satellite.radiansToDegrees(lookAngles.elevation);
+    }
+
+    function refineElevationCrossing(satrec, gs, t1, t2, thresholdDeg, targetDirection) {
+      let left = t1.getTime();
+      let right = t2.getTime();
+
+      for (let i = 0; i < 24; i++) {
+        const mid = (left + right) / 2;
+        const leftEl = getElevationDegFromTle(satrec, new Date(left), gs);
+        const midEl = getElevationDegFromTle(satrec, new Date(mid), gs);
+
+        if (leftEl === null || midEl === null) break;
+
+        if (targetDirection === "rise") {
+          if (leftEl < thresholdDeg && midEl >= thresholdDeg) {
+            right = mid;
+          } else {
+            left = mid;
+          }
+        } else {
+          if (leftEl >= thresholdDeg && midEl < thresholdDeg) {
+            right = mid;
+          } else {
+            left = mid;
+          }
+        }
+      }
+
+      return new Date((left + right) / 2);
+    }
+
+    function estimatePassMaxElevation(satrec, gs, aosDate, losDate) {
+      if (!aosDate || !losDate) return null;
+      const startMs = aosDate.getTime();
+      const endMs = losDate.getTime();
+      if (endMs <= startMs) return null;
+
+      const samples = Math.max(24, Math.ceil((endMs - startMs) / 10000));
+      let maxEl = -999;
+      let maxDate = aosDate;
+
+      for (let i = 0; i <= samples; i++) {
+        const t = new Date(startMs + (endMs - startMs) * i / samples);
+        const el = getElevationDegFromTle(satrec, t, gs);
+        if (el !== null && Number.isFinite(el) && el > maxEl) {
+          maxEl = el;
+          maxDate = t;
+        }
+      }
+
+      return { maxEl, maxDate };
+    }
+
+    function findNextPassBySgp4(line1, line2, gs) {
+      const satelliteLib = window.satellite;
+      if (!satelliteLib) {
+        throw new Error("satellite.js が読み込めていません。インターネット接続がある状態で開き直してください。");
+      }
+
+      const satrec = satelliteLib.twoline2satrec(line1, line2);
+
+      if (satrec.error && satrec.error !== 0) {
+        throw new Error("SGP4でTLEを読み込めませんでした。TLEの内容を確認してください。");
+      }
+
+      const now = new Date();
+      const stepMs = 10 * 1000;
+      const maxMs = 36 * 60 * 60 * 1000;
+      const thresholdDeg = AOS_LOS_ELEVATION_THRESHOLD_DEG;
+
+      let prevTime = now;
+      let prevEl = getElevationDegFromTle(satrec, prevTime, gs);
+
+      if (prevEl === null || Number.isNaN(prevEl)) {
+        throw new Error("SGP4 propagation failed");
+      }
+
+      let candidateAosDate = null;
+      let candidateMaxEl = prevEl;
+      let candidateMaxDate = now;
+
+      if (prevEl >= thresholdDeg) {
+        candidateAosDate = now;
+      }
+
+      for (let dt = stepMs; dt <= maxMs; dt += stepMs) {
+        const t = new Date(now.getTime() + dt);
+        const el = getElevationDegFromTle(satrec, t, gs);
+
+        if (el === null || Number.isNaN(el)) {
+          continue;
+        }
+
+        if (!candidateAosDate && prevEl < thresholdDeg && el >= thresholdDeg) {
+          candidateAosDate = refineElevationCrossing(satrec, gs, prevTime, t, thresholdDeg, "rise");
+          candidateMaxEl = el;
+          candidateMaxDate = t;
+        }
+
+        if (candidateAosDate) {
+          if (el > candidateMaxEl) {
+            candidateMaxEl = el;
+            candidateMaxDate = t;
+          }
+
+          if (prevEl >= thresholdDeg && el < thresholdDeg) {
+            const candidateLosDate = refineElevationCrossing(satrec, gs, prevTime, t, thresholdDeg, "set");
+            const peak = estimatePassMaxElevation(satrec, gs, candidateAosDate, candidateLosDate);
+            const maxEl = peak ? peak.maxEl : candidateMaxEl;
+            const maxDate = peak ? peak.maxDate : candidateMaxDate;
+
+            if (maxEl >= PASS_MIN_MAX_ELEVATION_DEG) {
+              return {
+                aosDate: candidateAosDate,
+                losDate: candidateLosDate,
+                maxElevationDeg: maxEl,
+                maxElevationDate: maxDate
+              };
+            }
+
+            candidateAosDate = null;
+            candidateMaxEl = -999;
+            candidateMaxDate = t;
+          }
+        }
+
+        prevTime = t;
+        prevEl = el;
+      }
+
+      throw new Error(`36時間以内にEl ${thresholdDeg}°で始まり、最大El ${PASS_MIN_MAX_ELEVATION_DEG}°以上となるパスを見つけられませんでした。`);
+    }
+
+
+    /* =========================
+       Antenna Tracking Visual / Az-El Graph
+    ========================= */
+
+    const antennaVisualCanvas = document.getElementById("antenna-visual-canvas");
+    const antennaVisualContainer = document.getElementById("antenna-visual-container");
+    const azGraphCanvas = document.getElementById("az-graph-canvas");
+    const azGraphContainer = document.getElementById("az-graph-container");
+    const elGraphCanvas = document.getElementById("el-graph-canvas");
+    const elGraphContainer = document.getElementById("el-graph-container");
+
+    const antennaAzLabel = document.getElementById("antenna-az-label");
+    const antennaElLabel = document.getElementById("antenna-el-label");
+    const antennaRangeLabel = document.getElementById("antenna-range-label");
+    const antennaStatusLabel = document.getElementById("antenna-status-label");
+    const graphAzLabel = document.getElementById("graph-az-label");
+    const graphElLabel = document.getElementById("graph-el-label");
+
+    function resizeCanvasToContainer(canvas, container) {
+      if (!canvas || !container) return null;
+
+      const rect = container.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(1, Math.floor(rect.width));
+      const height = Math.max(1, Math.floor(rect.height));
+
+      if (canvas.width !== Math.floor(width * dpr) || canvas.height !== Math.floor(height * dpr)) {
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+      }
+
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, width, height };
+    }
+
+    function getLookAnglesFromTle(satrec, date, gs) {
+      if (!window.satellite || !satrec) return null;
+
+      const pv = satellite.propagate(satrec, date);
+      if (!pv || !pv.position) return null;
+
+      const gmst = satellite.gstime(date);
+      const positionEcf = satellite.eciToEcf(pv.position, gmst);
+      const observerGd = {
+        longitude: satellite.degreesToRadians(gs.lon),
+        latitude: satellite.degreesToRadians(gs.lat),
+        height: (gs.alt || 0) / 1000
+      };
+
+      const lookAngles = satellite.ecfToLookAngles(observerGd, positionEcf);
+
+      return {
+        azDeg: normalizeDeg(satellite.radiansToDegrees(lookAngles.azimuth)),
+        elDeg: satellite.radiansToDegrees(lookAngles.elevation),
+        rangeKm: lookAngles.rangeSat
+      };
+    }
+
+    function drawAntennaVisual() {
+      const canvasInfo = resizeCanvasToContainer(antennaVisualCanvas, antennaVisualContainer);
+      if (!canvasInfo) return;
+
+      const { ctx, width, height } = canvasInfo;
+      ctx.clearRect(0, 0, width, height);
+
+      const bg = ctx.createLinearGradient(0, 0, 0, height);
+      bg.addColorStop(0, "#061926");
+      bg.addColorStop(1, "#02080d");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+
+      const satrec = orbitMapState.satrec;
+      const gs = getGroundStationSetting();
+      const look = satrec ? getLookAnglesFromTle(satrec, new Date(), gs) : null;
+      const displayVisible = look && look.elDeg >= TRACKING_DISPLAY_MIN_ELEVATION_DEG;
+      const passVisible = look && look.elDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG;
+
+      const cx = width * 0.5;
+      const horizonY = height * 0.69;
+      const groundY = height * 0.81;
+      const skyTop = height * 0.06;
+      const skyLeft = width * 0.08;
+      const skyRight = width * 0.92;
+      const skyW = skyRight - skyLeft;
+      const skyH = horizonY - skyTop;
+      const dishBaseX = cx;
+      const dishBaseY = groundY - 6;
+      const dishRadius = Math.min(width * 0.09, height * 0.06);
+
+      function xFromAz(azDeg) {
+        return skyLeft + normalizeDeg(azDeg) / 360 * skyW;
+      }
+
+      function yFromEl(elDeg) {
+        const clampedEl = clamp(elDeg, -5, 90);
+        const norm = (clampedEl + 5) / 95;
+        return horizonY - norm * skyH;
+      }
+
+      // sky / grid area
+      ctx.save();
+      ctx.fillStyle = "rgba(12, 30, 42, 0.35)";
+      ctx.fillRect(skyLeft, skyTop, skyW, skyH);
+      ctx.restore();
+
+      // elevation guide lines
+      ctx.save();
+      [0, 5, 30, 70, 90].forEach((el) => {
+        const y = yFromEl(el);
+        ctx.strokeStyle = el === AOS_LOS_ELEVATION_THRESHOLD_DEG
+          ? "rgba(43, 224, 95, 0.42)"
+          : (el === PASS_MIN_MAX_ELEVATION_DEG ? "rgba(242, 164, 0, 0.36)" : "rgba(95, 118, 132, 0.30)");
+        ctx.lineWidth = (el === AOS_LOS_ELEVATION_THRESHOLD_DEG || el === PASS_MIN_MAX_ELEVATION_DEG) ? 1.5 : 1;
+        ctx.setLineDash((el === AOS_LOS_ELEVATION_THRESHOLD_DEG || el === PASS_MIN_MAX_ELEVATION_DEG) ? [5, 5] : [3, 5]);
+        ctx.beginPath();
+        ctx.moveTo(skyLeft, y);
+        ctx.lineTo(skyRight, y);
+        ctx.stroke();
+
+        ctx.fillStyle = el === AOS_LOS_ELEVATION_THRESHOLD_DEG ? "rgba(43, 224, 95, 0.85)" : (el === PASS_MIN_MAX_ELEVATION_DEG ? "rgba(242, 164, 0, 0.78)" : "rgba(220, 232, 242, 0.56)");
+        ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText(`El ${el}°`, skyLeft + 4, y - 4);
+      });
+      ctx.setLineDash([]);
+
+      // azimuth guides
+      [0, 90, 180, 270, 360].forEach((az) => {
+        const x = xFromAz(az === 360 ? 0 : az);
+        ctx.strokeStyle = "rgba(95, 118, 132, 0.20)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, skyTop);
+        ctx.lineTo(x, horizonY);
+        ctx.stroke();
+      });
+      ctx.restore();
+
+      // horizon / ground
+      ctx.save();
+      ctx.strokeStyle = "rgba(220, 232, 242, 0.72)";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(skyLeft, horizonY);
+      ctx.lineTo(skyRight, horizonY);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(20, 58, 50, 0.45)";
+      ctx.beginPath();
+      ctx.moveTo(skyLeft - 12, horizonY);
+      ctx.lineTo(skyRight + 12, horizonY);
+      ctx.lineTo(width, height);
+      ctx.lineTo(0, height);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // azimuth labels
+      ctx.save();
+      ctx.fillStyle = "rgba(220, 232, 242, 0.72)";
+      ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("N", xFromAz(0), horizonY + 14);
+      ctx.fillText("E", xFromAz(90), horizonY + 14);
+      ctx.fillText("S", xFromAz(180), horizonY + 14);
+      ctx.fillText("W", xFromAz(270), horizonY + 14);
+      ctx.restore();
+
+      // antenna body (bigger)
+      ctx.save();
+      ctx.strokeStyle = "rgba(220, 232, 242, 0.88)";
+      ctx.fillStyle = "rgba(40, 217, 232, 0.18)";
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(dishBaseX - 18, groundY);
+      ctx.lineTo(dishBaseX, groundY - 38);
+      ctx.lineTo(dishBaseX + 18, groundY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(dishBaseX, dishBaseY, dishRadius, dishRadius * 0.52, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(dishBaseX, groundY - 38);
+      ctx.lineTo(dishBaseX, groundY - 10);
+      ctx.stroke();
+      ctx.restore();
+
+      if (!look) {
+        ctx.save();
+        ctx.fillStyle = "rgba(220, 232, 242, 0.72)";
+        ctx.font = "13px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("TLEを反映してください", cx, height * 0.36);
+        ctx.restore();
+
+        if (antennaAzLabel) antennaAzLabel.textContent = "--";
+        if (antennaElLabel) antennaElLabel.textContent = "--";
+        if (antennaRangeLabel) antennaRangeLabel.textContent = "--";
+        if (antennaStatusLabel) antennaStatusLabel.textContent = "--";
+        return;
+      }
+
+      if (!displayVisible) {
+        ctx.save();
+        ctx.fillStyle = "rgba(220, 232, 242, 0.66)";
+        ctx.font = "12px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("El 0°以上で衛星を表示", cx, height * 0.38);
+        ctx.restore();
+
+        if (antennaAzLabel) antennaAzLabel.textContent = `${look.azDeg.toFixed(1)}°`;
+        if (antennaElLabel) antennaElLabel.textContent = `${look.elDeg.toFixed(1)}°`;
+        if (antennaRangeLabel) antennaRangeLabel.textContent = `${look.rangeKm.toFixed(0)} km`;
+        if (antennaStatusLabel) antennaStatusLabel.textContent = "地平線下";
+        return;
+      }
+
+      const sx = xFromAz(look.azDeg);
+      const sy = yFromEl(look.elDeg);
+
+      // beam and dish pointing direction
+      ctx.save();
+      ctx.strokeStyle = passVisible ? "rgba(43, 224, 95, 0.90)" : "rgba(242, 164, 0, 0.82)";
+      ctx.fillStyle = passVisible ? "rgba(43, 224, 95, 0.16)" : "rgba(242, 164, 0, 0.14)";
+      ctx.lineWidth = 2.4;
+      ctx.shadowColor = passVisible ? "rgba(43, 224, 95, 0.55)" : "rgba(242, 164, 0, 0.45)";
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(dishBaseX, dishBaseY - 4);
+      ctx.lineTo(sx, sy);
+      ctx.stroke();
+      ctx.restore();
+
+      // highlight around satellite point
+      ctx.save();
+      const satColor = passVisible ? "#2be05f" : "#f2a400";
+      ctx.fillStyle = satColor;
+      ctx.strokeStyle = "#fff3c7";
+      ctx.lineWidth = 1.6;
+      ctx.shadowColor = satColor;
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(sx, sy, 13, 0, Math.PI * 2);
+      ctx.strokeStyle = passVisible ? "rgba(43, 224, 95, 0.35)" : "rgba(242, 164, 0, 0.28)";
+      ctx.stroke();
+      ctx.restore();
+
+      // antenna face marker rotated visually toward satellite
+      const beamAngle = Math.atan2(sy - (dishBaseY - 4), sx - dishBaseX);
+      ctx.save();
+      ctx.translate(dishBaseX, dishBaseY - 4);
+      ctx.rotate(beamAngle + Math.PI / 2);
+      ctx.strokeStyle = "rgba(220, 232, 242, 0.95)";
+      ctx.fillStyle = "rgba(220, 232, 242, 0.10)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, dishRadius * 0.82, dishRadius * 0.34, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // live text near satellite
+      ctx.save();
+      ctx.fillStyle = "rgba(220, 232, 242, 0.86)";
+      ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
+      ctx.textAlign = sx < cx ? "left" : "right";
+      const tx = sx < cx ? sx + 10 : sx - 10;
+      ctx.fillText(`SAT  El ${look.elDeg.toFixed(1)}°`, tx, sy - 10);
+      ctx.restore();
+
+      if (antennaAzLabel) antennaAzLabel.textContent = `${look.azDeg.toFixed(1)}°`;
+      if (antennaElLabel) antennaElLabel.textContent = `${look.elDeg.toFixed(1)}°`;
+      if (antennaRangeLabel) antennaRangeLabel.textContent = `${look.rangeKm.toFixed(0)} km`;
+      if (antennaStatusLabel) antennaStatusLabel.textContent = passVisible ? "AOS中" : "El 0〜5°";
+    }
+
+    function refineGraphElevationCrossing(satrec, gs, t1, t2, thresholdDeg, targetDirection) {
+      let left = t1.getTime();
+      let right = t2.getTime();
+
+      for (let i = 0; i < 24; i++) {
+        const mid = (left + right) / 2;
+        const leftLook = getLookAnglesFromTle(satrec, new Date(left), gs);
+        const midLook = getLookAnglesFromTle(satrec, new Date(mid), gs);
+
+        if (!leftLook || !midLook) break;
+
+        if (targetDirection === "rise") {
+          if (leftLook.elDeg < thresholdDeg && midLook.elDeg >= thresholdDeg) {
+            right = mid;
+          } else {
+            left = mid;
+          }
+        } else {
+          if (leftLook.elDeg >= thresholdDeg && midLook.elDeg < thresholdDeg) {
+            right = mid;
+          } else {
+            left = mid;
+          }
+        }
+      }
+
+      return new Date((left + right) / 2);
+    }
+
+    function findGraphEdgeCrossing(satrec, gs, centerDate, thresholdDeg, direction) {
+      if (!satrec || !centerDate) return null;
+
+      const stepMs = 10 * 1000;
+      const maxMs = 45 * 60 * 1000;
+      let nearTime = centerDate;
+      let nearLook = getLookAnglesFromTle(satrec, nearTime, gs);
+
+      if (!nearLook) return null;
+
+      if (direction === "before") {
+        for (let dt = stepMs; dt <= maxMs; dt += stepMs) {
+          const farTime = new Date(centerDate.getTime() - dt);
+          const farLook = getLookAnglesFromTle(satrec, farTime, gs);
+          if (!farLook) continue;
+
+          if (farLook.elDeg < thresholdDeg && nearLook.elDeg >= thresholdDeg) {
+            return refineGraphElevationCrossing(satrec, gs, farTime, nearTime, thresholdDeg, "rise");
+          }
+
+          nearTime = farTime;
+          nearLook = farLook;
+        }
+      } else {
+        for (let dt = stepMs; dt <= maxMs; dt += stepMs) {
+          const farTime = new Date(centerDate.getTime() + dt);
+          const farLook = getLookAnglesFromTle(satrec, farTime, gs);
+          if (!farLook) continue;
+
+          if (nearLook.elDeg >= thresholdDeg && farLook.elDeg < thresholdDeg) {
+            return refineGraphElevationCrossing(satrec, gs, nearTime, farTime, thresholdDeg, "set");
+          }
+
+          nearTime = farTime;
+          nearLook = farLook;
+        }
+      }
+
+      return null;
+    }
+
+    function getAzelGraphTimeWindow(satrec, gs, now) {
+      if (!satrec) {
+        return {
+          startMs: now.getTime() - 5 * 60 * 1000,
+          endMs: now.getTime() + 10 * 60 * 1000
+        };
+      }
+
+      const key = [
+        currentTle.line1,
+        currentTle.line2,
+        currentPass.aosDate ? currentPass.aosDate.getTime() : "noaos",
+        currentPass.losDate ? currentPass.losDate.getTime() : "nolos"
+      ].join("|");
+
+      if (azelGraphWindowCache.key !== key) {
+        const startDate = currentPass.aosDate
+          ? findGraphEdgeCrossing(satrec, gs, currentPass.aosDate, AZEL_GRAPH_EDGE_ELEVATION_DEG, "before")
+          : null;
+
+        const endDate = currentPass.losDate
+          ? findGraphEdgeCrossing(satrec, gs, currentPass.losDate, AZEL_GRAPH_EDGE_ELEVATION_DEG, "after")
+          : null;
+
+        azelGraphWindowCache = {
+          key,
+          startDate,
+          endDate
+        };
+      }
+
+      let startMs = azelGraphWindowCache.startDate
+        ? azelGraphWindowCache.startDate.getTime()
+        : now.getTime() - 5 * 60 * 1000;
+
+      let endMs = azelGraphWindowCache.endDate
+        ? azelGraphWindowCache.endDate.getTime()
+        : now.getTime() + 10 * 60 * 1000;
+
+      if (endMs <= startMs) {
+        startMs = now.getTime() - 5 * 60 * 1000;
+        endMs = now.getTime() + 10 * 60 * 1000;
+      }
+
+      return { startMs, endMs };
+    }
+
+    function buildGraphSeriesData(satrec, gs, now) {
+      const graphWindow = getAzelGraphTimeWindow(satrec, gs, now);
+      const startMs = graphWindow.startMs;
+      const endMs = graphWindow.endMs;
+      const nowMs = now.getTime();
+      const drawEndMs = clamp(nowMs, startMs, endMs);
+      const drawFraction = clamp((drawEndMs - startMs) / Math.max(endMs - startMs, 1), 0, 1);
+      const samples = 150;
+      const visibleSamples = Math.floor(samples * drawFraction);
+      const points = [];
+
+      if (satrec && drawFraction > 0) {
+        for (let i = 0; i <= visibleSamples; i++) {
+          const sampleRatio = i / samples;
+          const t = new Date(startMs + (endMs - startMs) * sampleRatio);
+          const look = getLookAnglesFromTle(satrec, t, gs);
+          if (look) {
+            points.push({
+              ratio: sampleRatio,
+              az: look.azDeg,
+              el: look.elDeg
+            });
+          }
+        }
+      }
+
+      return { startMs, endMs, nowMs, points };
+    }
+
+    function drawSingleTimeSeriesGraph(canvas, container, type) {
+      const canvasInfo = resizeCanvasToContainer(canvas, container);
+      if (!canvasInfo) return;
+
+      const { ctx, width, height } = canvasInfo;
+      ctx.clearRect(0, 0, width, height);
+
+      const bg = ctx.createLinearGradient(0, 0, 0, height);
+      bg.addColorStop(0, "#061926");
+      bg.addColorStop(1, "#02080d");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+
+      const satrec = orbitMapState.satrec;
+      const gs = getGroundStationSetting();
+      const now = new Date();
+      const lookNow = satrec ? getLookAnglesFromTle(satrec, now, gs) : null;
+      const series = buildGraphSeriesData(satrec, gs, now);
+
+      const leftPad = 18;
+      const rightPad = 4;
+      const topPad = 12;
+      const bottomPad = 14;
+      const plotW = Math.max(1, width - leftPad - rightPad);
+      const plotH = Math.max(1, height - topPad - bottomPad);
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(95, 118, 132, 0.30)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(leftPad, topPad, plotW, plotH);
+      ctx.restore();
+
+      const isAz = type === "az";
+      function yFromValue(v) {
+        if (isAz) {
+          return topPad + (360 - normalizeDeg(v)) / 360 * plotH;
+        }
+        return topPad + (90 - clamp(v, -5, 90)) / 95 * plotH;
+      }
+
+      // horizontal guide lines
+      ctx.save();
+      ctx.lineWidth = 1;
+      if (isAz) {
+        [0, 90, 180, 270, 360].forEach((val) => {
+          const y = yFromValue(val === 360 ? 360 : val);
+          ctx.strokeStyle = "rgba(95, 118, 132, 0.22)";
+          ctx.beginPath();
+          ctx.moveTo(leftPad, y);
+          ctx.lineTo(leftPad + plotW, y);
+          ctx.stroke();
+          const label = val === 360 ? "360" : String(val);
+          ctx.fillStyle = "rgba(220, 232, 242, 0.62)";
+          ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
+          ctx.fillText(label, 2, y + 3);
+        });
+      } else {
+        [0, 30, 60, 90].forEach((val) => {
+          const y = yFromValue(val);
+          ctx.strokeStyle = val === AOS_LOS_ELEVATION_THRESHOLD_DEG
+            ? "rgba(43, 224, 95, 0.42)"
+            : "rgba(95, 118, 132, 0.22)";
+          ctx.setLineDash(val === AOS_LOS_ELEVATION_THRESHOLD_DEG ? [5, 4] : []);
+          ctx.beginPath();
+          ctx.moveTo(leftPad, y);
+          ctx.lineTo(leftPad + plotW, y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = val === AOS_LOS_ELEVATION_THRESHOLD_DEG
+            ? "rgba(43, 224, 95, 0.78)"
+            : "rgba(220, 232, 242, 0.62)";
+          ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
+          ctx.fillText(String(val), 3, y + 3);
+        });
+      }
+      ctx.restore();
+
+      // series line
+      if (series.points.length > 1) {
+        ctx.save();
+        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = isAz ? "rgba(40, 217, 232, 0.95)" : "rgba(242, 164, 0, 0.95)";
+        ctx.shadowColor = isAz ? "rgba(40, 217, 232, 0.45)" : "rgba(242, 164, 0, 0.45)";
+        ctx.shadowBlur = 5;
+        ctx.beginPath();
+        series.points.forEach((p, i) => {
+          const x = leftPad + plotW * p.ratio;
+          const y = yFromValue(isAz ? p.az : p.el);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // current time cursor
+      const nowX = leftPad + plotW * clamp((series.nowMs - series.startMs) / Math.max(series.endMs - series.startMs, 1), 0, 1);
+      ctx.save();
+      ctx.strokeStyle = "rgba(220, 232, 242, 0.60)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(nowX, topPad);
+      ctx.lineTo(nowX, topPad + plotH);
+      ctx.stroke();
+      ctx.restore();
+
+      // current point marker only when display-visible
+      const graphNowVisible = lookNow && lookNow.elDeg >= TRACKING_DISPLAY_MIN_ELEVATION_DEG;
+      if (graphNowVisible) {
+        const currentValue = isAz ? lookNow.azDeg : lookNow.elDeg;
+        const cy = yFromValue(currentValue);
+        ctx.save();
+        ctx.fillStyle = isAz ? "#28d9e8" : "#f2a400";
+        ctx.strokeStyle = "#fff3c7";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(nowX, cy, 3.8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // x-axis labels (minimal, to avoid clipping)
+      ctx.save();
+      ctx.fillStyle = "rgba(220, 232, 242, 0.55)";
+      ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("開始", leftPad, height - 3);
+      ctx.textAlign = "right";
+      ctx.fillText("終了", leftPad + plotW, height - 3);
+      ctx.restore();
+
+      if (!satrec) {
+        ctx.save();
+        ctx.fillStyle = "rgba(220, 232, 242, 0.72)";
+        ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("TLEを反映してください", width / 2, height / 2 + 4);
+        ctx.restore();
+      }
+
+      return lookNow;
+    }
+
+    function drawAzelGraphs() {
+      const lookNowAz = drawSingleTimeSeriesGraph(azGraphCanvas, azGraphContainer, "az");
+      const lookNowEl = drawSingleTimeSeriesGraph(elGraphCanvas, elGraphContainer, "el");
+      const graphNowVisible = lookNowAz && lookNowAz.elDeg >= TRACKING_DISPLAY_MIN_ELEVATION_DEG;
+      if (graphAzLabel) graphAzLabel.textContent = graphNowVisible ? `${lookNowAz.azDeg.toFixed(1)}°` : "--";
+      if (graphElLabel) graphElLabel.textContent = (lookNowEl && lookNowEl.elDeg >= TRACKING_DISPLAY_MIN_ELEVATION_DEG) ? `${lookNowEl.elDeg.toFixed(1)}°` : "--";
+    }
+
+    function drawTrackingDisplays() {
+      drawAntennaVisual();
+      drawAzelGraphs();
+    }
+
+
+    function resetAzelGraphWindowCache() {
+      azelGraphWindowCache = {
+        key: "",
+        startDate: null,
+        endDate: null
+      };
+    }
+
+    function clearTrackingLabels() {
+      if (antennaAzLabel) antennaAzLabel.textContent = "--";
+      if (antennaElLabel) antennaElLabel.textContent = "--";
+      if (antennaRangeLabel) antennaRangeLabel.textContent = "--";
+      if (antennaStatusLabel) antennaStatusLabel.textContent = "更新中";
+      if (graphAzLabel) graphAzLabel.textContent = "--";
+      if (graphElLabel) graphElLabel.textContent = "--";
+    }
+
+    function resetTrackingForTleChange() {
+      resetAzelGraphWindowCache();
+
+      // 新しいTLEのSGP4計算が終わるまで、古い衛星位置・グラフを表示し続けない。
+      orbitMapState.satrec = null;
+      orbitMapState.track = [];
+      orbitMapState.periodMin = null;
+      orbitMapState.lastTrackUpdate = 0;
+      orbitMapState.message = "TLE再計算中";
+
+      clearTrackingLabels();
+      drawTrackingDisplays();
+    }
+
+    /* =========================
+       Orbit Map（World Map / Ground Track）
+    ========================= */
+
+    const orbitMapCanvas = document.getElementById("orbit-map-canvas");
+    const orbitMapContainer = document.getElementById("orbit-map-container");
+    const orbitMapGsLabel = document.getElementById("orbit-map-gs-label");
+    const orbitMapSatLabel = document.getElementById("orbit-map-sat-label");
+    const orbitMapPeriodLabel = document.getElementById("orbit-map-period-label");
+    const orbitMapModeButton = document.getElementById("orbit-map-mode-button");
+
+    let orbitMapViewMode = "world";
+    let orbitMapView = {
+      centerLon: 0,
+      centerLat: 0,
+      lonSpan: 360,
+      latSpan: 180
+    };
+
+    let orbitMapState = {
+      satrec: null,
+      track: [],
+      periodMin: null,
+      lastTrackUpdate: 0,
+      message: "TLE読込待ち"
+    };
+
+    const SIMPLE_WORLD_LAND = [
+      // North America
+      [[-168, 72], [-140, 70], [-125, 58], [-123, 48], [-108, 31], [-97, 25], [-82, 25], [-67, 45], [-52, 48], [-62, 58], [-94, 72], [-130, 74]],
+      // South America
+      [[-82, 12], [-70, 8], [-52, -5], [-35, -20], [-43, -55], [-64, -54], [-75, -35], [-81, -10]],
+      // Greenland
+      [[-52, 83], [-22, 75], [-33, 60], [-55, 59], [-73, 68]],
+      // Europe + Asia
+      [[-10, 36], [5, 55], [32, 70], [70, 72], [100, 62], [135, 56], [170, 64], [178, 50], [140, 34], [120, 18], [100, 6], [75, 8], [45, 26], [25, 36], [5, 36]],
+      // Africa
+      [[-18, 35], [8, 36], [34, 30], [51, 10], [43, -12], [30, -34], [14, -35], [-5, -20], [-17, 5]],
+      // Australia
+      [[112, -11], [136, -10], [154, -26], [146, -43], [119, -35]],
+      // Antarctica
+      [[-180, -72], [-120, -76], [-60, -73], [0, -78], [60, -72], [120, -76], [180, -72], [180, -90], [-180, -90]],
+      // Japan area accent
+      [[128, 32], [132, 35], [137, 38], [142, 43], [145, 44], [143, 36], [138, 33], [132, 31]],
+      // Southeast Asia islands rough
+      [[96, 7], [116, 8], [126, 0], [122, -8], [105, -6]]
+    ];
+
+    function resizeOrbitMapCanvas() {
+      if (!orbitMapCanvas || !orbitMapContainer) return;
+
+      const rect = orbitMapContainer.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(1, Math.floor(rect.width));
+      const height = Math.max(1, Math.floor(rect.height));
+
+      if (orbitMapCanvas.width !== Math.floor(width * dpr) || orbitMapCanvas.height !== Math.floor(height * dpr)) {
+        orbitMapCanvas.width = Math.floor(width * dpr);
+        orbitMapCanvas.height = Math.floor(height * dpr);
+        orbitMapCanvas.style.width = `${width}px`;
+        orbitMapCanvas.style.height = `${height}px`;
+      }
+    }
+
+    function normalizeLon(lon) {
+      return ((lon + 180) % 360 + 360) % 360 - 180;
+    }
+
+    function updateOrbitMapModeButton() {
+      if (!orbitMapModeButton) return;
+      orbitMapModeButton.textContent = orbitMapViewMode === "world"
+        ? "衛星付近を拡大"
+        : "世界全体を表示";
+    }
+
+    if (orbitMapModeButton) {
+      orbitMapModeButton.addEventListener("click", () => {
+        orbitMapViewMode = orbitMapViewMode === "world" ? "follow" : "world";
+        updateOrbitMapModeButton();
+      });
+      updateOrbitMapModeButton();
+    }
+
+    function setOrbitMapView(width, height, satPoint) {
+      if (orbitMapViewMode === "follow" && satPoint) {
+        const lonSpan = 80;
+        const latSpan = clamp(lonSpan * height / Math.max(width, 1), 28, 70);
+
+        orbitMapView = {
+          centerLon: satPoint.lon,
+          centerLat: clamp(satPoint.lat, -70 + latSpan / 2, 70 - latSpan / 2),
+          lonSpan,
+          latSpan
+        };
+      } else {
+        orbitMapView = {
+          centerLon: 0,
+          centerLat: 0,
+          lonSpan: 360,
+          latSpan: 180
+        };
+      }
+    }
+
+    function lonLatToMapXY(lon, lat, width, height) {
+      const dxLon = normalizeLon(lon - orbitMapView.centerLon);
+      const x = (dxLon + orbitMapView.lonSpan / 2) / orbitMapView.lonSpan * width;
+      const y = (orbitMapView.centerLat + orbitMapView.latSpan / 2 - lat) / orbitMapView.latSpan * height;
+      return { x, y };
+    }
+
+    function propagateToLatLon(satrec, date) {
+      if (!window.satellite || !satrec) return null;
+
+      const pv = satellite.propagate(satrec, date);
+      if (!pv || !pv.position) return null;
+
+      const gmst = satellite.gstime(date);
+      const gd = satellite.eciToGeodetic(pv.position, gmst);
+
+      return {
+        lat: satellite.radiansToDegrees(gd.latitude),
+        lon: normalizeLon(satellite.radiansToDegrees(gd.longitude)),
+        altKm: gd.height
+      };
+    }
+
+    function getOrbitPeriodMinutes(satrec) {
+      if (!satrec || !satrec.no) return 96;
+      return (2 * Math.PI) / satrec.no;
+    }
+
+    function buildGroundTrack(satrec) {
+      const periodMin = getOrbitPeriodMinutes(satrec);
+      const now = new Date();
+      const samples = 180;
+      const track = [];
+
+      for (let i = 0; i <= samples; i++) {
+        const t = new Date(now.getTime() + (periodMin * 60 * 1000) * (i / samples));
+        const p = propagateToLatLon(satrec, t);
+        if (p && Number.isFinite(p.lat) && Number.isFinite(p.lon)) {
+          track.push(p);
+        }
+      }
+
+      orbitMapState.track = track;
+      orbitMapState.periodMin = periodMin;
+      orbitMapState.lastTrackUpdate = Date.now();
+    }
+
+    async function refreshOrbitMap() {
+      if (!currentTle || !currentTle.line1 || !currentTle.line2) return;
+
+      try {
+        await waitForSatelliteJs();
+        const satrec = satellite.twoline2satrec(currentTle.line1, currentTle.line2);
+
+        if (satrec.error && satrec.error !== 0) {
+          throw new Error("TLE error");
+        }
+
+        orbitMapState.satrec = satrec;
+        orbitMapState.message = "";
+        resetAzelGraphWindowCache();
+        buildGroundTrack(satrec);
+        drawTrackingDisplays();
+      } catch (error) {
+        console.error(error);
+        orbitMapState.satrec = null;
+        orbitMapState.track = [];
+        orbitMapState.periodMin = null;
+        orbitMapState.message = "TLE/SGP4エラー";
+        resetAzelGraphWindowCache();
+        clearTrackingLabels();
+        drawTrackingDisplays();
+      }
+    }
+
+    function drawWorldMap(ctx, width, height) {
+      ctx.clearRect(0, 0, width, height);
+
+      const grd = ctx.createLinearGradient(0, 0, 0, height);
+      grd.addColorStop(0, "#061926");
+      grd.addColorStop(1, "#02080d");
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, width, height);
+
+      // latitude / longitude grid
+      ctx.save();
+      ctx.strokeStyle = "rgba(95, 118, 132, 0.25)";
+      ctx.lineWidth = 1;
+
+      const lonStep = orbitMapViewMode === "follow" ? 10 : 30;
+      const latStep = orbitMapViewMode === "follow" ? 10 : 30;
+
+      for (let lon = -180; lon <= 180; lon += lonStep) {
+        const p1 = lonLatToMapXY(lon, -90, width, height);
+        const p2 = lonLatToMapXY(lon, 90, width, height);
+        if ((p1.x >= -width && p1.x <= width * 2) || orbitMapViewMode === "world") {
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        }
+      }
+
+      for (let lat = -80; lat <= 80; lat += latStep) {
+        const p1 = lonLatToMapXY(orbitMapView.centerLon - orbitMapView.lonSpan / 2, lat, width, height);
+        const p2 = lonLatToMapXY(orbitMapView.centerLon + orbitMapView.lonSpan / 2, lat, width, height);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // equator / prime meridian
+      ctx.save();
+      ctx.strokeStyle = "rgba(40, 217, 232, 0.32)";
+      ctx.lineWidth = 1;
+      const eq1 = lonLatToMapXY(orbitMapView.centerLon - orbitMapView.lonSpan / 2, 0, width, height);
+      const eq2 = lonLatToMapXY(orbitMapView.centerLon + orbitMapView.lonSpan / 2, 0, width, height);
+      const pm1 = lonLatToMapXY(0, -90, width, height);
+      const pm2 = lonLatToMapXY(0, 90, width, height);
+      ctx.beginPath();
+      ctx.moveTo(eq1.x, eq1.y);
+      ctx.lineTo(eq2.x, eq2.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(pm1.x, pm1.y);
+      ctx.lineTo(pm2.x, pm2.y);
+      ctx.stroke();
+      ctx.restore();
+
+      // rough land masses
+      ctx.save();
+      ctx.fillStyle = "rgba(34, 76, 67, 0.72)";
+      ctx.strokeStyle = "rgba(98, 180, 153, 0.45)";
+      ctx.lineWidth = 1;
+
+      SIMPLE_WORLD_LAND.forEach(poly => {
+        ctx.beginPath();
+        poly.forEach(([lon, lat], i) => {
+          const p = lonLatToMapXY(lon, lat, width, height);
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        });
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+
+    function drawTrack(ctx, width, height, track) {
+      if (!track || track.length < 2) return;
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(40, 217, 232, 0.95)";
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "rgba(40, 217, 232, 0.75)";
+      ctx.shadowBlur = 8;
+
+      ctx.beginPath();
+      let started = false;
+      let prev = null;
+
+      track.forEach(point => {
+        const p = lonLatToMapXY(point.lon, point.lat, width, height);
+
+        if (!prev || Math.abs(p.x - prev.x) > width * 0.5) {
+          if (started) ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          started = true;
+        } else {
+          ctx.lineTo(p.x, p.y);
+        }
+
+        prev = p;
+      });
+
+      if (started) ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawPoint(ctx, x, y, radius, fill, stroke, label) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = fill;
+      ctx.shadowColor = fill;
+      ctx.shadowBlur = 10;
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = stroke;
+      ctx.stroke();
+
+      if (label) {
+        ctx.shadowBlur = 0;
+        ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.fillStyle = "#dce8f2";
+        ctx.fillText(label, x + 8, y - 8);
+      }
+      ctx.restore();
+    }
+
+    function drawOrbitMap() {
+      if (!orbitMapCanvas) return;
+
+      drawTrackingDisplays();
+
+      resizeOrbitMapCanvas();
+
+      const dpr = window.devicePixelRatio || 1;
+      const ctx = orbitMapCanvas.getContext("2d");
+      const width = orbitMapCanvas.width / dpr;
+      const height = orbitMapCanvas.height / dpr;
+      const mapBottomInset = 34;
+      const mapHeight = Math.max(1, height - mapBottomInset);
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+
+      const satForView = orbitMapState.satrec ? propagateToLatLon(orbitMapState.satrec, new Date()) : null;
+      setOrbitMapView(width, mapHeight, satForView);
+      drawWorldMap(ctx, width, mapHeight);
+
+      // 下部の情報チップと軌道表示が被らないように、地図描画だけ少し上で止める
+      ctx.save();
+      ctx.fillStyle = "rgba(2, 8, 12, 0.72)";
+      ctx.fillRect(0, mapHeight, width, height - mapHeight);
+      ctx.restore();
+
+      const gs = getGroundStationSetting();
+      const gsPos = lonLatToMapXY(gs.lon, gs.lat, width, mapHeight);
+      drawPoint(ctx, gsPos.x, gsPos.y, 4.5, "#2be05f", "#dfffe8", gs.name);
+
+      if (orbitMapGsLabel) {
+        orbitMapGsLabel.textContent = `${gs.lat.toFixed(2)}, ${gs.lon.toFixed(2)}`;
+      }
+
+      if (!orbitMapState.satrec) {
+        ctx.save();
+        ctx.fillStyle = "rgba(220, 232, 242, 0.7)";
+        ctx.font = "13px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(orbitMapState.message || "TLEを反映してください", width / 2, mapHeight / 2);
+        ctx.restore();
+
+        if (orbitMapSatLabel) orbitMapSatLabel.textContent = "--";
+        if (orbitMapPeriodLabel) orbitMapPeriodLabel.textContent = "--";
+        requestAnimationFrame(drawOrbitMap);
+        return;
+      }
+
+      // Recalculate one-orbit ground track occasionally so the leading point follows current time.
+      if (Date.now() - orbitMapState.lastTrackUpdate > 30000) {
+        buildGroundTrack(orbitMapState.satrec);
+      }
+
+      drawTrack(ctx, width, mapHeight, orbitMapState.track);
+
+      const sat = satForView;
+      if (sat) {
+        const satPos = lonLatToMapXY(sat.lon, sat.lat, width, mapHeight);
+        drawPoint(ctx, satPos.x, satPos.y, 5.5, "#f2a400", "#fff3c7", currentTle.name || "SAT");
+
+        if (orbitMapSatLabel) {
+          const modeLabel = orbitMapViewMode === "follow" ? "追尾" : "全体";
+          orbitMapSatLabel.textContent = `${sat.lat.toFixed(2)}, ${sat.lon.toFixed(2)} / ${modeLabel}`;
+        }
+      }
+
+      if (orbitMapPeriodLabel) {
+        orbitMapPeriodLabel.textContent = orbitMapState.periodMin ? `${orbitMapState.periodMin.toFixed(1)} min` : "--";
+      }
+
+      requestAnimationFrame(drawOrbitMap);
+    }
+
+    window.addEventListener("resize", () => {
+      resizeOrbitMapCanvas();
+      drawTrackingDisplays();
+      drawRssiGraph();
+      drawTelemetryGraphs();
+      drawOrbitMap();
+    });
+
+
+    function getSelectedTleSource() {
+      const checked = document.querySelector('input[name="tle-source"]:checked');
+      return checked ? checked.value : "sat1";
+    }
+
+    function setTleSource(source) {
+      const isSat1 = source === "sat1";
+
+      tleInput.readOnly = isSat1;
+      applyTleButton.disabled = isSat1;
+
+      if (isSat1) {
+        generateSat1Tle();
+      } else {
+        tleInput.readOnly = false;
+        applyTleButton.disabled = false;
+        tleInput.value = "";
+
+        currentTle = { name: "CUSTOM-TLE", line1: "", line2: "" };
+        setPassTimes(null, null);
+        resetTrackingForTleChange();
+
+        tleStatus.textContent = "";
+      }
+    }
+
+    tleSourceRadios.forEach((radio) => {
+      radio.addEventListener("change", () => {
+        setTleSource(getSelectedTleSource());
+      });
+    });
+
+
+    applyTleButton.addEventListener("click", async () => {
+      const { line1, line2 } = extractTleLines(tleInput.value);
+
+      if (!line1 || !line2) {
+        setPassTimes(null, null);
+        setPassStatus("TLEの1行目・2行目を入力してください。", "red");
+        alert("TLEの形式を確認してください。1行目は「1 」、2行目は「2 」から始まる必要があります。");
+        return;
+      }
+
+      currentTle = {
+        name: "CUSTOM-TLE",
+        line1,
+        line2
+      };
+
+      resetTrackingForTleChange();
+
+      setPassTimesCalculating();
+      setPassStatus("SGP4でAOS/LOSを計算中...", "cyan");
+      console.log("Current TLE:", currentTle);
+
+      try {
+        await waitForSatelliteJs();
+
+        const gs = getGroundStationSetting();
+        const result = findNextPassBySgp4(line1, line2, gs);
+
+        setPassTimes(result.aosDate, result.losDate);
+        setPassStatus(
+          `TLE反映完了：El ${AOS_LOS_ELEVATION_THRESHOLD_DEG}° / 最大El ${PASS_MIN_MAX_ELEVATION_DEG}°以上 / ${gs.name} (${gs.lat.toFixed(4)}, ${gs.lon.toFixed(4)})`,
+          "green"
+        );
+        await refreshOrbitMap();
+      } catch (error) {
+        console.error(error);
+        setPassTimes(null, null);
+        orbitMapState.satrec = null;
+        orbitMapState.track = [];
+        orbitMapState.periodMin = null;
+        orbitMapState.message = "TLE/SGP4エラー";
+        resetAzelGraphWindowCache();
+        clearTrackingLabels();
+        setPassStatus(`エラー：${error.message}`, "red");
+      }
+    });
+
+    /* =========================
+       Initial State
+    ========================= */
+
+    updatePortStatus("disconnected", "未接続");
+    updateFooterPort("未接続");
+
+    resizeOrbitMapCanvas();
+    drawOrbitMap();
+
+    setTleSource("sat1");
+  </script>
+
+    <script>
+      // Poll local data.json (written by receive_data.py) and feed into existing handlers
+      async function pollBackendData() {
+        try {
+          const res = await fetch('data.json?ts=' + Date.now());
+          if (!res.ok) return;
+          const obj = await res.json();
+          if (!obj) return;
+
+          // If hex payload available, convert to bytes and pass to byte handler
+          const packetHex = obj.packet_hex || obj.hex;
+
+          if (packetHex) {
+            const parts = packetHex.split(/\s+/).filter(s => s.length > 0);
+            const bytes = parts.map(h => parseInt(h, 16));
+            if (bytes.length && typeof handleReceivedSerialBytes === 'function') {
+              handleReceivedSerialBytes(new Uint8Array(bytes));
+            }
+          }
+
+          // If decoded text available, pass to text handler
+          if (obj.text && typeof handleReceivedSerialText === 'function') {
+            handleReceivedSerialText(String(obj.text));
+          }
+        } catch (e) {
+          // ignore fetch/parse errors
+        }
+      }
+
+      // Poll 800ms
+      setInterval(pollBackendData, 800);
+      pollBackendData();
+    </script>
+</body>
+</html>
