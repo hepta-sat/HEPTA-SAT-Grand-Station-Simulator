@@ -320,21 +320,235 @@
       display: block;
     }
 
+    .antenna-dom-visual {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      --sat-x: 76%;
+      --sat-y: 43%;
+      --beam-color: #2be05f;
+      --beam-angle: -34deg;
+      --beam-length: 132px;
+      --dish-angle: -28deg;
+    }
+
+    .antenna-dom-visual.hidden {
+      display: none;
+    }
+
+    .antenna-dom-visual::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 74%;
+      width: min(178%, 520px);
+      aspect-ratio: 1 / 0.50;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(43, 224, 95, 0.58);
+      border-radius: 50%;
+      background:
+        radial-gradient(ellipse at 50% 58%, rgba(43, 224, 95, 0.12), rgba(14, 70, 58, 0.24) 42%, rgba(7, 31, 29, 0.92) 75%, rgba(2, 8, 12, 0.03) 76%),
+        linear-gradient(180deg, rgba(20, 80, 70, 0.18), rgba(5, 22, 20, 0.02));
+      box-shadow:
+        inset 0 0 42px rgba(43, 224, 95, 0.12),
+        0 0 30px rgba(43, 224, 95, 0.08);
+    }
+
+    .antenna-dom-grid {
+      position: absolute;
+      left: 50%;
+      top: 74%;
+      width: min(178%, 520px);
+      aspect-ratio: 1 / 0.50;
+      transform: translate(-50%, -50%);
+      background:
+        linear-gradient(90deg, transparent 49.7%, rgba(220, 232, 242, 0.12) 50%, transparent 50.3%),
+        linear-gradient(0deg, transparent 49.5%, rgba(220, 232, 242, 0.10) 50%, transparent 50.5%),
+        repeating-linear-gradient(26deg, transparent 0 48px, rgba(95, 118, 132, 0.075) 49px 50px),
+        repeating-linear-gradient(154deg, transparent 0 48px, rgba(95, 118, 132, 0.075) 49px 50px);
+      border-radius: 50%;
+      box-shadow:
+        inset 0 0 0 1px rgba(43, 224, 95, 0.42),
+        inset 0 0 0 42px rgba(43, 224, 95, 0.032),
+        inset 0 0 0 84px rgba(43, 224, 95, 0.022);
+    }
+
+    .antenna-dom-grid::after {
+      content: "ZENITH";
+      position: absolute;
+      left: 50%;
+      top: -58%;
+      height: 118%;
+      transform: translateX(-50%);
+      border-left: 1px dashed rgba(220, 232, 242, 0.20);
+      color: rgba(220, 232, 242, 0.58);
+      font-family: Consolas, Menlo, monospace;
+      font-size: 8px;
+      line-height: 1;
+      padding-left: 5px;
+      padding-top: 2px;
+      text-shadow: 0 0 8px rgba(2, 8, 13, 0.95);
+    }
+
+    .antenna-dom-mast {
+      position: absolute;
+      left: 50%;
+      top: 68%;
+      width: 3px;
+      height: 42px;
+      transform: translate(-50%, -30px);
+      background: linear-gradient(180deg, rgba(220, 232, 242, 0.86), #4c6f7e);
+      border-radius: 99px;
+      box-shadow: 0 0 10px rgba(40, 217, 232, 0.18);
+    }
+
+    .antenna-dom-mast::before,
+    .antenna-dom-mast::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 4px;
+      width: 21px;
+      height: 1px;
+      transform-origin: left center;
+      background: rgba(220, 232, 242, 0.42);
+    }
+
+    .antenna-dom-mast::before {
+      transform: rotate(-34deg);
+    }
+
+    .antenna-dom-mast::after {
+      transform: rotate(-146deg);
+    }
+
+    .antenna-dom-base {
+      position: absolute;
+      left: 50%;
+      top: 68%;
+      width: 46px;
+      height: 22px;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(40, 217, 232, 0.75);
+      border-radius: 50%;
+      background:
+        radial-gradient(ellipse at 50% 45%, rgba(40, 217, 232, 0.46), rgba(10, 53, 62, 0.78) 70%),
+        rgba(40, 217, 232, 0.22);
+      box-shadow:
+        0 0 14px rgba(40, 217, 232, 0.22),
+        0 12px 0 -8px rgba(40, 217, 232, 0.20);
+    }
+
+    .antenna-dom-base::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 70%;
+      width: 70px;
+      height: 24px;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(40, 217, 232, 0.22);
+      border-radius: 50%;
+      box-shadow: inset 0 0 12px rgba(40, 217, 232, 0.08);
+    }
+
+    .antenna-dom-dish {
+      position: absolute;
+      left: 50%;
+      top: calc(68% - 24px);
+      width: 46px;
+      height: 20px;
+      transform: translate(-50%, -50%) rotate(var(--dish-angle));
+      border: 1px solid rgba(220, 232, 242, 0.82);
+      border-top-width: 2px;
+      border-radius: 50% 50% 46% 46%;
+      background:
+        radial-gradient(ellipse at 50% 55%, rgba(40, 217, 232, 0.12), transparent 58%),
+        rgba(2, 8, 12, 0.18);
+      box-shadow: 0 0 10px rgba(220, 232, 242, 0.10);
+    }
+
+    .antenna-dom-dish::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 30px;
+      height: 12px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border-top: 1px solid rgba(220, 232, 242, 0.45);
+      border-bottom: 1px solid rgba(40, 217, 232, 0.18);
+      background: transparent;
+    }
+
+    .antenna-dom-dish::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 51%;
+      width: 7px;
+      height: 7px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: #28d9e8;
+      box-shadow: 0 0 8px rgba(40, 217, 232, 0.5);
+    }
+
+    .antenna-dom-beam {
+      position: absolute;
+      left: 50%;
+      top: calc(68% - 24px);
+      width: var(--beam-length);
+      height: 2px;
+      transform-origin: left center;
+      transform: rotate(var(--beam-angle));
+      background: linear-gradient(90deg, rgba(43, 224, 95, 0.92), rgba(43, 224, 95, 0.38), transparent);
+      box-shadow: 0 0 10px rgba(43, 224, 95, 0.34);
+      opacity: 0.86;
+    }
+
+    .antenna-dom-sat {
+      position: absolute;
+      left: var(--sat-x);
+      top: var(--sat-y);
+      width: 11px;
+      height: 11px;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(223, 255, 232, 0.96);
+      border-radius: 50%;
+      background: #2be05f;
+      box-shadow: 0 0 14px rgba(43, 224, 95, 0.62);
+    }
+
+    .antenna-dom-sat::after {
+      content: "SAT";
+      position: absolute;
+      left: -1px;
+      top: -13px;
+      color: #dce8f2;
+      font-size: 8px;
+      font-family: Consolas, Menlo, monospace;
+      text-shadow: 0 0 8px rgba(2, 8, 13, 0.9);
+    }
+
     .tracking-overlay {
       position: absolute;
       left: 8px;
       right: 8px;
-      bottom: 7px;
+      bottom: 6px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 6px;
       pointer-events: none;
+      z-index: 4;
     }
 
     .tracking-chip {
       min-width: 0;
       border: 1px solid rgba(45, 70, 84, 0.9);
-      background: rgba(3, 10, 15, 0.68);
+      background: rgba(3, 10, 15, 0.78);
       border-radius: 3px;
       padding: 4px 6px;
       color: #b8c8d4;
@@ -1270,6 +1484,14 @@
             <div class="panel-title">衛星・アンテナ追尾ビジュアル</div>
             <div class="panel-body tracking-body" id="antenna-visual-container">
               <canvas id="antenna-visual-canvas" class="tracking-canvas"></canvas>
+              <div class="antenna-dom-visual" id="antenna-dom-visual">
+                <div class="antenna-dom-grid"></div>
+                <div class="antenna-dom-beam"></div>
+                <div class="antenna-dom-mast"></div>
+                <div class="antenna-dom-base"></div>
+                <div class="antenna-dom-dish"></div>
+                <div class="antenna-dom-sat"></div>
+              </div>
               <div class="tracking-overlay">
                 <div class="tracking-chip">Az <span id="antenna-az-label">--</span></div>
                 <div class="tracking-chip">El <span id="antenna-el-label">--</span></div>
@@ -1610,6 +1832,20 @@
     let packetByteBuffer = [];
     let packetLogHistory = [];
     let telemetryHistory = [];
+    const backendTelemetryState = {
+      voltageV: null,
+      temperatureC: null,
+      accX: null,
+      accY: null,
+      accZ: null,
+      gyroX: null,
+      gyroY: null,
+      gyroZ: null,
+      magX: null,
+      magY: null,
+      magZ: null,
+      receivedNumber: null
+    };
 
     function byteToHex(byte) {
       return Number(byte & 0xFF).toString(16).toUpperCase().padStart(2, "0");
@@ -1764,6 +2000,120 @@
       drawTelemetryGraphs();
     }
 
+    function updateTelemetryDisplayFromObject(source) {
+      if (!source || !isTelemetryDisplayAllowed()) return;
+
+      const decoded = {
+        modeText: source.modeText || "NORMAL",
+        modeClassName: source.modeClassName || "normal",
+        voltageV: Number(source.voltageV),
+        temperatureC: Number(source.temperatureC || 0),
+        accX: Number(source.accX || 0),
+        accY: Number(source.accY || 0),
+        accZ: Number(source.accZ || 0),
+        gyroX: Number(source.gyroX || 0),
+        gyroY: Number(source.gyroY || 0),
+        gyroZ: Number(source.gyroZ || 0),
+        magX: Number(source.magX || 0),
+        magY: Number(source.magY || 0),
+        magZ: Number(source.magZ || 0)
+      };
+
+      if (!Number.isFinite(decoded.voltageV)) return;
+
+      if (packetUi.tmModeValue) {
+        packetUi.tmModeValue.textContent = decoded.modeText;
+        packetUi.tmModeValue.className = `tm-status-main ${decoded.modeClassName}`.trim();
+      }
+
+      setTelemetryText(packetUi.tmVoltageValue, `${decoded.voltageV.toFixed(2)} V`);
+      setTelemetryText(packetUi.tmVoltageRaw, "raw: text telemetry");
+      setTelemetryText(packetUi.tmTempValue, `${decoded.temperatureC.toFixed(1)} °C`);
+      setTelemetryText(packetUi.tmTempRaw, "raw: text telemetry");
+
+      setTelemetryText(packetUi.tmAccXValue, `${decoded.accX.toFixed(2)} m/s²`);
+      setTelemetryText(packetUi.tmAccYValue, `${decoded.accY.toFixed(2)} m/s²`);
+      setTelemetryText(packetUi.tmAccZValue, `${decoded.accZ.toFixed(2)} m/s²`);
+
+      setTelemetryText(packetUi.tmGyroXValue, `${decoded.gyroX.toFixed(1)} °/s`);
+      setTelemetryText(packetUi.tmGyroYValue, `${decoded.gyroY.toFixed(1)} °/s`);
+      setTelemetryText(packetUi.tmGyroZValue, `${decoded.gyroZ.toFixed(1)} °/s`);
+
+      setTelemetryText(packetUi.tmMagXValue, `${decoded.magX.toFixed(1)} µT`);
+      setTelemetryText(packetUi.tmMagYValue, `${decoded.magY.toFixed(1)} µT`);
+      setTelemetryText(packetUi.tmMagZValue, `${decoded.magZ.toFixed(1)} µT`);
+
+      telemetryHistory.push({
+        time: Date.now(),
+        modeText: decoded.modeText,
+        voltageV: decoded.voltageV,
+        temperatureC: decoded.temperatureC,
+        accX: decoded.accX,
+        accY: decoded.accY,
+        accZ: decoded.accZ,
+        gyroX: decoded.gyroX,
+        gyroY: decoded.gyroY,
+        gyroZ: decoded.gyroZ,
+        magX: decoded.magX,
+        magY: decoded.magY,
+        magZ: decoded.magZ
+      });
+      if (telemetryHistory.length > 1200) telemetryHistory = telemetryHistory.slice(-1200);
+      drawTelemetryGraphs();
+    }
+
+    function updateTelemetryDisplayFromBackendText(text) {
+      const line = String(text || "").trim();
+      if (!line) return false;
+
+      const match = line.match(/^(V|T|TEMP|AX|AY|AZ|GX|GY|GZ|MX|MY|MZ|NUM)\s*=\s*([-+]?\d+(?:\.\d+)?)$/i);
+      if (!match) return false;
+
+      const key = match[1].toUpperCase();
+      const value = Number(match[2]);
+      if (!Number.isFinite(value)) return false;
+
+      const keyMap = {
+        V: "voltageV",
+        T: "temperatureC",
+        TEMP: "temperatureC",
+        AX: "accX",
+        AY: "accY",
+        AZ: "accZ",
+        GX: "gyroX",
+        GY: "gyroY",
+        GZ: "gyroZ",
+        MX: "magX",
+        MY: "magY",
+        MZ: "magZ",
+        NUM: "receivedNumber"
+      };
+
+      backendTelemetryState[keyMap[key]] = value;
+
+      if (key === "NUM") {
+        telemetryHistory.push({
+          time: Date.now(),
+          receivedNumber: value
+        });
+        if (telemetryHistory.length > 1200) telemetryHistory = telemetryHistory.slice(-1200);
+        drawTelemetryGraphs();
+        return true;
+      }
+
+      if (
+        backendTelemetryState.voltageV === null ||
+        backendTelemetryState.accX === null ||
+        backendTelemetryState.accY === null ||
+        backendTelemetryState.accZ === null
+      ) {
+        return true;
+      }
+
+      updateTelemetryDisplayFromObject(backendTelemetryState);
+      return true;
+    }
+
     function updatePacketDisplay(packet) {
       if (!packet || !packetUi.logList) return;
 
@@ -1807,8 +2157,7 @@
     }
 
     function isTelemetryDisplayAllowed() {
-      const elevationDeg = getCurrentSatelliteElevationDegForTelemetryGate();
-      return elevationDeg !== null && elevationDeg >= TELEMETRY_DISPLAY_MIN_ELEVATION_DEG;
+      return true;
     }
 
     function clearTelemetryReceiveDisplaysForLowElevation() {
@@ -1915,6 +2264,7 @@
     }
 
     const TELEMETRY_GRAPH_ITEMS = {
+      receivedNumber: { label: "Received", unit: "num", defaultMin: 0, defaultMax: 500, fixed: 0 },
       voltageV: { label: "電圧", unit: "V", defaultMin: 3.0, defaultMax: 4.3, fixed: 2 },
       temperatureC: { label: "温度", unit: "°C", defaultMin: 0, defaultMax: 40, fixed: 1 },
       accX: { label: "加速度 X", unit: "m/s²", defaultMin: -12, defaultMax: 12, fixed: 2 },
@@ -1931,7 +2281,7 @@
     const TELEMETRY_GRAPH_GROUPS = {
       power: {
         tabLabel: "温度 / 電圧",
-        keys: ["temperatureC", "voltageV"]
+        keys: ["receivedNumber", "temperatureC", "voltageV"]
       },
       motion: {
         tabLabel: "角速度 / 加速度",
@@ -1944,6 +2294,7 @@
     };
 
     const TELEMETRY_GRAPH_COLORS = {
+      receivedNumber: { line: "rgba(40, 217, 232, 0.96)", point: "#28d9e8", shadow: "rgba(40, 217, 232, 0.45)" },
       voltageV: { line: "rgba(40, 217, 232, 0.96)", point: "#28d9e8", shadow: "rgba(40, 217, 232, 0.45)" },
       temperatureC: { line: "rgba(242, 164, 0, 0.96)", point: "#f2a400", shadow: "rgba(242, 164, 0, 0.45)" },
       accX: { line: "rgba(43, 224, 95, 0.94)", point: "#2be05f", shadow: "rgba(43, 224, 95, 0.40)" },
@@ -3142,6 +3493,7 @@ ${tle.line2}`;
     const antennaElLabel = document.getElementById("antenna-el-label");
     const antennaRangeLabel = document.getElementById("antenna-range-label");
     const antennaStatusLabel = document.getElementById("antenna-status-label");
+    const antennaDomVisual = document.getElementById("antenna-dom-visual");
     const graphAzLabel = document.getElementById("graph-az-label");
     const graphElLabel = document.getElementById("graph-el-label");
     let THREE_LIB = null;
@@ -3437,6 +3789,148 @@ ${tle.line2}`;
       requestAnimationFrame(animateAntenna3D);
     }
 
+    function drawAntennaFallback2D(look, width, height, displayVisible, passVisible) {
+      const canvasInfo = resizeCanvasToContainer(antennaVisualCanvas, antennaVisualContainer);
+      if (!canvasInfo) return;
+
+      const { ctx } = canvasInfo;
+      ctx.clearRect(0, 0, width, height);
+
+      const bg = ctx.createLinearGradient(0, 0, 0, height);
+      bg.addColorStop(0, "#061926");
+      bg.addColorStop(1, "#02080d");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+
+      const cx = width / 2;
+      const cy = height * 0.72;
+      const radius = Math.max(44, Math.min(width, height) * 0.52);
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(40, 217, 232, 0.18)";
+      ctx.lineWidth = 1;
+      [1, 0.72, 0.44].forEach(scale => {
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, radius * scale, radius * scale * 0.34, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+
+      ctx.strokeStyle = "rgba(220, 232, 242, 0.18)";
+      ["N", "E", "S", "W"].forEach((label, index) => {
+        const angle = -Math.PI / 2 + index * Math.PI / 2;
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * radius * 0.34;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(220, 232, 242, 0.76)";
+        ctx.font = "11px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(label, x, y - 4);
+      });
+      ctx.restore();
+
+      const mastTopY = cy - radius * 0.18;
+      ctx.save();
+      ctx.strokeStyle = "#dce8f2";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + 16);
+      ctx.lineTo(cx, mastTopY);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(40, 217, 232, 0.38)";
+      ctx.strokeStyle = "rgba(220, 232, 242, 0.82)";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 18, 30, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      const activeColor = passVisible ? "#2be05f" : "#2be05f";
+      const lookForDraw = look || { azDeg: 45, elDeg: 18, rangeKm: 0 };
+      const azRad = deg2rad(lookForDraw.azDeg);
+      const elNorm = clamp((lookForDraw.elDeg + 5) / 95, 0, 1);
+      const satRadius = radius * 0.44;
+      const satX = cx + Math.cos(azRad) * satRadius + Math.sin(azRad) * radius * 0.12;
+      const satY = height * 0.44 - elNorm * radius * 0.42 - Math.sin(azRad) * radius * 0.08;
+
+      ctx.save();
+      ctx.translate(cx, mastTopY);
+      ctx.rotate(azRad * 0.45);
+      ctx.strokeStyle = "#dce8f2";
+      ctx.fillStyle = "rgba(220, 232, 242, 0.14)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 22, 10, -deg2rad(clamp(lookForDraw.elDeg, 0, 80)) * 0.55, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      if (look) {
+        ctx.save();
+        ctx.strokeStyle = activeColor;
+        ctx.shadowColor = activeColor;
+        ctx.shadowBlur = 10;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, mastTopY);
+        ctx.lineTo(satX, satY);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.fillStyle = activeColor;
+        ctx.shadowColor = activeColor;
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(satX, satY, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "#fff3c7";
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+        ctx.fillStyle = "#dce8f2";
+        ctx.font = "11px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText("SAT", satX + 10, satY - 8);
+        ctx.restore();
+      } else {
+        ctx.save();
+        ctx.fillStyle = "rgba(220, 232, 242, 0.72)";
+        ctx.font = "12px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("TLE loading", cx, height / 2);
+        ctx.restore();
+      }
+    }
+
+    function updateAntennaDomVisual(look, displayVisible, passVisible) {
+      if (!antennaDomVisual) return;
+
+      antennaDomVisual.classList.remove("hidden");
+
+      const activeColor = passVisible ? "#2be05f" : "#2be05f";
+      const drawLook = look || { azDeg: 45, elDeg: 18 };
+      const azRad = deg2rad(drawLook.azDeg);
+      const elNorm = clamp((drawLook.elDeg + 5) / 95, 0, 1);
+      const satX = 50 + Math.cos(azRad) * 33 + Math.sin(azRad) * 4;
+      const satY = 47 - elNorm * 18 - Math.sin(azRad) * 5;
+      const originX = 50;
+      const originY = 62;
+      const beamAngle = Math.atan2(satY - originY, satX - originX) * 180 / Math.PI;
+      const beamLength = Math.max(72, Math.hypot(satX - originX, satY - originY) * 3.0);
+      const dishAngle = clamp(beamAngle, -72, -8);
+
+      antennaDomVisual.style.setProperty("--sat-x", `${clamp(satX, 16, 86)}%`);
+      antennaDomVisual.style.setProperty("--sat-y", `${clamp(satY, 18, 55)}%`);
+      antennaDomVisual.style.setProperty("--beam-color", passVisible ? activeColor : "#2be05f");
+      antennaDomVisual.style.setProperty("--beam-angle", `${beamAngle.toFixed(1)}deg`);
+      antennaDomVisual.style.setProperty("--beam-length", `${beamLength.toFixed(0)}px`);
+      antennaDomVisual.style.setProperty("--dish-angle", `${dishAngle.toFixed(1)}deg`);
+    }
+
     function drawAntennaVisual() {
       if (!antennaVisualCanvas || !antennaVisualContainer) return;
 
@@ -3449,6 +3943,8 @@ ${tle.line2}`;
       const displayVisible = look && look.elDeg >= TRACKING_DISPLAY_MIN_ELEVATION_DEG;
       const passVisible = look && look.elDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG;
 
+      updateAntennaDomVisual(look, displayVisible, passVisible);
+
       if (!THREE_LIB) {
         if (antennaAzLabel) antennaAzLabel.textContent = look ? `${look.azDeg.toFixed(1)}°` : "--";
         if (antennaElLabel) antennaElLabel.textContent = look ? `${look.elDeg.toFixed(1)}°` : "--";
@@ -3460,6 +3956,7 @@ ${tle.line2}`;
       const THREE = THREE_LIB;
       const state = ensureAntenna3DScene(width, height);
       if (!state) return;
+      if (antennaDomVisual) antennaDomVisual.classList.add("hidden");
 
       if (!look) {
         state.satGroup.visible = false;
@@ -3627,14 +4124,11 @@ ${tle.line2}`;
       const startMs = graphWindow.startMs;
       const endMs = graphWindow.endMs;
       const nowMs = now.getTime();
-      const drawEndMs = clamp(nowMs, startMs, endMs);
-      const drawFraction = clamp((drawEndMs - startMs) / Math.max(endMs - startMs, 1), 0, 1);
       const samples = 150;
-      const visibleSamples = Math.floor(samples * drawFraction);
       const points = [];
 
-      if (satrec && drawFraction > 0) {
-        for (let i = 0; i <= visibleSamples; i++) {
+      if (satrec) {
+        for (let i = 0; i <= samples; i++) {
           const sampleRatio = i / samples;
           const t = new Date(startMs + (endMs - startMs) * sampleRatio);
           const look = getLookAnglesFromTle(satrec, t, gs);
@@ -3789,6 +4283,15 @@ ${tle.line2}`;
         ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "center";
         ctx.fillText("TLEを反映してください", width / 2, height / 2 + 4);
+        ctx.restore();
+      }
+
+      if (satrec && series.points.length === 0) {
+        ctx.save();
+        ctx.fillStyle = "rgba(220, 232, 242, 0.72)";
+        ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("No graph points", width / 2, height / 2 + 4);
         ctx.restore();
       }
 
@@ -4456,16 +4959,27 @@ ${tle.line2}`;
           // If hex payload available, convert to bytes and pass to byte handler
           const packetHex = obj.packet_hex || obj.hex;
 
+          if (obj.telemetry && !obj.packet_hex && typeof updateTelemetryDisplayFromObject === 'function') {
+            updateTelemetryDisplayFromObject(obj.telemetry);
+          }
+
           if (packetHex) {
             const parts = packetHex.split(/\s+/).filter(s => s.length > 0);
             const bytes = parts.map(h => parseInt(h, 16));
-            if (bytes.length && typeof handleReceivedSerialBytes === 'function') {
+            if (bytes.length && bytes[0] === TELEMETRY_PACKET.header && typeof parseTelemetryPacket === 'function') {
+              const payloadLength = bytes[5];
+              const totalLength = 7 + payloadLength;
+              if (bytes.length >= totalLength && typeof updatePacketDisplay === 'function') {
+                updatePacketDisplay(parseTelemetryPacket(bytes.slice(0, totalLength)));
+              }
+            } else if (bytes.length && typeof handleReceivedSerialBytes === 'function') {
               handleReceivedSerialBytes(new Uint8Array(bytes));
             }
           }
 
           // If decoded text available, pass to text handler
           if (obj.text && typeof handleReceivedSerialText === 'function') {
+            updateTelemetryDisplayFromBackendText(String(obj.text));
             handleReceivedSerialText(String(obj.text));
           }
         } catch (e) {

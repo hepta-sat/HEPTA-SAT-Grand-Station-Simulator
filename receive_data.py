@@ -18,6 +18,7 @@ telemetry_state = {
 	"ay": None,
 	"az": None,
 	"voltage": None,
+	"temperature": None,
 	# optional sensors
 	"gx": None,
 	"gy": None,
@@ -51,6 +52,7 @@ def calculate_packet_checksum(bytes_without_header_and_checksum: list[int]) -> i
 
 
 def build_hk_packet(voltage_v: float, ax: float, ay: float, az: float,
+                    temperature_c: float = 0.0,
                     gx: float = 0.0, gy: float = 0.0, gz: float = 0.0,
                     mx: float = 0.0, my: float = 0.0, mz: float = 0.0) -> bytes:
 	global telemetry_sequence
@@ -61,7 +63,7 @@ def build_hk_packet(voltage_v: float, ax: float, ay: float, az: float,
 	payload: list[int] = [
 		0x00,
 		*encode_u16(round(voltage_v * 1000)),
-		*encode_i16(0),  # temperature placeholder
+		*encode_i16(round(temperature_c * 10)),
 		*encode_i16(round(ax * 100)),
 		*encode_i16(round(ay * 100)),
 		*encode_i16(round(az * 100)),
@@ -98,6 +100,7 @@ def parse_telemetry_line(line: str) -> tuple[str | None, float | None]:
 		"my": r"^MY\s*=\s*([-+]?\d+(?:\.\d+)?)$",
 		"mz": r"^MZ\s*=\s*([-+]?\d+(?:\.\d+)?)$",
 		"voltage": r"^V\s*=\s*([-+]?\d+(?:\.\d+)?)$",
+		"temperature": r"^(?:T|TEMP)\s*=\s*([-+]?\d+(?:\.\d+)?)$",
 	}
 
 	for key, pattern in patterns.items():
@@ -119,12 +122,14 @@ def maybe_write_packet_from_sample(timestamp: str) -> None:
 	mx = telemetry_state.get("mx") or 0.0
 	my = telemetry_state.get("my") or 0.0
 	mz = telemetry_state.get("mz") or 0.0
+	temperature = telemetry_state.get("temperature") or 0.0
 
 	packet = build_hk_packet(
 		telemetry_state["voltage"],
 		telemetry_state["ax"],
 		telemetry_state["ay"],
 		telemetry_state["az"],
+		temperature,
 		gx, gy, gz, mx, my, mz,
 	)
 	packet_hex = packet.hex(" ")
@@ -134,6 +139,19 @@ def maybe_write_packet_from_sample(timestamp: str) -> None:
 		"hex": packet_hex,
 		"packet_hex": packet_hex,
 		"packet_text": "HK telemetry sample",
+		"telemetry": {
+			"voltageV": telemetry_state["voltage"],
+			"temperatureC": temperature,
+			"accX": telemetry_state["ax"],
+			"accY": telemetry_state["ay"],
+			"accZ": telemetry_state["az"],
+			"gyroX": gx,
+			"gyroY": gy,
+			"gyroZ": gz,
+			"magX": mx,
+			"magY": my,
+			"magZ": mz,
+		},
 	}
 	try:
 		tmp_path = os.path.join(os.path.dirname(__file__), "data.json.tmp")
