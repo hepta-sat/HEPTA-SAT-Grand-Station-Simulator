@@ -1731,9 +1731,9 @@
     }
 
     // AOS/LOS表示に使う最低仰角。
-    // パスは最大仰角70deg以上のものだけを採用し、AOS/LOS時刻はEl 5deg交差で表示する。
+    // パスはEl 5deg以上で見えるものを採用し、AOS/LOS時刻はEl 5deg交差で表示する。
     const AOS_LOS_ELEVATION_THRESHOLD_DEG = 5;
-    const PASS_MIN_MAX_ELEVATION_DEG = 70;
+    const PASS_MIN_MAX_ELEVATION_DEG = AOS_LOS_ELEVATION_THRESHOLD_DEG;
     const TRACKING_DISPLAY_MIN_ELEVATION_DEG = 0;
 
     // テレメトリ・受信パケット等を画面に反映する最低仰角。
@@ -2063,6 +2063,8 @@
     }
 
     function updateTelemetryDisplayFromBackendText(text) {
+      if (!isTelemetryDisplayAllowed()) return false;
+
       const line = String(text || "").trim();
       if (!line) return false;
 
@@ -2116,6 +2118,7 @@
 
     function updatePacketDisplay(packet) {
       if (!packet || !packetUi.logList) return;
+      if (!isTelemetryDisplayAllowed()) return;
 
       const nowText = formatTime(new Date());
       if (packetUi.header) packetUi.header.textContent = byteToHex(packet.header);
@@ -2157,7 +2160,12 @@
     }
 
     function isTelemetryDisplayAllowed() {
-      return true;
+      if (!currentPass || !currentPass.aosDate || !currentPass.losDate) return false;
+
+      const now = Date.now();
+      const aosTime = currentPass.aosDate.getTime();
+      const losTime = currentPass.losDate.getTime();
+      return Number.isFinite(aosTime) && Number.isFinite(losTime) && now >= aosTime && now <= losTime;
     }
 
     function clearTelemetryReceiveDisplaysForLowElevation() {
@@ -4972,6 +4980,7 @@ ${tle.line2}`;
           if (!res.ok) return;
           const obj = await res.json();
           if (!obj) return;
+          if (typeof isTelemetryDisplayAllowed === 'function' && !isTelemetryDisplayAllowed()) return;
 
           // If hex payload available, convert to bytes and pass to byte handler
           const packetHex = obj.packet_hex || obj.hex;
