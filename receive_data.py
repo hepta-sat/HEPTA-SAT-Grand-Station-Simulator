@@ -1,6 +1,7 @@
 import argparse
 from datetime import datetime
 import re
+import time
 
 import serial
 from serial.tools import list_ports
@@ -18,6 +19,7 @@ telemetry_state = {
 	"ay": None,
 	"az": None,
 	"voltage": None,
+	"rssi": None,
 	"temperature": None,
 	# optional sensors
 	"gx": None,
@@ -29,6 +31,7 @@ telemetry_state = {
 }
 telemetry_sequence = 0
 last_warning_signature = None
+last_rssi_poll_time = 0.0
 
 
 def to_int16(value: int) -> int:
@@ -89,6 +92,10 @@ def build_hk_packet(voltage_v: float, ax: float, ay: float, az: float,
 
 
 def parse_telemetry_line(line: str) -> tuple[str | None, float | None]:
+	rssi_value = parse_rssi_line(line)
+	if rssi_value is not None:
+		return "rssi", rssi_value
+
 	patterns = {
 		"ax": r"^AX\s*=\s*([-+]?\d+(?:\.\d+)?)$",
 		"ay": r"^AY\s*=\s*([-+]?\d+(?:\.\d+)?)$",
@@ -109,6 +116,69 @@ def parse_telemetry_line(line: str) -> tuple[str | None, float | None]:
 			return key, float(match.group(1))
 
 	return None, None
+
+
+def normalize_rssi_dbm(value: float) -> float:
+	# XBee RSSI is normally reported as a negative dBm value, while ATDB
+	# reports only the positive magnitude. Accept both forms for logs/tests.
+	return -value if value > 0 else value
+
+
+def parse_rssi_line(line: str) -> float | None:
+	direct_match = re.match(r"^RSSI\s*[:=]\s*(-?\d{1,3}(?:\.\d+)?)\s*(?:dBm)?$", line, re.IGNORECASE)
+	if direct_match:
+		return normalize_rssi_dbm(float(direct_match.group(1)))
+
+	db_match = re.match(r"^DB\s*[:=]\s*([0-9A-Fa-f]{1,2})$", line, re.IGNORECASE)
+	if db_match:
+		return -float(int(db_match.group(1), 16))
+
+	return None
+
+
+def read_xbee_atdb_rssi(ser: serial.Serial, guard_time_s: float = 1.05) -> float | None:
+	original_timeout = ser.timeout
+	try:
+		ser.timeout = 1.0
+		time.sleep(guard_time_s)
+		ser.reset_input_buffer()
+		ser.write(b"+++")
+		ser.flush()
+		time.sleep(guard_time_s)
+
+		response = ser.read_until(b"\r").decode("ascii", errors="ignore").strip()
+		if response != "OK":
+			return None
+
+		ser.write(b"ATDB\r")
+		ser.flush()
+		db_response = ser.read_until(b"\r").decode("ascii", errors="ignore").strip()
+
+		ser.write(b"ATCN\r")
+		ser.flush()
+		ser.read_until(b"\r")
+
+		if re.fullmatch(r"[0-9A-Fa-f]{1,2}", db_response):
+			return -float(int(db_response, 16))
+		return parse_rssi_line(f"DB={db_response}")
+	except Exception:
+		return None
+	finally:
+		ser.timeout = original_timeout
+
+
+def maybe_poll_xbee_rssi(ser: serial.Serial, interval_s: float) -> float | None:
+	global last_rssi_poll_time
+
+	if interval_s <= 0:
+		return None
+
+	now = time.monotonic()
+	if now - last_rssi_poll_time < interval_s:
+		return None
+
+	last_rssi_poll_time = now
+	return read_xbee_atdb_rssi(ser)
 
 
 def maybe_write_packet_from_sample(timestamp: str) -> None:
@@ -139,6 +209,7 @@ def maybe_write_packet_from_sample(timestamp: str) -> None:
 		"hex": packet_hex,
 		"packet_hex": packet_hex,
 		"packet_text": "HK telemetry sample",
+		"rssi": telemetry_state.get("rssi"),
 		"telemetry": {
 			"voltageV": telemetry_state["voltage"],
 			"temperatureC": temperature,
@@ -239,6 +310,12 @@ def parse_args() -> argparse.Namespace:
 		action="store_true",
 		help="アップリンク送信時にCRLFを付与する",
 	)
+	parser.add_argument(
+		"--rssi-atdb-interval",
+		type=float,
+		default=5.0,
+		help="Poll local XBee ATDB RSSI every N seconds. 0 disables polling.",
+	)
 	return parser.parse_args()
 
 
@@ -269,13 +346,35 @@ def format_payload(data: bytes, use_hex: bool) -> str:
 		return f"<binary> {data.hex(' ')}"
 
 
-def write_received_data(timestamp: str, payload: bytes, formatted: str) -> None:
+def write_received_data(timestamp: str, payload: bytes, formatted: str, rssi: float | None = None) -> None:
 	packet_hex = payload.hex(" ")
 	data_obj = {
 		"timestamp": timestamp,
 		"text": formatted,
 		"hex": packet_hex,
 		"packet_text": formatted,
+	}
+	if rssi is not None:
+		data_obj["rssi"] = rssi
+	try:
+		tmp_path = os.path.join(os.path.dirname(__file__), "data.json.tmp")
+		out_path = os.path.join(os.path.dirname(__file__), "data.json")
+		with open(tmp_path, "w", encoding="utf-8") as f:
+			json.dump(data_obj, f, ensure_ascii=False)
+			f.flush()
+			os.fsync(f.fileno())
+		os.replace(tmp_path, out_path)
+	except Exception:
+		print("[WARN] failed to write data.json")
+
+
+def write_rssi_data(timestamp: str, rssi: float) -> None:
+	data_obj = {
+		"timestamp": timestamp,
+		"text": f"RSSI={rssi:.0f}",
+		"hex": "",
+		"packet_text": f"RSSI={rssi:.0f}",
+		"rssi": rssi,
 	}
 	try:
 		tmp_path = os.path.join(os.path.dirname(__file__), "data.json.tmp")
@@ -313,6 +412,11 @@ def main() -> None:
 			while True:
 				payload = ser.readline()
 				if not payload:
+					timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+					rssi_value = maybe_poll_xbee_rssi(ser, args.rssi_atdb_interval)
+					if rssi_value is not None:
+						telemetry_state["rssi"] = rssi_value
+						write_rssi_data(timestamp, rssi_value)
 					continue
 
 				timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -320,10 +424,21 @@ def main() -> None:
 				print(f"[{timestamp}] {formatted}")
 
 				line = formatted.strip()
+				if args.rssi_atdb_interval > 0 and line == "OK":
+					continue
+				if args.rssi_atdb_interval > 0 and re.fullmatch(r"[0-9A-Fa-f]{1,2}", line):
+					rssi_value = -float(int(line, 16))
+					telemetry_state["rssi"] = rssi_value
+					write_rssi_data(timestamp, rssi_value)
+					continue
+
 				field_name, field_value = parse_telemetry_line(line)
 				if field_name is not None and field_value is not None:
 					telemetry_state[field_name] = field_value
-					maybe_write_packet_from_sample(timestamp)
+					if field_name == "rssi":
+						write_received_data(timestamp, payload, formatted, field_value)
+					else:
+						maybe_write_packet_from_sample(timestamp)
 					warn_if_sample_looks_suspicious(timestamp)
 				else:
 					write_received_data(timestamp, payload, formatted)
