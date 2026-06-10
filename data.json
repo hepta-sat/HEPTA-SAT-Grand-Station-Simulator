@@ -1,1 +1,1 @@
-{"timestamp": "2026-06-10 15:34:08", "text": "text telemetry sample", "hex": "", "packet_text": "text telemetry sample", "rssi": -30.0, "telemetry": {"voltageV": 3.562194, "temperatureC": 0.0, "accX": 0.0, "accY": 0.0, "accZ": 0.0, "gyroX": 0.0, "gyroY": 0.0, "gyroZ": 0.0, "magX": 0.0, "magY": 0.0, "magZ": 0.0}}
+{"timestamp": "2026-06-10 16:15:11", "text": "RSSI=-34", "hex": "", "packet_text": "RSSI=-34", "rssi": -34.0}

@@ -1408,7 +1408,7 @@
   <div class="app">
 
     <header class="header">
-      HEPTA Ground Station（衛星用・環境地上局ソフトウェア）
+      HEPTA Ground Station Simulator
     </header>
 
     <main class="main">
@@ -1469,7 +1469,7 @@
 
         <!-- 中央：地図 -->
         <div class="panel orbit-panel">
-          <div class="panel-title">軌道マップ（地球地図）</div>
+          <div class="panel-title">軌道マップ</div>
 
           <div class="orbit-map-placeholder" id="orbit-map-container">
             <canvas id="orbit-map-canvas" class="orbit-map-canvas"></canvas>
@@ -1541,7 +1541,7 @@
       <section class="bottom-area">
 
         <div class="panel">
-          <div class="panel-title">受信強度 / 通信状態</div>
+          <div class="panel-title">受信強度</div>
           <div class="panel-body link-status-body">
             <div class="link-status-card">
               <div class="link-status-label">RSSI</div>
@@ -1572,7 +1572,7 @@
         </div>
 
         <div class="panel">
-          <div class="panel-title">テレメトリ値</div>
+          <div class="panel-title">テレメトリ</div>
           <div class="panel-body tm-value-body">
             <div class="tm-value-grid">
               <div class="tm-status-card">
@@ -1659,7 +1659,7 @@
         </div>
 
         <div class="panel">
-          <div class="panel-title">コマンド送信 / 送信コマンド一覧</div>
+          <div class="panel-title">コマンド / ACK ログ</div>
           <div class="panel-body command-body">
             <div class="command-input-area">
               <input id="command-input" class="command-input" type="text" placeholder="コマンド入力欄 例: a / b / c" autocomplete="off">
@@ -1669,10 +1669,9 @@
             <div class="command-log">
               <div class="command-log-header">
                 <div>時間</div>
-                <div>送信コマンド</div>
+                <div>送信コマンド/ACK</div>
               </div>
               <div class="command-log-list" id="command-log-list">
-                <div class="command-wait">送信コマンド待ち</div>
               </div>
             </div>
           </div>
@@ -2542,7 +2541,7 @@
         ctx.fillStyle = "rgba(220, 232, 242, 0.58)";
         ctx.font = "9px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("テレメトリ受信待ち", leftPad + plotW / 2, topPad + plotH / 2 + 3);
+        //ctx.fillText("テレメトリ受信待ち", leftPad + plotW / 2, topPad + plotH / 2 + 3);
         ctx.restore();
       }
 
@@ -2684,7 +2683,7 @@
         ctx.fillStyle = "rgba(220, 232, 242, 0.58)";
         ctx.font = "9px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("RSSIデータ待ち", leftPad + plotW / 2, topPad + plotH / 2 + 3);
+        //ctx.fillText("RSSIデータ待ち", leftPad + plotW / 2, topPad + plotH / 2 + 3);
         ctx.restore();
       }
 
