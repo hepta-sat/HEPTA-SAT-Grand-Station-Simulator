@@ -34,6 +34,11 @@ telemetry_state = {
 telemetry_sequence = 0
 last_warning_signature = None
 last_rssi_poll_time = 0.0
+last_command_send_time = 0.0
+last_command_ack: dict | None = None
+last_command_tx: dict | None = None
+COMMAND_ACK_TTL_S = 30.0
+COMMAND_ACK_RSSI_GUARD_S = 4.0
 
 SENSOR_FIELD_NAMES = ("ax", "ay", "az", "gx", "gy", "gz", "mx", "my", "mz")
 
@@ -183,11 +188,81 @@ def maybe_poll_xbee_rssi(ser: serial.Serial, interval_s: float) -> float | None:
 		return None
 
 	now = time.monotonic()
+	if now - last_command_send_time < COMMAND_ACK_RSSI_GUARD_S:
+		return None
+
 	if now - last_rssi_poll_time < interval_s:
 		return None
 
 	last_rssi_poll_time = now
 	return read_xbee_atdb_rssi(ser)
+
+
+def remember_command_ack(timestamp: str, line: str) -> None:
+	global last_command_ack
+
+	match = re.match(r"^SENSOR_MODE\s*=\s*(ON|OFF)$", line.strip(), re.IGNORECASE)
+	if not match:
+		return
+
+	mode = match.group(1).upper()
+	expected_ack = f"SENSOR_MODE = {mode}"
+	now = time.monotonic()
+	if (
+		not last_command_tx
+		or last_command_tx.get("expected_ack") != expected_ack
+		or last_command_tx.get("ack_received")
+		or now - float(last_command_tx.get("sent_monotonic", 0.0)) > COMMAND_ACK_TTL_S
+	):
+		print(f"[status] SENSOR_MODE={mode}")
+		return
+
+	last_command_ack = {
+		"timestamp": timestamp,
+		"text": expected_ack,
+		"mode": mode,
+		"received_monotonic": now,
+	}
+	last_command_tx["ack_received"] = True
+	print(f"[ack] SENSOR_MODE={mode}")
+
+
+def remember_command_tx(command: str, payload: bytes) -> None:
+	global last_command_tx
+
+	expected_ack = None
+	if command.lower() == "a":
+		expected_ack = "SENSOR_MODE = ON"
+	elif command.lower() == "b":
+		expected_ack = "SENSOR_MODE = OFF"
+
+	last_command_tx = {
+		"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+		"command": command,
+		"hex": payload.hex(" "),
+		"expected_ack": expected_ack,
+		"ack_received": False,
+		"sent_monotonic": time.monotonic(),
+	}
+
+
+def attach_recent_command_ack(data_obj: dict) -> None:
+	if not last_command_ack:
+		pass
+	elif time.monotonic() - float(last_command_ack.get("received_monotonic", 0.0)) <= COMMAND_ACK_TTL_S:
+		data_obj["command_ack"] = {
+			"timestamp": last_command_ack.get("timestamp"),
+			"text": last_command_ack.get("text"),
+			"mode": last_command_ack.get("mode"),
+		}
+
+	if last_command_tx and time.monotonic() - float(last_command_tx.get("sent_monotonic", 0.0)) <= COMMAND_ACK_TTL_S:
+		data_obj["command_tx"] = {
+			"timestamp": last_command_tx.get("timestamp"),
+			"command": last_command_tx.get("command"),
+			"hex": last_command_tx.get("hex"),
+			"expected_ack": last_command_tx.get("expected_ack"),
+		}
 
 
 class CommandApiHandler(BaseHTTPRequestHandler):
@@ -219,6 +294,8 @@ class CommandApiHandler(BaseHTTPRequestHandler):
 		self._send_json(404, {"ok": False, "error": "not_found"})
 
 	def do_POST(self) -> None:
+		global last_command_send_time
+
 		if self.path != "/send-command":
 			self._send_json(404, {"ok": False, "error": "not_found"})
 			return
@@ -248,8 +325,10 @@ class CommandApiHandler(BaseHTTPRequestHandler):
 			with self.serial_lock:
 				self.serial_port.write(payload)
 				self.serial_port.flush()
+			last_command_send_time = time.monotonic()
+			remember_command_tx(command, payload)
 			print(f"[uplink] UI command sent: {command!r}")
-			self._send_json(200, {"ok": True, "command": command})
+			self._send_json(200, {"ok": True, "command": command, "hex": payload.hex(" ")})
 		except Exception as exc:
 			print(f"[api] command send failed: {exc}")
 			self._send_json(500, {"ok": False, "error": "send_failed"})
@@ -308,6 +387,7 @@ def maybe_write_packet_from_sample(timestamp: str) -> None:
 			"magZ": mz,
 		},
 	}
+	attach_recent_command_ack(data_obj)
 	try:
 		tmp_path = os.path.join(os.path.dirname(__file__), "data.json.tmp")
 		out_path = os.path.join(os.path.dirname(__file__), "data.json")
@@ -345,6 +425,7 @@ def write_text_telemetry_state(timestamp: str) -> None:
 			"magZ": telemetry_state.get("mz") or 0.0,
 		},
 	}
+	attach_recent_command_ack(data_obj)
 	try:
 		tmp_path = os.path.join(os.path.dirname(__file__), "data.json.tmp")
 		out_path = os.path.join(os.path.dirname(__file__), "data.json")
@@ -451,8 +532,8 @@ def parse_args() -> argparse.Namespace:
 	parser.add_argument(
 		"--command-line-ending",
 		choices=("lf", "crlf", "none"),
-		default="lf",
-		help="Line ending appended to UI commands (default: lf)",
+		default="none",
+		help="Line ending appended to UI commands (default: none)",
 	)
 	return parser.parse_args()
 
@@ -486,6 +567,7 @@ def format_payload(data: bytes, use_hex: bool) -> str:
 
 def write_received_data(timestamp: str, payload: bytes, formatted: str, rssi: float | None = None) -> None:
 	packet_hex = payload.hex(" ")
+	remember_command_ack(timestamp, formatted)
 	data_obj = {
 		"timestamp": timestamp,
 		"text": formatted,
@@ -494,6 +576,7 @@ def write_received_data(timestamp: str, payload: bytes, formatted: str, rssi: fl
 	}
 	if rssi is not None:
 		data_obj["rssi"] = rssi
+	attach_recent_command_ack(data_obj)
 	try:
 		tmp_path = os.path.join(os.path.dirname(__file__), "data.json.tmp")
 		out_path = os.path.join(os.path.dirname(__file__), "data.json")
@@ -514,6 +597,7 @@ def write_rssi_data(timestamp: str, rssi: float) -> None:
 		"packet_text": f"RSSI={rssi:.0f}",
 		"rssi": rssi,
 	}
+	attach_recent_command_ack(data_obj)
 	try:
 		tmp_path = os.path.join(os.path.dirname(__file__), "data.json.tmp")
 		out_path = os.path.join(os.path.dirname(__file__), "data.json")

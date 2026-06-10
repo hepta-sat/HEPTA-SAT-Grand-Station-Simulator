@@ -1,11 +1,12 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
 
 const root = path.resolve(__dirname);
 const preferPort = 8000;
 const indexFile = 'hepta_ground_station_ui_compact_v36_wider_azel_graph.html';
+let receiveBackend = null;
 
 function contentTypeFor(file) {
   const ext = path.extname(file).toLowerCase();
@@ -20,6 +21,65 @@ function contentTypeFor(file) {
     case '.wasm': return 'application/wasm';
     default: return 'application/octet-stream';
   }
+}
+
+function startReceiveBackend() {
+  const pythonCmd = process.env.PYTHON || 'python';
+  const args = [
+    path.join(root, 'receive_data.py'),
+    '--command-line-ending',
+    'none'
+  ];
+
+  receiveBackend = spawn(pythonCmd, args, {
+    cwd: root,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+    env: {
+      ...process.env,
+      PYTHONIOENCODING: 'utf-8'
+    }
+  });
+
+  let sawSerialPermissionError = false;
+
+  function writeBackendOutput(stream, chunk) {
+    const text = chunk.toString('utf8');
+    if (text.includes('PermissionError') || text.includes('could not open port')) {
+      sawSerialPermissionError = true;
+    }
+    stream.write(`[receive_data] ${text}`);
+  }
+
+  receiveBackend.stdout.on('data', (chunk) => {
+    writeBackendOutput(process.stdout, chunk);
+  });
+
+  receiveBackend.stderr.on('data', (chunk) => {
+    writeBackendOutput(process.stderr, chunk);
+  });
+
+  receiveBackend.on('exit', (code, signal) => {
+    const reason = signal ? `signal ${signal}` : `code ${code}`;
+    console.log(`[receive_data] exited (${reason})`);
+    if (sawSerialPermissionError) {
+      console.log('[receive_data] COM port is busy. Close old browser tabs using Web Serial, Arduino IDE, TeraTerm, PuTTY, VS Code serial monitor, or another receive_data.py, then run npm start again.');
+      console.log('[receive_data] If it still fails, unplug/replug the USB serial adapter.');
+    }
+    receiveBackend = null;
+  });
+
+  receiveBackend.on('error', (err) => {
+    console.log(`[receive_data] failed to start: ${err.message || err}`);
+  });
+
+  console.log(`[receive_data] starting: ${pythonCmd} ${args.map(arg => `"${arg}"`).join(' ')}`);
+}
+
+function stopReceiveBackend() {
+  if (!receiveBackend) return;
+  receiveBackend.kill();
+  receiveBackend = null;
 }
 
 function createServer() {
@@ -86,6 +146,7 @@ function tryListen(port) {
 
     const url = `http://localhost:${info.port}/${indexFile}`;
     console.log(`Serving ${root} on ${url}`);
+    startReceiveBackend();
 
     // Open default browser on Windows, macOS, Linux
     const startCmd = process.platform === 'win32' ? `start "" "${url}"` : process.platform === 'darwin' ? `open "${url}"` : `xdg-open "${url}"`;
@@ -97,3 +158,13 @@ function tryListen(port) {
     process.exit(1);
   }
 })();
+
+process.on('SIGINT', () => {
+  stopReceiveBackend();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  stopReceiveBackend();
+  process.exit(0);
+});

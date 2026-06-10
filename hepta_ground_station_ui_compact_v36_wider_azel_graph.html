@@ -742,8 +742,8 @@
 
     .link-status-body {
       display: grid;
-      grid-template-rows: 1fr 1fr;
-      gap: 8px;
+      grid-template-rows: 1fr;
+      gap: 0;
       padding: 8px;
       text-align: left;
       color: #c8d8e3;
@@ -760,7 +760,7 @@
       display: grid;
       grid-template-columns: 1fr;
       grid-template-rows: auto 1fr;
-      gap: 4px;
+      gap: 7px;
       overflow: hidden;
     }
 
@@ -782,7 +782,7 @@
     .link-status-value {
       color: #28d9e8;
       font-family: Consolas, Menlo, monospace;
-      font-size: 20px;
+      font-size: 34px;
       line-height: 1;
       white-space: nowrap;
       overflow: hidden;
@@ -791,7 +791,7 @@
 
     .link-status-unit {
       color: #8ea3af;
-      font-size: 10px;
+      font-size: 12px;
       white-space: nowrap;
     }
 
@@ -807,7 +807,7 @@
       position: relative;
       min-height: 0;
       height: 100%;
-      margin-top: 5px;
+      margin-top: 7px;
       border: 1px solid rgba(45, 70, 84, 0.65);
       border-radius: 3px;
       overflow: hidden;
@@ -1556,16 +1556,6 @@
               </div>
             </div>
 
-            <div class="link-status-card">
-              <div class="link-status-label">受信コマンド数（このパス）</div>
-              <div>
-                <div class="link-status-value-row">
-                  <div class="link-status-value" id="rx-command-count">0</div>
-                  <div class="link-status-unit">cmd</div>
-                </div>
-                <div class="link-status-sub" id="rx-command-note">AOSごとにリセット</div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1753,8 +1743,9 @@
     let xbeeWriter = null;
 
     const XBEE_BAUD_RATE = 9600;
-    const USE_BACKEND_COMMAND_API = false;
+    const USE_BACKEND_COMMAND_API = true;
     const COMMAND_API_URL = "http://127.0.0.1:8765/send-command";
+    const COMMAND_API_HEALTH_URL = "http://127.0.0.1:8765/health";
     const DIRECT_SERIAL_COMMAND_LINE_ENDING = "";
 
     const portStatusDot = document.getElementById("port-status-dot");
@@ -1777,6 +1768,9 @@
     const commandSendButton = document.getElementById("command-send-button");
     const commandLogList = document.getElementById("command-log-list");
     let commandLogHistory = [];
+    let lastDisplayedCommandAckKey = "";
+    let lastDisplayedCommandTxKey = "";
+    let backendReceiverConnected = false;
 
     const packetUi = {
       header: document.getElementById("pkt-header"),
@@ -2207,7 +2201,13 @@
       }
     }
 
+    function isReceiverConnected() {
+      if (USE_BACKEND_COMMAND_API) return backendReceiverConnected;
+      return typeof isXbeePortOpen === "function" && isXbeePortOpen();
+    }
+
     function isTelemetryDisplayAllowed() {
+      if (!isReceiverConnected()) return false;
       if (!currentPass || !currentPass.aosDate || !currentPass.losDate) return false;
 
       const now = Date.now();
@@ -2218,6 +2218,7 @@
 
     function clearTelemetryReceiveDisplaysForLowElevation() {
       if (rssiValueEl) rssiValueEl.textContent = "--";
+      rssiHistory = [];
 
       if (packetUi.tmModeValue) {
         packetUi.tmModeValue.textContent = "--";
@@ -2246,6 +2247,7 @@
       }
 
       drawTelemetryGraphs();
+      drawRssiGraph();
     }
 
     let telemetryGateWasAllowed = null;
@@ -2778,12 +2780,38 @@
     }
 
 
-    function updateCommandAckLog(text) {
+    function updateCommandAckLog(text, ackKey) {
       const line = String(text || "").trim();
       const match = line.match(/^SENSOR_MODE\s*=\s*(ON|OFF)$/i);
       if (!match) return false;
 
+      const displayKey = ackKey || line.toUpperCase();
+      if (displayKey === lastDisplayedCommandAckKey) return true;
+      lastDisplayedCommandAckKey = displayKey;
+
       updateCommandLog(`ACK SENSOR_MODE=${match[1].toUpperCase()}`);
+      return true;
+    }
+
+    function updateCommandAckLogFromObject(commandAck) {
+      if (!commandAck) return false;
+      const text = typeof commandAck === "string" ? commandAck : commandAck.text;
+      const key = typeof commandAck === "string"
+        ? commandAck.toUpperCase()
+        : `${commandAck.timestamp || ""}|${commandAck.text || ""}`;
+      return updateCommandAckLog(text, key);
+    }
+
+    function updateCommandTxLogFromObject(commandTx) {
+      if (!commandTx) return false;
+      const key = `${commandTx.timestamp || ""}|${commandTx.command || ""}|${commandTx.hex || ""}`;
+      if (key === lastDisplayedCommandTxKey) return true;
+      lastDisplayedCommandTxKey = key;
+
+      const command = String(commandTx.command || "").trim();
+      const hex = String(commandTx.hex || "").trim();
+      const expected = String(commandTx.expected_ack || "").trim();
+      updateCommandLog(`TX ${command}${hex ? ` [${hex}]` : ""}${expected ? ` / wait ${expected}` : ""}`);
       return true;
     }
 
@@ -2873,11 +2901,42 @@
     function configureBackendCommandMode() {
       if (!USE_BACKEND_COMMAND_API) return;
 
+      backendReceiverConnected = false;
       if (selectPortButton) selectPortButton.disabled = true;
-      if (connectPortButton) connectPortButton.disabled = true;
-      selectedPortName.textContent = "receive_data.py API";
-      updatePortStatus("connected", "API送信");
-      updateFooterPort("receive_data.py API");
+      if (connectPortButton) connectPortButton.disabled = false;
+      selectedPortName.textContent = "Python Backend";
+      updatePortStatus("disconnected", "接続待ち");
+      updateFooterPort("Python Backend");
+    }
+
+    async function connectBackendReceiver() {
+      try {
+        updatePortStatus("selected", "接続確認中");
+        const response = await fetch(COMMAND_API_HEALTH_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error(`health ${response.status}`);
+
+        const body = await response.json();
+        if (!body.serial_open) {
+          backendReceiverConnected = false;
+          updateTelemetryReceiveGate();
+          updatePortStatus("disconnected", "Python未接続");
+          alert("receive_data.py は起動していますが、シリアルポートが開いていません。COMポートの使用状況を確認してください。");
+          return false;
+        }
+
+        updatePortStatus("connected", "Python接続中");
+        backendReceiverConnected = true;
+        updateFooterPort("Python Backend / 9600 bps");
+        updateTelemetryReceiveGate();
+        return true;
+      } catch (error) {
+        console.error(error);
+        backendReceiverConnected = false;
+        updateTelemetryReceiveGate();
+        updatePortStatus("disconnected", "Python未起動");
+        alert("Pythonバックエンドに接続できません。npm start から起動し直してください。");
+        return false;
+      }
     }
 
     async function startXbeeReadLoop() {
@@ -2937,6 +2996,7 @@
     initTelemetryGraphSelects();
     drawTelemetryGraphs();
     updateRxCommandCountDisplay();
+    updateTelemetryReceiveGate();
 
     function setPortDot(status) {
       portStatusDot.classList.remove("connected", "selected", "disconnected");
@@ -3091,7 +3151,13 @@
       }
     }
 
-    connectPortButton.addEventListener("click", openSelectedXbeePort);
+    connectPortButton.addEventListener("click", () => {
+      if (USE_BACKEND_COMMAND_API) {
+        connectBackendReceiver();
+      } else {
+        openSelectedXbeePort();
+      }
+    });
 
     async function autoSelectPreviouslyAuthorizedPort() {
       if (!("serial" in navigator)) return;
@@ -5275,7 +5341,8 @@ ${tle.line2}`;
       // Poll local data.json (written by receive_data.py) and feed into existing handlers
       async function pollBackendData() {
         try {
-          if (typeof isXbeePortOpen === 'function' && isXbeePortOpen()) return;
+          if (!USE_BACKEND_COMMAND_API && typeof isXbeePortOpen === 'function' && isXbeePortOpen()) return;
+          if (USE_BACKEND_COMMAND_API && !backendReceiverConnected) return;
 
           const res = await fetch('data.json?ts=' + Date.now());
           if (!res.ok) return;
@@ -5289,6 +5356,14 @@ ${tle.line2}`;
           if (typeof updateRssiDisplay === 'function') {
             const rssiDbm = normalizeRssiDbm(rssi);
             if (rssiDbm !== null) updateRssiDisplay(rssiDbm);
+          }
+
+          if (obj.command_ack && obj.command_tx && typeof updateCommandAckLogFromObject === 'function') {
+            updateCommandAckLogFromObject(obj.command_ack);
+          }
+
+          if (obj.command_tx && typeof updateCommandTxLogFromObject === 'function') {
+            updateCommandTxLogFromObject(obj.command_tx);
           }
 
           if (obj.telemetry && !obj.packet_hex && typeof updateTelemetryDisplayFromObject === 'function') {
@@ -5309,10 +5384,19 @@ ${tle.line2}`;
             }
           }
 
-          // If decoded text available, pass to text handler
+          // If decoded text available, pass to text handler.
+          // command_ack is already handled above; do not feed the same ACK line
+          // through the generic text path on every data.json poll.
           if (obj.text && typeof handleReceivedSerialText === 'function') {
-            updateTelemetryDisplayFromBackendText(String(obj.text));
-            handleReceivedSerialText(String(obj.text));
+            const text = String(obj.text);
+            const ackText = typeof obj.command_ack === 'string'
+              ? obj.command_ack
+              : obj.command_ack?.text;
+            const isCommandAckText = ackText && text.trim().toUpperCase() === String(ackText).trim().toUpperCase();
+            if (!isCommandAckText) {
+              updateTelemetryDisplayFromBackendText(text);
+              handleReceivedSerialText(text);
+            }
           }
         } catch (e) {
           // ignore fetch/parse errors
