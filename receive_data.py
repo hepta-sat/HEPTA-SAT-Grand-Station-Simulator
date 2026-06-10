@@ -1,6 +1,8 @@
 import argparse
 from datetime import datetime
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import re
+import threading
 import time
 
 import serial
@@ -32,6 +34,13 @@ telemetry_state = {
 telemetry_sequence = 0
 last_warning_signature = None
 last_rssi_poll_time = 0.0
+
+SENSOR_FIELD_NAMES = ("ax", "ay", "az", "gx", "gy", "gz", "mx", "my", "mz")
+
+
+def clear_sensor_telemetry_state() -> None:
+	for key in SENSOR_FIELD_NAMES:
+		telemetry_state[key] = None
 
 
 def to_int16(value: int) -> int:
@@ -181,6 +190,81 @@ def maybe_poll_xbee_rssi(ser: serial.Serial, interval_s: float) -> float | None:
 	return read_xbee_atdb_rssi(ser)
 
 
+class CommandApiHandler(BaseHTTPRequestHandler):
+	serial_port: serial.Serial | None = None
+	serial_lock = threading.Lock()
+	line_ending = b"\n"
+
+	def log_message(self, format: str, *args: object) -> None:
+		print(f"[api] {format % args}")
+
+	def _send_json(self, status_code: int, payload: dict) -> None:
+		body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+		self.send_response(status_code)
+		self.send_header("Content-Type", "application/json; charset=utf-8")
+		self.send_header("Content-Length", str(len(body)))
+		self.send_header("Access-Control-Allow-Origin", "*")
+		self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		self.send_header("Access-Control-Allow-Headers", "Content-Type")
+		self.end_headers()
+		self.wfile.write(body)
+
+	def do_OPTIONS(self) -> None:
+		self._send_json(200, {"ok": True})
+
+	def do_GET(self) -> None:
+		if self.path == "/health":
+			self._send_json(200, {"ok": True, "serial_open": self.serial_port is not None and self.serial_port.is_open})
+			return
+		self._send_json(404, {"ok": False, "error": "not_found"})
+
+	def do_POST(self) -> None:
+		if self.path != "/send-command":
+			self._send_json(404, {"ok": False, "error": "not_found"})
+			return
+
+		try:
+			content_length = int(self.headers.get("Content-Length", "0"))
+			raw_body = self.rfile.read(content_length).decode("utf-8")
+			body = json.loads(raw_body) if raw_body else {}
+			command = str(body.get("command", "")).strip()
+		except Exception:
+			self._send_json(400, {"ok": False, "error": "invalid_json"})
+			return
+
+		if not command:
+			self._send_json(400, {"ok": False, "error": "empty_command"})
+			return
+
+		if command.lower() == "b":
+			clear_sensor_telemetry_state()
+
+		if self.serial_port is None or not self.serial_port.is_open:
+			self._send_json(503, {"ok": False, "error": "serial_not_open"})
+			return
+
+		try:
+			payload = command.encode("utf-8") + self.line_ending
+			with self.serial_lock:
+				self.serial_port.write(payload)
+				self.serial_port.flush()
+			print(f"[uplink] UI command sent: {command!r}")
+			self._send_json(200, {"ok": True, "command": command})
+		except Exception as exc:
+			print(f"[api] command send failed: {exc}")
+			self._send_json(500, {"ok": False, "error": "send_failed"})
+
+
+def start_command_api(ser: serial.Serial, host: str, port: int, line_ending: bytes) -> ThreadingHTTPServer:
+	CommandApiHandler.serial_port = ser
+	CommandApiHandler.line_ending = line_ending
+	server = ThreadingHTTPServer((host, port), CommandApiHandler)
+	thread = threading.Thread(target=server.serve_forever, daemon=True)
+	thread.start()
+	print(f"[api] Command API listening on http://{host}:{port}")
+	return server
+
+
 def maybe_write_packet_from_sample(timestamp: str) -> None:
 	# require minimal fields (voltage and accelerations). other sensors default to 0.
 	if telemetry_state["voltage"] is None or telemetry_state["ax"] is None or telemetry_state["ay"] is None or telemetry_state["az"] is None:
@@ -222,6 +306,43 @@ def maybe_write_packet_from_sample(timestamp: str) -> None:
 			"magX": mx,
 			"magY": my,
 			"magZ": mz,
+		},
+	}
+	try:
+		tmp_path = os.path.join(os.path.dirname(__file__), "data.json.tmp")
+		out_path = os.path.join(os.path.dirname(__file__), "data.json")
+		with open(tmp_path, "w", encoding="utf-8") as f:
+			json.dump(data_obj, f, ensure_ascii=False)
+			f.flush()
+			os.fsync(f.fileno())
+		os.replace(tmp_path, out_path)
+	except Exception:
+		print("[WARN] failed to write data.json")
+
+
+def write_text_telemetry_state(timestamp: str) -> None:
+	if telemetry_state["voltage"] is None:
+		return
+
+	temperature = telemetry_state.get("temperature") or 0.0
+	data_obj = {
+		"timestamp": timestamp,
+		"text": "text telemetry sample",
+		"hex": "",
+		"packet_text": "text telemetry sample",
+		"rssi": telemetry_state.get("rssi"),
+		"telemetry": {
+			"voltageV": telemetry_state["voltage"],
+			"temperatureC": temperature,
+			"accX": telemetry_state.get("ax") or 0.0,
+			"accY": telemetry_state.get("ay") or 0.0,
+			"accZ": telemetry_state.get("az") or 0.0,
+			"gyroX": telemetry_state.get("gx") or 0.0,
+			"gyroY": telemetry_state.get("gy") or 0.0,
+			"gyroZ": telemetry_state.get("gz") or 0.0,
+			"magX": telemetry_state.get("mx") or 0.0,
+			"magY": telemetry_state.get("my") or 0.0,
+			"magZ": telemetry_state.get("mz") or 0.0,
 		},
 	}
 	try:
@@ -316,6 +437,23 @@ def parse_args() -> argparse.Namespace:
 		default=5.0,
 		help="Poll local XBee ATDB RSSI every N seconds. 0 disables polling.",
 	)
+	parser.add_argument(
+		"--command-api-host",
+		default="127.0.0.1",
+		help="UI command API bind host (default: 127.0.0.1)",
+	)
+	parser.add_argument(
+		"--command-api-port",
+		type=int,
+		default=8765,
+		help="UI command API port (default: 8765)",
+	)
+	parser.add_argument(
+		"--command-line-ending",
+		choices=("lf", "crlf", "none"),
+		default="lf",
+		help="Line ending appended to UI commands (default: lf)",
+	)
 	return parser.parse_args()
 
 
@@ -394,6 +532,13 @@ def main() -> None:
 	if not args.port:
 		return
 
+	line_endings = {
+		"lf": b"\n",
+		"crlf": b"\r\n",
+		"none": b"",
+	}
+	command_api_server: ThreadingHTTPServer | None = None
+
 	print(
 		f"Listening on {args.port} @ {args.baudrate} bps "
 		f"(timeout={args.timeout}s). Ctrl+C で終了します。"
@@ -401,19 +546,28 @@ def main() -> None:
 
 	try:
 		with serial.Serial(args.port, args.baudrate, timeout=args.timeout) as ser:
+			command_api_server = start_command_api(
+				ser,
+				args.command_api_host,
+				args.command_api_port,
+				line_endings[args.command_line_ending],
+			)
+
 			if args.send_uplink:
 				uplink_bytes = args.uplink_cmd.encode("utf-8")
 				if args.append_crlf:
 					uplink_bytes += b"\r\n"
-				ser.write(uplink_bytes)
-				ser.flush()
+				with CommandApiHandler.serial_lock:
+					ser.write(uplink_bytes)
+					ser.flush()
 				print(f"[uplink] 送信: {args.uplink_cmd!r}")
 
 			while True:
 				payload = ser.readline()
 				if not payload:
 					timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-					rssi_value = maybe_poll_xbee_rssi(ser, args.rssi_atdb_interval)
+					with CommandApiHandler.serial_lock:
+						rssi_value = maybe_poll_xbee_rssi(ser, args.rssi_atdb_interval)
 					if rssi_value is not None:
 						telemetry_state["rssi"] = rssi_value
 						write_rssi_data(timestamp, rssi_value)
@@ -424,6 +578,11 @@ def main() -> None:
 				print(f"[{timestamp}] {formatted}")
 
 				line = formatted.strip()
+				if re.fullmatch(r"num\s*=\s*\d+", line, re.IGNORECASE):
+					clear_sensor_telemetry_state()
+					write_received_data(timestamp, payload, formatted)
+					continue
+
 				if args.rssi_atdb_interval > 0 and line == "OK":
 					continue
 				if args.rssi_atdb_interval > 0 and re.fullmatch(r"[0-9A-Fa-f]{1,2}", line):
@@ -438,6 +597,7 @@ def main() -> None:
 					if field_name == "rssi":
 						write_received_data(timestamp, payload, formatted, field_value)
 					else:
+						write_text_telemetry_state(timestamp)
 						maybe_write_packet_from_sample(timestamp)
 					warn_if_sample_looks_suspicious(timestamp)
 				else:
@@ -453,6 +613,10 @@ def main() -> None:
 		print(f"シリアル通信エラー: {exc}")
 	except KeyboardInterrupt:
 		print("\n受信を終了しました。")
+	finally:
+		if command_api_server is not None:
+			command_api_server.shutdown()
+			command_api_server.server_close()
 
 
 if __name__ == "__main__":

@@ -1170,18 +1170,27 @@
       overflow-y: auto;
       overflow-x: hidden;
       flex: 1;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.012) 0,
+          rgba(255, 255, 255, 0.012) 20px,
+          transparent 20px,
+          transparent 40px
+        );
     }
 
     .packet-log-row {
-      padding: 3px 6px;
+      padding: 4px 6px;
       border-bottom: 1px solid rgba(45, 70, 84, 0.35);
       color: #c8d8e3;
       font-family: Consolas, Menlo, monospace;
       font-size: 10px;
-      line-height: 1.25;
+      line-height: 1.35;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      background: rgba(2, 8, 12, 0.82);
     }
 
     .packet-log-row.packet-log-ng {
@@ -1684,10 +1693,6 @@
 
     <!-- 最下部 -->
     <footer class="footer">
-      <div class="footer-item">
-        接続状態：<span class="red" id="footer-connection-status">● 未接続</span>
-      </div>
-
       <div class="footer-item footer-port-control" id="footer-port">
         ポート：<span class="port-name" id="selected-port-name">未接続</span>
         <span id="port-status-dot" class="status-dot disconnected"></span>
@@ -1748,12 +1753,14 @@
     let xbeeWriter = null;
 
     const XBEE_BAUD_RATE = 9600;
+    const USE_BACKEND_COMMAND_API = false;
+    const COMMAND_API_URL = "http://127.0.0.1:8765/send-command";
+    const DIRECT_SERIAL_COMMAND_LINE_ENDING = "";
 
     const portStatusDot = document.getElementById("port-status-dot");
     const portStatusText = document.getElementById("port-status-text");
     const selectedPortName = document.getElementById("selected-port-name");
 
-    const footerConnectionStatus = document.getElementById("footer-connection-status");
     const footerPort = document.getElementById("footer-port");
 
     const selectPortButton = document.getElementById("select-port-button");
@@ -1981,21 +1988,18 @@
       setTelemetryText(packetUi.tmMagYValue, `${decoded.magY.toFixed(1)} µT`);
       setTelemetryText(packetUi.tmMagZValue, `${decoded.magZ.toFixed(1)} µT`);
 
-      telemetryHistory.push({
+      const historyPoint = {
         time: Date.now(),
-        modeText: decoded.modeText,
-        voltageV: decoded.voltageV,
-        temperatureC: decoded.temperatureC,
-        accX: decoded.accX,
-        accY: decoded.accY,
-        accZ: decoded.accZ,
-        gyroX: decoded.gyroX,
-        gyroY: decoded.gyroY,
-        gyroZ: decoded.gyroZ,
-        magX: decoded.magX,
-        magY: decoded.magY,
-        magZ: decoded.magZ
+        modeText: decoded.modeText
+      };
+
+      Object.entries(decoded).forEach(([key, value]) => {
+        if (value !== null && key !== "modeText" && key !== "modeClassName") {
+          historyPoint[key] = value;
+        }
       });
+
+      telemetryHistory.push(historyPoint);
       if (telemetryHistory.length > 1200) telemetryHistory = telemetryHistory.slice(-1200);
       drawTelemetryGraphs();
     }
@@ -2003,61 +2007,85 @@
     function updateTelemetryDisplayFromObject(source) {
       if (!source || !isTelemetryDisplayAllowed()) return;
 
+      const readNumeric = (key) => {
+        if (source[key] === null || source[key] === undefined || source[key] === "") return null;
+        const value = Number(source[key]);
+        return Number.isFinite(value) ? value : null;
+      };
+
       const decoded = {
         modeText: source.modeText || "NORMAL",
         modeClassName: source.modeClassName || "normal",
-        voltageV: Number(source.voltageV),
-        temperatureC: Number(source.temperatureC || 0),
-        accX: Number(source.accX || 0),
-        accY: Number(source.accY || 0),
-        accZ: Number(source.accZ || 0),
-        gyroX: Number(source.gyroX || 0),
-        gyroY: Number(source.gyroY || 0),
-        gyroZ: Number(source.gyroZ || 0),
-        magX: Number(source.magX || 0),
-        magY: Number(source.magY || 0),
-        magZ: Number(source.magZ || 0)
+        voltageV: readNumeric("voltageV"),
+        temperatureC: readNumeric("temperatureC"),
+        accX: readNumeric("accX"),
+        accY: readNumeric("accY"),
+        accZ: readNumeric("accZ"),
+        gyroX: readNumeric("gyroX"),
+        gyroY: readNumeric("gyroY"),
+        gyroZ: readNumeric("gyroZ"),
+        magX: readNumeric("magX"),
+        magY: readNumeric("magY"),
+        magZ: readNumeric("magZ"),
+        receivedNumber: readNumeric("receivedNumber")
       };
 
-      if (!Number.isFinite(decoded.voltageV)) return;
+      const hasAnyValue = [
+        decoded.voltageV,
+        decoded.temperatureC,
+        decoded.accX,
+        decoded.accY,
+        decoded.accZ,
+        decoded.gyroX,
+        decoded.gyroY,
+        decoded.gyroZ,
+        decoded.magX,
+        decoded.magY,
+        decoded.magZ,
+        decoded.receivedNumber
+      ].some(value => value !== null);
+
+      if (!hasAnyValue) return;
 
       if (packetUi.tmModeValue) {
         packetUi.tmModeValue.textContent = decoded.modeText;
         packetUi.tmModeValue.className = `tm-status-main ${decoded.modeClassName}`.trim();
       }
 
-      setTelemetryText(packetUi.tmVoltageValue, `${decoded.voltageV.toFixed(2)} V`);
-      setTelemetryText(packetUi.tmVoltageRaw, "raw: text telemetry");
-      setTelemetryText(packetUi.tmTempValue, `${decoded.temperatureC.toFixed(1)} °C`);
-      setTelemetryText(packetUi.tmTempRaw, "raw: text telemetry");
+      if (decoded.voltageV !== null) {
+        setTelemetryText(packetUi.tmVoltageValue, `${decoded.voltageV.toFixed(2)} V`);
+        setTelemetryText(packetUi.tmVoltageRaw, "raw: text telemetry");
+      }
 
-      setTelemetryText(packetUi.tmAccXValue, `${decoded.accX.toFixed(2)} m/s²`);
-      setTelemetryText(packetUi.tmAccYValue, `${decoded.accY.toFixed(2)} m/s²`);
-      setTelemetryText(packetUi.tmAccZValue, `${decoded.accZ.toFixed(2)} m/s²`);
+      if (decoded.temperatureC !== null) {
+        setTelemetryText(packetUi.tmTempValue, `${decoded.temperatureC.toFixed(1)} °C`);
+        setTelemetryText(packetUi.tmTempRaw, "raw: text telemetry");
+      }
 
-      setTelemetryText(packetUi.tmGyroXValue, `${decoded.gyroX.toFixed(1)} °/s`);
-      setTelemetryText(packetUi.tmGyroYValue, `${decoded.gyroY.toFixed(1)} °/s`);
-      setTelemetryText(packetUi.tmGyroZValue, `${decoded.gyroZ.toFixed(1)} °/s`);
+      if (decoded.accX !== null) setTelemetryText(packetUi.tmAccXValue, `${decoded.accX.toFixed(2)} m/s²`);
+      if (decoded.accY !== null) setTelemetryText(packetUi.tmAccYValue, `${decoded.accY.toFixed(2)} m/s²`);
+      if (decoded.accZ !== null) setTelemetryText(packetUi.tmAccZValue, `${decoded.accZ.toFixed(2)} m/s²`);
 
-      setTelemetryText(packetUi.tmMagXValue, `${decoded.magX.toFixed(1)} µT`);
-      setTelemetryText(packetUi.tmMagYValue, `${decoded.magY.toFixed(1)} µT`);
-      setTelemetryText(packetUi.tmMagZValue, `${decoded.magZ.toFixed(1)} µT`);
+      if (decoded.gyroX !== null) setTelemetryText(packetUi.tmGyroXValue, `${decoded.gyroX.toFixed(1)} °/s`);
+      if (decoded.gyroY !== null) setTelemetryText(packetUi.tmGyroYValue, `${decoded.gyroY.toFixed(1)} °/s`);
+      if (decoded.gyroZ !== null) setTelemetryText(packetUi.tmGyroZValue, `${decoded.gyroZ.toFixed(1)} °/s`);
 
-      telemetryHistory.push({
+      if (decoded.magX !== null) setTelemetryText(packetUi.tmMagXValue, `${decoded.magX.toFixed(1)} µT`);
+      if (decoded.magY !== null) setTelemetryText(packetUi.tmMagYValue, `${decoded.magY.toFixed(1)} µT`);
+      if (decoded.magZ !== null) setTelemetryText(packetUi.tmMagZValue, `${decoded.magZ.toFixed(1)} µT`);
+
+      const historyPoint = {
         time: Date.now(),
-        modeText: decoded.modeText,
-        voltageV: decoded.voltageV,
-        temperatureC: decoded.temperatureC,
-        accX: decoded.accX,
-        accY: decoded.accY,
-        accZ: decoded.accZ,
-        gyroX: decoded.gyroX,
-        gyroY: decoded.gyroY,
-        gyroZ: decoded.gyroZ,
-        magX: decoded.magX,
-        magY: decoded.magY,
-        magZ: decoded.magZ
+        modeText: decoded.modeText
+      };
+
+      Object.entries(decoded).forEach(([key, value]) => {
+        if (value !== null && key !== "modeText" && key !== "modeClassName") {
+          historyPoint[key] = value;
+        }
       });
+
+      telemetryHistory.push(historyPoint);
       if (telemetryHistory.length > 1200) telemetryHistory = telemetryHistory.slice(-1200);
       drawTelemetryGraphs();
     }
@@ -2093,27 +2121,52 @@
 
       backendTelemetryState[keyMap[key]] = value;
 
-      if (key === "NUM") {
-        telemetryHistory.push({
-          time: Date.now(),
-          receivedNumber: value
-        });
-        if (telemetryHistory.length > 1200) telemetryHistory = telemetryHistory.slice(-1200);
-        drawTelemetryGraphs();
-        return true;
-      }
-
-      if (
-        backendTelemetryState.voltageV === null ||
-        backendTelemetryState.accX === null ||
-        backendTelemetryState.accY === null ||
-        backendTelemetryState.accZ === null
-      ) {
-        return true;
-      }
-
       updateTelemetryDisplayFromObject(backendTelemetryState);
       return true;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderPacketLog() {
+      if (!packetUi.logList) return;
+
+      packetUi.logList.innerHTML = packetLogHistory.map(row => {
+        const className = row.ok ? "" : "packet-log-ng";
+        const hex = escapeHtml(row.hex || "");
+        return `<div class="packet-log-row ${className}" title="${hex}">${hex}</div>`;
+      }).join("");
+    }
+
+    function addPacketLog(row) {
+      if (!packetUi.logList) return;
+
+      packetLogHistory.unshift(row);
+      packetLogHistory = packetLogHistory.slice(0, 24);
+      renderPacketLog();
+    }
+
+    function updateRawPacketSummary(bytes) {
+      const hexText = bytesToHex(bytes);
+      if (packetUi.header) packetUi.header.textContent = bytes.length ? byteToHex(bytes[0]) : "--";
+      if (packetUi.satId) packetUi.satId.textContent = "--";
+      if (packetUi.type) packetUi.type.textContent = "--";
+      if (packetUi.seq) packetUi.seq.textContent = "--";
+      if (packetUi.len) packetUi.len.textContent = String(bytes.length);
+      if (packetUi.payload) packetUi.payload.textContent = hexText || "--";
+      if (packetUi.checksum) packetUi.checksum.textContent = "--";
+      if (packetUi.typeLabel) packetUi.typeLabel.textContent = "RAW Serial";
+      if (packetUi.checkResult) {
+        packetUi.checkResult.textContent = "RAW";
+        packetUi.checkResult.className = "packet-meta-value";
+      }
+      if (packetUi.lastTime) packetUi.lastTime.textContent = formatTime(new Date());
     }
 
     function updatePacketDisplay(packet) {
@@ -2137,15 +2190,10 @@
 
       updateDecodedTelemetryDisplay(packet);
 
-      packetLogHistory.unshift({
+      addPacketLog({
         hex: bytesToHex(packet.rawBytes),
         ok: packet.checksumOk
       });
-      packetLogHistory = packetLogHistory.slice(0, 8);
-
-      packetUi.logList.innerHTML = packetLogHistory.map(row => `
-        <div class="packet-log-row ${row.ok ? "" : "packet-log-ng"}" title="${row.hex}">${row.hex}</div>
-      `).join("");
     }
 
     function getCurrentSatelliteElevationDegForTelemetryGate() {
@@ -2216,7 +2264,14 @@
       if (!value || value.length === 0) return;
       if (!isTelemetryDisplayAllowed()) return;
 
-      packetByteBuffer.push(...Array.from(value));
+      const receivedBytes = Array.from(value);
+      updateRawPacketSummary(receivedBytes);
+      addPacketLog({
+        hex: bytesToHex(receivedBytes),
+        ok: true
+      });
+
+      packetByteBuffer.push(...receivedBytes);
       if (packetByteBuffer.length > 1024) packetByteBuffer = packetByteBuffer.slice(-1024);
 
       while (packetByteBuffer.length >= 7) {
@@ -2703,16 +2758,33 @@
 
       let counted = 0;
       lines.forEach(line => {
-        if (line.trim().length > 0) counted += 1;
+        const trimmed = line.trim();
+        if (trimmed.length > 0) {
+          updateTelemetryDisplayFromBackendText(trimmed);
+          updateCommandAckLog(trimmed);
+          counted += 1;
+        }
       });
 
       // 改行なしのデータでも、受信チャンクが来たことはカウントできるようにする。
       if (counted === 0 && text.trim().length > 0 && serialTextBuffer.length > 0) {
+        updateTelemetryDisplayFromBackendText(serialTextBuffer);
+        updateCommandAckLog(serialTextBuffer);
         counted = 1;
         serialTextBuffer = "";
       }
 
       for (let i = 0; i < counted; i++) incrementRxCommandCount();
+    }
+
+
+    function updateCommandAckLog(text) {
+      const line = String(text || "").trim();
+      const match = line.match(/^SENSOR_MODE\s*=\s*(ON|OFF)$/i);
+      if (!match) return false;
+
+      updateCommandLog(`ACK SENSOR_MODE=${match[1].toUpperCase()}`);
+      return true;
     }
 
 
@@ -2742,6 +2814,32 @@
         return;
       }
 
+      if (USE_BACKEND_COMMAND_API) {
+        try {
+          const response = await fetch(COMMAND_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ command: commandText })
+          });
+
+          if (!response.ok) {
+            throw new Error(`Command API returned ${response.status}`);
+          }
+
+          updateCommandLog(commandText);
+          commandInput.value = "";
+          commandInput.focus();
+        } catch (error) {
+          console.error(error);
+          alert("receive_data.py を起動してから送信してください。");
+        }
+        return;
+      }
+
+      if (xbeePort && !xbeeWriter) {
+        await openSelectedXbeePort();
+      }
+
       if (!xbeePort || !xbeeWriter) {
         alert("XBeeポートに接続してから送信してください。");
         return;
@@ -2749,7 +2847,7 @@
 
       try {
         const encoder = new TextEncoder();
-        await xbeeWriter.write(encoder.encode(`${commandText}\n`));
+        await xbeeWriter.write(encoder.encode(`${commandText}${DIRECT_SERIAL_COMMAND_LINE_ENDING}`));
         updateCommandLog(commandText);
         commandInput.value = "";
         commandInput.focus();
@@ -2770,6 +2868,16 @@
           sendXbeeCommand();
         }
       });
+    }
+
+    function configureBackendCommandMode() {
+      if (!USE_BACKEND_COMMAND_API) return;
+
+      if (selectPortButton) selectPortButton.disabled = true;
+      if (connectPortButton) connectPortButton.disabled = true;
+      selectedPortName.textContent = "receive_data.py API";
+      updatePortStatus("connected", "API送信");
+      updateFooterPort("receive_data.py API");
     }
 
     async function startXbeeReadLoop() {
@@ -2848,22 +2956,14 @@
         portStatusText.textContent = text || "接続中";
         portStatusText.className = "green";
 
-        footerConnectionStatus.textContent = "● 接続中";
-        footerConnectionStatus.className = "green";
       } else if (status === "selected") {
         setPortDot("selected");
         portStatusText.textContent = text || "選択済み";
         portStatusText.className = "orange";
-
-        footerConnectionStatus.textContent = "● 未接続";
-        footerConnectionStatus.className = "red";
       } else {
         setPortDot("disconnected");
         portStatusText.textContent = text || "未接続";
         portStatusText.className = "";
-
-        footerConnectionStatus.textContent = "● 未接続";
-        footerConnectionStatus.className = "red";
       }
     }
 
@@ -2891,6 +2991,36 @@
       return "Serial Port";
     }
 
+    function isXbeePortOpen() {
+      return Boolean(xbeePort && xbeePort.readable);
+    }
+
+    function getSerialOpenFailureMessage(error) {
+      const errorName = error && error.name ? error.name : "Error";
+      const errorMessage = error && error.message ? error.message : "";
+
+      if (errorName === "NotFoundError") {
+        return "";
+      }
+
+      if (errorName === "InvalidStateError") {
+        return "このポートはすでに開かれています。ページを再読み込みしてから再接続してください。";
+      }
+
+      if (errorName === "NetworkError") {
+        return [
+          "XBeeポートを開けませんでした。",
+          "receive_data.py、Arduino IDE、TeraTerm、PuTTYなど、同じCOMポートを使っているアプリを閉じてから再接続してください。",
+          errorMessage ? `詳細: ${errorMessage}` : ""
+        ].filter(Boolean).join("\n");
+      }
+
+      return [
+        "XBeeポートへの接続に失敗しました。",
+        errorMessage ? `詳細: ${errorName}: ${errorMessage}` : `詳細: ${errorName}`
+      ].join("\n");
+    }
+
     selectPortButton.addEventListener("click", async () => {
       try {
         if (!("serial" in navigator)) {
@@ -2914,11 +3044,24 @@
       }
     });
 
-    connectPortButton.addEventListener("click", async () => {
+    async function openSelectedXbeePort() {
       try {
+        if (!("serial" in navigator)) {
+          alert("このブラウザはWeb Serial APIに対応していません。ChromeまたはEdgeを使用してください。");
+          return false;
+        }
+
         if (!xbeePort) {
-          alert("先にポートを選択してください。");
-          return;
+          xbeePort = await navigator.serial.requestPort();
+          const selectedName = getPortDisplayName(xbeePort);
+          selectedPortName.textContent = selectedName;
+          updatePortStatus("selected", "選択済み");
+          updateFooterPort(selectedName);
+        }
+
+        if (xbeeWriter && isXbeePortOpen()) {
+          updatePortStatus("connected", "接続中");
+          return true;
         }
 
         await xbeePort.open({ baudRate: XBEE_BAUD_RATE });
@@ -2931,13 +3074,46 @@
         selectedPortName.textContent = portName;
         updateFooterPort(`${portName} / 9600 bps`);
         startXbeeReadLoop();
+        return true;
 
       } catch (error) {
         console.error(error);
-        updatePortStatus("disconnected", "接続失敗");
-        alert("XBeeポートへの接続に失敗しました。");
+        if (error && error.name === "NotFoundError") {
+          updatePortStatus("disconnected", "ポート選択キャンセル");
+          selectedPortName.textContent = "未選択";
+          updateFooterPort("未選択");
+        } else {
+          updatePortStatus("disconnected", "接続失敗");
+          const message = getSerialOpenFailureMessage(error);
+          if (message) alert(message);
+        }
+        return false;
       }
-    });
+    }
+
+    connectPortButton.addEventListener("click", openSelectedXbeePort);
+
+    async function autoSelectPreviouslyAuthorizedPort() {
+      if (!("serial" in navigator)) return;
+
+      try {
+        const ports = await navigator.serial.getPorts();
+        if (!ports || ports.length === 0) return;
+
+        xbeePort = ports[0];
+        const portName = getPortDisplayName(xbeePort);
+        selectedPortName.textContent = portName;
+        updatePortStatus("selected", "選択済み");
+        updateFooterPort(portName);
+        await openSelectedXbeePort();
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    if (USE_BACKEND_COMMAND_API) {
+      configureBackendCommandMode();
+    }
 
     /* =========================
        TLE Generator
@@ -4538,6 +4714,118 @@ ${tle.line2}`;
       return { x, y };
     }
 
+    function destinationLonLat(lonDeg, latDeg, bearingDeg, centralAngleDeg) {
+      const lat1 = latDeg * Math.PI / 180;
+      const lon1 = lonDeg * Math.PI / 180;
+      const bearing = bearingDeg * Math.PI / 180;
+      const distance = centralAngleDeg * Math.PI / 180;
+
+      const sinLat1 = Math.sin(lat1);
+      const cosLat1 = Math.cos(lat1);
+      const sinDistance = Math.sin(distance);
+      const cosDistance = Math.cos(distance);
+
+      const lat2 = Math.asin(
+        sinLat1 * cosDistance + cosLat1 * sinDistance * Math.cos(bearing)
+      );
+      const lon2 = lon1 + Math.atan2(
+        Math.sin(bearing) * sinDistance * cosLat1,
+        cosDistance - sinLat1 * Math.sin(lat2)
+      );
+
+      return {
+        lon: normalizeLon(lon2 * 180 / Math.PI),
+        lat: lat2 * 180 / Math.PI
+      };
+    }
+
+    function getVisibilityCentralAngleDeg(altKm, minElevationDeg) {
+      const earthRadiusKm = 6371;
+      const altitudeKm = Math.max(0, altKm || 0);
+      const orbitRadiusKm = earthRadiusKm + altitudeKm;
+      const elevationRad = minElevationDeg * Math.PI / 180;
+      const acosArg = clamp(
+        earthRadiusKm / orbitRadiusKm * Math.cos(elevationRad),
+        -1,
+        1
+      );
+
+      return Math.max(0, (Math.acos(acosArg) - elevationRad) * 180 / Math.PI);
+    }
+
+    function drawVisibilityFootprint(ctx, width, height, gs, satAltKm) {
+      const centralAngleDeg = getVisibilityCentralAngleDeg(
+        satAltKm,
+        AOS_LOS_ELEVATION_THRESHOLD_DEG
+      );
+
+      if (!centralAngleDeg || centralAngleDeg <= 0) return;
+
+      const samples = 144;
+      const ring = [];
+
+      for (let i = 0; i <= samples; i++) {
+        ring.push(destinationLonLat(gs.lon, gs.lat, i * 360 / samples, centralAngleDeg));
+      }
+
+      const segments = [];
+      let currentSegment = [];
+      let prev = null;
+
+      ring.forEach(point => {
+        const p = lonLatToMapXY(point.lon, point.lat, width, height);
+        if (prev && Math.abs(p.x - prev.x) > width * 0.5) {
+          if (currentSegment.length > 1) segments.push(currentSegment);
+          currentSegment = [p];
+        } else {
+          currentSegment.push(p);
+        }
+        prev = p;
+      });
+
+      if (currentSegment.length > 1) segments.push(currentSegment);
+
+      ctx.save();
+      ctx.fillStyle = "rgba(43, 224, 95, 0.10)";
+      ctx.strokeStyle = "rgba(43, 224, 95, 0.72)";
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+      ctx.shadowColor = "rgba(43, 224, 95, 0.45)";
+      ctx.shadowBlur = 8;
+
+      segments.forEach(segment => {
+        ctx.beginPath();
+        const center = lonLatToMapXY(gs.lon, gs.lat, width, height);
+        ctx.moveTo(center.x, center.y);
+        segment.forEach((p, index) => {
+          if (index === 0) ctx.lineTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        });
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        segment.forEach((p, index) => {
+          if (index === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        });
+        ctx.stroke();
+      });
+
+      ctx.shadowBlur = 0;
+      ctx.setLineDash([]);
+      const labelPos = lonLatToMapXY(
+        gs.lon,
+        clamp(gs.lat + centralAngleDeg, -89.5, 89.5),
+        width,
+        height
+      );
+      ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
+      ctx.fillStyle = "rgba(216, 255, 232, 0.92)";
+      ctx.fillText(`Visible El >= ${AOS_LOS_ELEVATION_THRESHOLD_DEG}deg`, labelPos.x + 6, labelPos.y - 6);
+      ctx.restore();
+    }
+
     function unwrapPolygonLongitudes(poly) {
       if (!poly || poly.length === 0) return [];
 
@@ -4825,13 +5113,14 @@ ${tle.line2}`;
 
       const gs = getGroundStationSetting();
       const gsPos = lonLatToMapXY(gs.lon, gs.lat, width, mapHeight);
-      drawPoint(ctx, gsPos.x, gsPos.y, 4.5, "#2be05f", "#dfffe8", gs.name);
 
       if (orbitMapGsLabel) {
         orbitMapGsLabel.textContent = `${gs.lat.toFixed(2)}, ${gs.lon.toFixed(2)}`;
       }
 
       if (!orbitMapState.satrec) {
+        drawPoint(ctx, gsPos.x, gsPos.y, 4.5, "#2be05f", "#dfffe8", gs.name);
+
         ctx.save();
         ctx.fillStyle = "rgba(220, 232, 242, 0.7)";
         ctx.font = "13px Segoe UI, Noto Sans JP, sans-serif";
@@ -4850,10 +5139,16 @@ ${tle.line2}`;
         buildGroundTrack(orbitMapState.satrec);
       }
 
-      drawTrack(ctx, width, mapHeight, orbitMapState.track);
-
       const sat = satForView;
       if (sat) {
+        drawVisibilityFootprint(ctx, width, mapHeight, gs, sat.altKm);
+      }
+
+      drawTrack(ctx, width, mapHeight, orbitMapState.track);
+
+      if (sat) {
+        drawPoint(ctx, gsPos.x, gsPos.y, 4.5, "#2be05f", "#dfffe8", gs.name);
+
         const satPos = lonLatToMapXY(sat.lon, sat.lat, width, mapHeight);
         drawPoint(ctx, satPos.x, satPos.y, 5.5, "#f2a400", "#fff3c7", currentTle.name || "SAT");
 
@@ -4865,6 +5160,10 @@ ${tle.line2}`;
 
       if (orbitMapPeriodLabel) {
         orbitMapPeriodLabel.textContent = orbitMapState.periodMin ? `${orbitMapState.periodMin.toFixed(1)} min` : "--";
+      }
+
+      if (!sat) {
+        drawPoint(ctx, gsPos.x, gsPos.y, 4.5, "#2be05f", "#dfffe8", gs.name);
       }
 
       requestAnimationFrame(drawOrbitMap);
@@ -4976,6 +5275,8 @@ ${tle.line2}`;
       // Poll local data.json (written by receive_data.py) and feed into existing handlers
       async function pollBackendData() {
         try {
+          if (typeof isXbeePortOpen === 'function' && isXbeePortOpen()) return;
+
           const res = await fetch('data.json?ts=' + Date.now());
           if (!res.ok) return;
           const obj = await res.json();
