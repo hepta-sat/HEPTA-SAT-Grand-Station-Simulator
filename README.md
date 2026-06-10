@@ -1,11 +1,24 @@
 # HEPTA_GSApp
 
-## 受信スクリプト
+## 起動手順
 
-`receive_data.py` は XBee 受信データを標準出力に表示し、最新データを `data.json` に書き込みます。
+このブランチでは VS Code と Python は不要です。
+Windows のコマンドプロンプトだけで起動できます。
 
-```powershell
-python receive_data.py -p COM18
+```bat
+npm install
+npm start
 ```
 
-`-p/--port` を省略した場合は、`SERIAL_PORT` 環境変数または接続済みシリアルポートを使います。複数ポートがある場合は、明示的に `-p` を指定してください。
+ブラウザが開いたら、画面下部の接続ボタンから XBee のシリアルポートを選択してください。
+
+## 必要なもの
+
+- Node.js / npm
+- Chrome または Edge
+- XBee / USB シリアルドライバ
+
+## RSSI 表示
+
+RSSI は実測値ではなく、UI 内で生成したシミュレーション値を表示します。
+Python や RSSI 取得用の追加ライブラリは使用しません。
