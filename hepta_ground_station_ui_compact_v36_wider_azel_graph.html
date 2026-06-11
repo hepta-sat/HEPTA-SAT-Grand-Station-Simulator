@@ -10,13 +10,46 @@
       box-sizing: border-box;
     }
 
+    html {
+      scrollbar-gutter: stable;
+    }
+
+    * {
+      scrollbar-width: auto;
+      scrollbar-color: #8d8d8d #f3f5f7;
+    }
+
+    *::-webkit-scrollbar {
+      width: 16px;
+      height: 16px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: #f3f5f7;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      min-height: 44px;
+      border: 3px solid #f3f5f7;
+      border-radius: 9px;
+      background: #8d8d8d;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background: #777777;
+    }
+
+    *::-webkit-scrollbar-corner {
+      background: #f3f5f7;
+    }
+
     body {
       margin: 0;
       width: 100vw;
       height: 100vh;
       background: #050b10;
       color: #dce8f2;
-      font-family: "Segoe UI", "Noto Sans JP", sans-serif;
+      font-family: "Segoe UI", "Helvetica Neue", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
       overflow: hidden;
     }
 
