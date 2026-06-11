@@ -14,7 +14,18 @@ import os
 TELEMETRY_PACKET_HEADER = 0x7E
 TELEMETRY_PACKET_SAT_ID = 0x01
 TELEMETRY_PACKET_TYPE_HK = 0x10
+TELEMETRY_PACKET_TYPES = (0x10, 0x11, 0x12, 0x20, 0x30)
 TELEMETRY_PACKET_PAYLOAD_LENGTH = 23
+COMMAND_PACKET_PARAMETER = 0x00
+COMMAND_PACKET_IDS = {
+	"a": 0x11,
+	"b": 0x12,
+}
+COMMAND_PACKET_LABELS = {
+	"a": "SENSOR_MODE ON",
+	"b": "SENSOR_MODE OFF",
+}
+next_command_sequence_number = 0x003B
 
 telemetry_state = {
 	"ax": None,
@@ -103,6 +114,36 @@ def build_hk_packet(voltage_v: float, ax: float, ay: float, az: float,
 	]
 	checksum = calculate_packet_checksum(packet_body)
 	return bytes([TELEMETRY_PACKET_HEADER, *packet_body, checksum])
+
+
+def build_command_packet_info(command: str) -> dict | None:
+	global next_command_sequence_number
+
+	command_key = command.strip().lower()
+	command_id = COMMAND_PACKET_IDS.get(command_key)
+	if command_id is None:
+		return None
+
+	sequence = next_command_sequence_number & 0xFFFF
+	next_command_sequence_number = (next_command_sequence_number + 1) & 0xFFFF
+	packet_body = [
+		TELEMETRY_PACKET_SAT_ID,
+		command_id,
+		COMMAND_PACKET_PARAMETER,
+		(sequence >> 8) & 0xFF,
+		sequence & 0xFF,
+	]
+	checksum = calculate_packet_checksum(packet_body)
+	packet = bytes([TELEMETRY_PACKET_HEADER, *packet_body, checksum])
+	return {
+		"packet_hex": packet.hex(" "),
+		"destination_id": TELEMETRY_PACKET_SAT_ID,
+		"command_id": command_id,
+		"parameter": COMMAND_PACKET_PARAMETER,
+		"sequence": sequence,
+		"checksum": checksum,
+		"label": COMMAND_PACKET_LABELS.get(command_key, command_key.upper()),
+	}
 
 
 def parse_telemetry_line(line: str) -> tuple[str | None, float | None]:
@@ -201,7 +242,7 @@ def maybe_poll_xbee_rssi(ser: serial.Serial, interval_s: float) -> float | None:
 def remember_command_ack(timestamp: str, line: str) -> None:
 	global last_command_ack
 
-	match = re.match(r"^SENSOR_MODE\s*=\s*(ON|OFF)$", line.strip(), re.IGNORECASE)
+	match = re.match(r"^SENSOR_MODE\s*=?\s*(ON|OFF)$", line.strip(), re.IGNORECASE)
 	if not match:
 		return
 
@@ -231,15 +272,20 @@ def remember_command_tx(command: str, payload: bytes) -> None:
 	global last_command_tx
 
 	expected_ack = None
-	if command.lower() == "a":
+	command_key = command.lower()
+	if command_key == "a":
 		expected_ack = "SENSOR_MODE = ON"
-	elif command.lower() == "b":
+	elif command_key == "b":
 		expected_ack = "SENSOR_MODE = OFF"
+	packet_info = build_command_packet_info(command)
 
 	last_command_tx = {
 		"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-		"command": command,
+		"command": command_key,
 		"hex": payload.hex(" "),
+		"packet_hex": packet_info.get("packet_hex") if packet_info else "",
+		"packet_label": packet_info.get("label") if packet_info else "",
+		"packet": packet_info,
 		"expected_ack": expected_ack,
 		"ack_received": False,
 		"sent_monotonic": time.monotonic(),
@@ -261,7 +307,11 @@ def attach_recent_command_ack(data_obj: dict) -> None:
 			"timestamp": last_command_tx.get("timestamp"),
 			"command": last_command_tx.get("command"),
 			"hex": last_command_tx.get("hex"),
+			"packet_hex": last_command_tx.get("packet_hex"),
+			"packet_label": last_command_tx.get("packet_label"),
+			"packet": last_command_tx.get("packet"),
 			"expected_ack": last_command_tx.get("expected_ack"),
+			"ack_received": last_command_tx.get("ack_received"),
 		}
 
 
@@ -312,8 +362,12 @@ class CommandApiHandler(BaseHTTPRequestHandler):
 		if not command:
 			self._send_json(400, {"ok": False, "error": "empty_command"})
 			return
+		command_key = command.lower()
+		if command_key not in COMMAND_PACKET_IDS:
+			self._send_json(400, {"ok": False, "error": "unsupported_command", "allowed": sorted(COMMAND_PACKET_IDS)})
+			return
 
-		if command.lower() == "b":
+		if command_key == "b":
 			clear_sensor_telemetry_state()
 
 		if self.serial_port is None or not self.serial_port.is_open:
@@ -321,14 +375,22 @@ class CommandApiHandler(BaseHTTPRequestHandler):
 			return
 
 		try:
-			payload = command.encode("utf-8") + self.line_ending
+			payload = command_key.encode("utf-8") + self.line_ending
 			with self.serial_lock:
 				self.serial_port.write(payload)
 				self.serial_port.flush()
 			last_command_send_time = time.monotonic()
-			remember_command_tx(command, payload)
-			print(f"[uplink] UI command sent: {command!r}")
-			self._send_json(200, {"ok": True, "command": command, "hex": payload.hex(" ")})
+			remember_command_tx(command_key, payload)
+			print(f"[uplink] UI command sent: {command_key!r}")
+			self._send_json(200, {
+				"ok": True,
+				"command": command_key,
+				"hex": payload.hex(" "),
+				"packet_hex": last_command_tx.get("packet_hex") if last_command_tx else "",
+				"packet_label": last_command_tx.get("packet_label") if last_command_tx else "",
+				"packet": last_command_tx.get("packet") if last_command_tx else None,
+				"expected_ack": last_command_tx.get("expected_ack") if last_command_tx else None,
+			})
 		except Exception as exc:
 			print(f"[api] command send failed: {exc}")
 			self._send_json(500, {"ok": False, "error": "send_failed"})
@@ -565,6 +627,45 @@ def format_payload(data: bytes, use_hex: bool) -> str:
 		return f"<binary> {data.hex(' ')}"
 
 
+def extract_complete_telemetry_packets(buffer: bytearray) -> list[bytes]:
+	packets: list[bytes] = []
+
+	while True:
+		header_index = buffer.find(bytes([TELEMETRY_PACKET_HEADER]))
+		if header_index < 0:
+			buffer.clear()
+			break
+
+		if header_index > 0:
+			del buffer[:header_index]
+
+		if len(buffer) < 7:
+			break
+
+		packet_type = buffer[2]
+		payload_length = buffer[5]
+
+		if packet_type in TELEMETRY_PACKET_TYPES and payload_length != TELEMETRY_PACKET_PAYLOAD_LENGTH:
+			del buffer[0]
+			continue
+
+		if payload_length > 64:
+			del buffer[0]
+			continue
+
+		total_length = 7 + payload_length
+		if len(buffer) < total_length:
+			break
+
+		packet = bytes(buffer[:total_length])
+		del buffer[:total_length]
+
+		if packet_type in TELEMETRY_PACKET_TYPES and payload_length == TELEMETRY_PACKET_PAYLOAD_LENGTH:
+			packets.append(packet)
+
+	return packets
+
+
 def write_received_data(timestamp: str, payload: bytes, formatted: str, rssi: float | None = None) -> None:
 	packet_hex = payload.hex(" ")
 	remember_command_ack(timestamp, formatted)
@@ -646,6 +747,8 @@ def main() -> None:
 					ser.flush()
 				print(f"[uplink] 送信: {args.uplink_cmd!r}")
 
+			telemetry_packet_buffer = bytearray()
+
 			while True:
 				payload = ser.readline()
 				if not payload:
@@ -658,6 +761,20 @@ def main() -> None:
 					continue
 
 				timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+				if telemetry_packet_buffer or TELEMETRY_PACKET_HEADER in payload:
+					telemetry_packet_buffer.extend(payload)
+					packets = extract_complete_telemetry_packets(telemetry_packet_buffer)
+					if packets:
+						for packet in packets:
+							packet_formatted = format_payload(packet, args.hex)
+							print(f"[{timestamp}] {packet_formatted}")
+							write_received_data(timestamp, packet, packet_formatted)
+						continue
+
+					if telemetry_packet_buffer:
+						continue
+
 				formatted = format_payload(payload, args.hex)
 				print(f"[{timestamp}] {formatted}")
 

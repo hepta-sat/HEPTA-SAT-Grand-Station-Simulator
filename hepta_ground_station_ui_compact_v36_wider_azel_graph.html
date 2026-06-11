@@ -579,14 +579,18 @@
 
     .azel-split-body {
       display: grid;
-      grid-template-rows: 1fr 1fr;
+      grid-template-rows: none;
+      grid-auto-rows: minmax(208px, auto);
       gap: 5px;
       padding: 3px 2px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      align-content: start;
     }
 
     .mini-graph-box {
       position: relative;
-      min-height: 0;
+      min-height: 208px;
       border: 1px solid rgba(45, 70, 84, 0.8);
       border-radius: 4px;
       overflow: hidden;
@@ -607,7 +611,7 @@
 
     .mini-graph-canvas-wrap {
       position: relative;
-      min-height: 0;
+      min-height: 184px;
       overflow: hidden;
     }
 
@@ -1355,9 +1359,7 @@
     /* ===== HEPTA Operation Platform Theme ===== */
 
     body {
-      background:
-        radial-gradient(circle at 18% 0%, rgba(0, 93, 214, 0.13), transparent 34%),
-        linear-gradient(180deg, #f6f9ff 0%, #edf4fb 100%);
+      background: #f3f5f7;
       color: #08245c;
     }
 
@@ -1368,10 +1370,9 @@
     .header {
       border: 1px solid rgba(255, 255, 255, 0.28);
       border-radius: 8px 8px 4px 4px;
-      background:
-        linear-gradient(90deg, #043b94 0%, #05245f 55%, #061a45 100%);
+      background: #06357f;
       color: #ffffff;
-      box-shadow: 0 6px 18px rgba(10, 58, 128, 0.22);
+      box-shadow: none;
       letter-spacing: 0.03em;
     }
 
@@ -1395,18 +1396,14 @@
     .footer {
       border: 1px solid #d6e3f1;
       border-radius: 8px;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 251, 255, 0.96));
-      box-shadow:
-        0 8px 20px rgba(29, 71, 123, 0.10),
-        inset 0 1px 0 rgba(255, 255, 255, 0.86);
+      background: #ffffff;
+      box-shadow: none;
     }
 
     .panel-title {
       border-bottom: 1px solid #e2ebf5;
       color: #06266f;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 247, 255, 0.96));
+      background: #ffffff;
       font-weight: 700;
     }
 
@@ -1441,8 +1438,8 @@
     .setting-block,
     .mini-graph-box {
       border-color: #d6e3f1;
-      background: rgba(255, 255, 255, 0.82);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      background: #ffffff;
+      box-shadow: none;
     }
 
     .pass-label,
@@ -1517,9 +1514,9 @@
     .command-send-button,
     .orbit-map-mode-button {
       border-color: #0b63d8;
-      background: linear-gradient(180deg, #0b79f0, #005ad2);
+      background: #0568d8;
       color: #ffffff;
-      box-shadow: 0 5px 12px rgba(0, 91, 216, 0.20);
+      box-shadow: none;
       font-weight: 600;
     }
 
@@ -1527,7 +1524,7 @@
     .command-send-button:hover,
     .orbit-map-mode-button:hover {
       border-color: #004ead;
-      background: linear-gradient(180deg, #1688ff, #0052bf);
+      background: #0052bf;
     }
 
     .tle-radio-option {
@@ -1561,16 +1558,16 @@
     .telemetry-graph-title,
     .mini-graph-title {
       border-bottom-color: #e1ebf6;
-      background: rgba(242, 247, 255, 0.92);
+      background: #f5f7fa;
       color: #0c2b66;
     }
 
     .orbit-map-chip,
     .tracking-chip {
       border-color: rgba(190, 209, 231, 0.92);
-      background: rgba(255, 255, 255, 0.82);
+      background: #ffffff;
       color: #0c2b66;
-      box-shadow: 0 4px 12px rgba(13, 57, 122, 0.08);
+      box-shadow: none;
     }
 
     .rssi-graph-wrap,
@@ -1579,10 +1576,24 @@
       background: #f8fbff;
     }
 
+    .azel-split-body {
+      grid-template-rows: none;
+      grid-auto-rows: minmax(208px, auto);
+      align-content: start;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .mini-graph-box {
+      min-height: 208px;
+    }
+
+    .mini-graph-canvas-wrap {
+      min-height: 184px;
+    }
+
     .tracking-body {
-      background:
-        radial-gradient(circle at 50% 38%, rgba(0, 91, 216, 0.10), transparent 60%),
-        linear-gradient(180deg, #f9fcff, #eaf3ff);
+      background: #f8f9fb;
     }
 
     .orbit-map-canvas,
@@ -1804,7 +1815,7 @@
           <div class="panel-body tm-value-body">
             <div class="tm-value-grid">
               <div class="tm-status-card">
-                <div class="tm-status-label">運用</div>
+                <div class="tm-status-label">モード</div>
                 <div class="tm-status-main" id="tm-mode-value">--</div>
               </div>
 
@@ -1961,8 +1972,8 @@
     const RSSI_SIM_REFERENCE_DBM = -45;
     const RSSI_SIM_NO_SIGNAL_DBM = -98;
     const CANVAS_THEME = {
-      bgTop: "#f9fcff",
-      bgBottom: "#eaf3ff",
+      bgTop: "#f8f9fb",
+      bgBottom: "#f8f9fb",
       plotBg: "rgba(255, 255, 255, 0.84)",
       grid: "rgba(87, 116, 150, 0.28)",
       gridStrong: "rgba(21, 78, 138, 0.58)",
@@ -2040,10 +2051,13 @@
       header: 0x7E,
       satId: 0x01,
       typeHk: 0x10,
+      telemetryTypes: [0x10, 0x11, 0x12, 0x20, 0x30],
       types: {
-        0x10: "HK Telemetry",
-        0x20: "Mission Data",
-        0x30: "Command ACK",
+        0x10: "Standby Telemetry",
+        0x11: "Mission Telemetry",
+        0x12: "Power Save Telemetry",
+        0x20: "Mission Telemetry (legacy)",
+        0x30: "Power Save Telemetry (legacy)",
         0x40: "Event Log"
       }
     };
@@ -2057,8 +2071,8 @@
         b: 0x12
       },
       labels: {
-        a: "SENSOR_MODE ON",
-        b: "SENSOR_MODE OFF"
+        a: "MISSION_MODE",
+        b: "STANDBY_MODE"
       }
     };
 
@@ -2136,14 +2150,46 @@
     }
 
     function decodeMode(modeByte) {
-      if (modeByte === 0x00) return { text: "NORMAL", className: "normal" };
-      if (modeByte === 0x01) return { text: "POWER SAVE", className: "power-save" };
+      if (modeByte === 0x00) return { text: "Standby", className: "normal" };
+      if (modeByte === 0x01) return { text: "Mission", className: "mission" };
       return { text: `UNKNOWN(${byteToHex(modeByte)})`, className: "" };
     }
 
-    function decodeHkPayload(payload) {
+    function decodePacketTypeMode(packetType) {
+      if (packetType === 0x10) return { text: "Standby", className: "normal" };
+      if (packetType === 0x11) return { text: "Mission", className: "mission" };
+      if (packetType === 0x12) return { text: "Power Save", className: "power-save" };
+      if (packetType === 0x20) return { text: "Mission", className: "mission" };
+      if (packetType === 0x30) return { text: "Power Save", className: "power-save" };
+      return null;
+    }
+
+    function isTelemetryPacketType(packetType) {
+      return TELEMETRY_PACKET.telemetryTypes.includes(packetType);
+    }
+
+    function getPowerModeFromVoltage(voltageV) {
+      if (Number.isFinite(voltageV) && voltageV < 3.6) {
+        return { text: "Power Save", className: "power-save" };
+      }
+      return null;
+    }
+
+    function updateTelemetryStatusDisplays(decoded) {
+      if (packetUi.tmModeValue) {
+        const powerMode = decoded.modeFromPacketType ? null : getPowerModeFromVoltage(decoded.voltageV);
+        const displayMode = powerMode || {
+          text: decoded.modeText || "--",
+          className: decoded.modeClassName || ""
+        };
+        packetUi.tmModeValue.textContent = displayMode.text;
+        packetUi.tmModeValue.className = `tm-status-main ${displayMode.className}`.trim();
+      }
+    }
+
+    function decodeHkPayload(payload, packetType = TELEMETRY_PACKET.typeHk) {
       // HK Telemetry payload format（教材用）
-      // Payload[0]    : 衛星状態 0x00=NORMAL, 0x01=POWER SAVE
+      // Payload[0]    : 運用モード 0x00=Standby, 0x01=Mission
       // Payload[1-2]  : 電圧 mV, uint16, big-endian 例 3.89 V = 3890 = 0x0F32
       // Payload[3-4]  : 温度 0.1 degC, int16, big-endian 例 23.2 degC = 232 = 0x00E8
       // Payload[5-10] : 加速度XYZ 0.01 m/s^2, int16 x3
@@ -2151,7 +2197,8 @@
       // Payload[17-22]: 地磁気XYZ 0.1 uT, int16 x3
       if (!payload || payload.length < 23) return null;
 
-      const mode = decodeMode(payload[0]);
+      const packetTypeMode = decodePacketTypeMode(packetType);
+      const mode = packetTypeMode || decodeMode(payload[0]);
       const voltageRaw = ((payload[1] & 0xFF) << 8) | (payload[2] & 0xFF);
       const temperatureRaw = readInt16BE(payload[3], payload[4]);
 
@@ -2174,6 +2221,7 @@
       return {
         modeText: mode.text,
         modeClassName: mode.className,
+        modeFromPacketType: !!packetTypeMode,
 
         voltageRaw,
         voltageV,
@@ -2202,16 +2250,15 @@
     }
 
     function updateDecodedTelemetryDisplay(packet) {
-      const decoded = packet && packet.packetType === 0x10 ? decodeHkPayload(packet.payload) : null;
+      const decoded = packet && isTelemetryPacketType(packet.packetType)
+        ? decodeHkPayload(packet.payload, packet.packetType)
+        : null;
 
       if (!decoded) {
         return;
       }
 
-      if (packetUi.tmModeValue) {
-        packetUi.tmModeValue.textContent = decoded.modeText;
-        packetUi.tmModeValue.className = `tm-status-main ${decoded.modeClassName}`.trim();
-      }
+      updateTelemetryStatusDisplays(decoded);
 
       setTelemetryText(packetUi.tmVoltageValue, `${decoded.voltageV.toFixed(2)} V`);
       setTelemetryText(packetUi.tmVoltageRaw, `raw: ${decoded.voltageHex} = ${decoded.voltageRaw} ADC`);
@@ -2256,7 +2303,7 @@
       };
 
       const decoded = {
-        modeText: source.modeText || "NORMAL",
+        modeText: source.modeText || "Standby",
         modeClassName: source.modeClassName || "normal",
         voltageV: readNumeric("voltageV"),
         temperatureC: readNumeric("temperatureC"),
@@ -2289,10 +2336,7 @@
 
       if (!hasAnyValue) return;
 
-      if (packetUi.tmModeValue) {
-        packetUi.tmModeValue.textContent = decoded.modeText;
-        packetUi.tmModeValue.className = `tm-status-main ${decoded.modeClassName}`.trim();
-      }
+      updateTelemetryStatusDisplays(decoded);
 
       if (decoded.voltageV !== null) {
         setTelemetryText(packetUi.tmVoltageValue, `${decoded.voltageV.toFixed(2)} V`);
@@ -2540,8 +2584,14 @@
 
         if (packetByteBuffer.length < 7) return;
 
+        const packetType = packetByteBuffer[2];
         const payloadLength = packetByteBuffer[5];
         const totalLength = 7 + payloadLength;
+
+        if (isTelemetryPacketType(packetType) && payloadLength !== 23) {
+          packetByteBuffer.shift();
+          continue;
+        }
 
         if (payloadLength > 64) {
           packetByteBuffer.shift();
@@ -3070,8 +3120,24 @@
     }
 
 
+    function getCommandModeLabel(mode) {
+      const normalizedMode = String(mode || "").trim().toUpperCase();
+      if (normalizedMode === "ON") return "MISSION_MODE";
+      if (normalizedMode === "OFF") return "STANDBY_MODE";
+      return "";
+    }
+
+    function getExpectedAckLabel(commandText) {
+      const command = normalizeCommandText(commandText);
+      if (command === "a") return getCommandModeLabel("ON");
+      if (command === "b") return getCommandModeLabel("OFF");
+      return "";
+    }
+
     function getAckModeFromText(text) {
       const line = String(text || "").trim();
+      const commandModeMatch = line.match(/^(MISSION_MODE|STANDBY_MODE)$/i);
+      if (commandModeMatch) return commandModeMatch[1].toUpperCase() === "MISSION_MODE" ? "ON" : "OFF";
       const directMatch = line.match(/^SENSOR_MODE\s*=?\s*(ON|OFF)$/i);
       if (directMatch) return directMatch[1].toUpperCase();
       const ackMatch = line.match(/\bACK\b.*\b(ON|OFF)\b/i);
@@ -3094,7 +3160,7 @@
 
       const mode = match[1].toUpperCase();
       commandAckByteTextBuffer = "";
-      return updateCommandAckLog(`SENSOR_MODE = ${mode}`, `bytes|${mode}|${Date.now()}`);
+      return updateCommandAckLog(getCommandModeLabel(mode), `bytes|${mode}|${Date.now()}`);
     }
 
     function renderCommandLog() {
@@ -3108,7 +3174,7 @@
     }
 
     function markMatchingCommandAck(mode) {
-      const expectedAck = `SENSOR_MODE = ${mode}`;
+      const expectedAck = getCommandModeLabel(mode);
       const row = commandLogHistory.find(item =>
         item.type === "tx" &&
         !item.ackReceived &&
@@ -3125,10 +3191,18 @@
     }
 
     function markCommandAckFromTelemetryPacket(packet) {
-      if (!packet || !packet.checksumOk || packet.packetType !== TELEMETRY_PACKET.typeHk) return false;
+      if (!packet || !packet.checksumOk || !isTelemetryPacketType(packet.packetType)) return false;
       if (!packet.payload || packet.payload.length < 1) return false;
 
-      const mode = packet.payload[0] === 0x01 ? "ON" : packet.payload[0] === 0x00 ? "OFF" : "";
+      const mode = (packet.packetType === 0x11 || packet.packetType === 0x20)
+        ? "ON"
+        : packet.packetType === 0x10
+          ? "OFF"
+          : packet.payload[0] === 0x01
+            ? "ON"
+            : packet.payload[0] === 0x00
+              ? "OFF"
+              : "";
       if (!mode) return false;
 
       return markMatchingCommandAck(mode);
@@ -3146,7 +3220,7 @@
       } else {
         lastDisplayedCommandAckKey = displayKey;
         updateCommandLog({
-          command: `ACK SENSOR_MODE=${mode}`,
+          command: `ACK ${getCommandModeLabel(mode)}`,
           type: "ack"
         });
       }
@@ -3235,7 +3309,7 @@
       const command = normalizeCommandText(commandText);
       const label = packetLabel || COMMAND_PACKET.labels[command] || command.toUpperCase();
       const packet = packetHex || buildCommandPacketInfo(command, nextCommandSequenceNumber)?.hex || "";
-      return `TX ${command.toUpperCase()} ${label}${packet ? ` | ${packet}` : ""}`;
+      return `TX ${label}${packet ? ` | ${packet}` : ""}`;
     }
 
     function updateCommandLog(commandEntry) {
@@ -3321,11 +3395,11 @@
           command: formatCommandPacketLog(
             packetInfo.command,
             packetInfo.hex,
-            packetInfo.command === "a" ? "SENSOR_MODE = ON" : "SENSOR_MODE = OFF",
+            getExpectedAckLabel(packetInfo.command),
             packetInfo.label
           ),
           type: "tx",
-          expectedAck: packetInfo.command === "a" ? "SENSOR_MODE = ON" : "SENSOR_MODE = OFF",
+          expectedAck: getExpectedAckLabel(packetInfo.command),
           ackReceived: false
         });
         commandInput.value = "";
@@ -4411,7 +4485,7 @@ ${tle.line2}`;
           antialias: true,
           alpha: true
         });
-        renderer.setClearColor(0xf1f7ff, 1);
+        renderer.setClearColor(0xf8f9fb, 1);
 
         const scene = new THREE.Scene();
         scene.fog = null;
@@ -5029,7 +5103,7 @@ ${tle.line2}`;
     function drawAzimuthCompassGraph(ctx, width, height, plot, series, lookNow) {
       const cx = plot.left + plot.width / 2;
       const cy = plot.top + plot.height / 2;
-      const radius = Math.max(1, Math.min(plot.width, plot.height) * 0.42);
+      const radius = Math.max(1, Math.min(plot.width, plot.height) * 0.47);
 
       ctx.save();
       ctx.fillStyle = CANVAS_THEME.plotBg;
@@ -5062,10 +5136,10 @@ ${tle.line2}`;
         ["W", 270, -1, 0]
       ].forEach(([label, deg, dx, dy]) => {
         ctx.fillStyle = CANVAS_THEME.text;
-        ctx.font = "bold 10px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.font = "bold 13px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(label, cx + dx * (radius + 10), cy + dy * (radius + 10));
+        ctx.fillText(label, cx + dx * (radius * 0.86), cy + dy * (radius * 0.86));
       });
 
       [0, 90, 180, 270].forEach(deg => {
@@ -5074,7 +5148,7 @@ ${tle.line2}`;
         ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(String(deg), cx + Math.cos(rad) * radius * 0.70, cy + Math.sin(rad) * radius * 0.70);
+        ctx.fillText(`${deg}°`, cx + Math.cos(rad) * radius * 0.48, cy + Math.sin(rad) * radius * 0.48);
       });
 
       if (series.points.length > 1) {
@@ -5088,7 +5162,7 @@ ${tle.line2}`;
           else ctx.lineTo(x, y);
         });
         ctx.strokeStyle = "rgba(0, 149, 184, 0.98)";
-        ctx.lineWidth = 1.9;
+        ctx.lineWidth = 2.4;
         ctx.shadowColor = "rgba(0, 149, 184, 0.22)";
         ctx.shadowBlur = 4;
         ctx.stroke();
@@ -5104,11 +5178,11 @@ ${tle.line2}`;
         ctx.moveTo(cx, cy);
         ctx.lineTo(endX, endY);
         ctx.strokeStyle = "#0b63d8";
-        ctx.lineWidth = 2.2;
+        ctx.lineWidth = 2.8;
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.arc(endX, endY, 4.2, 0, Math.PI * 2);
+        ctx.arc(endX, endY, 5.0, 0, Math.PI * 2);
         ctx.fillStyle = "#28d9e8";
         ctx.fill();
         ctx.strokeStyle = "#ffffff";
@@ -5116,9 +5190,9 @@ ${tle.line2}`;
         ctx.stroke();
 
         ctx.fillStyle = CANVAS_THEME.text;
-        ctx.font = "bold 9px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.font = "bold 10px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText(`${lookNow.azDeg.toFixed(1)}°`, cx, cy + radius + 14);
+        ctx.fillText(`${lookNow.azDeg.toFixed(1)}°`, cx, plot.top + plot.height - 6);
       }
 
       ctx.restore();
@@ -5143,10 +5217,11 @@ ${tle.line2}`;
       const lookNow = satrec ? getLookAnglesFromTle(satrec, now, gs) : null;
       const series = buildGraphSeriesData(satrec, gs, now);
 
-      const leftPad = 18;
-      const rightPad = 4;
-      const topPad = 12;
-      const bottomPad = 14;
+      const isAz = type === "az";
+      const leftPad = isAz ? 10 : 30;
+      const rightPad = isAz ? 10 : 8;
+      const topPad = isAz ? 16 : 18;
+      const bottomPad = isAz ? 22 : 24;
       const plotW = Math.max(1, width - leftPad - rightPad);
       const plotH = Math.max(1, height - topPad - bottomPad);
       ctx.fillStyle = CANVAS_THEME.plotBg;
@@ -5158,7 +5233,6 @@ ${tle.line2}`;
       ctx.strokeRect(leftPad, topPad, plotW, plotH);
       ctx.restore();
 
-      const isAz = type === "az";
       if (isAz) {
         drawAzimuthCompassGraph(ctx, width, height, {
           left: leftPad,
@@ -5210,8 +5284,14 @@ ${tle.line2}`;
           ? "rgba(43, 224, 95, 0.78)"
           : CANVAS_THEME.textMuted;
         ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
-        ctx.fillText(String(val), 3, y + 3);
+        ctx.textAlign = "right";
+        ctx.fillText(String(val), leftPad - 5, y + 3);
       });
+
+      ctx.fillStyle = CANVAS_THEME.text;
+      ctx.font = "bold 9px Segoe UI, Noto Sans JP, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("El (°)", leftPad, topPad - 5);
       ctx.restore();
 
       // series line
@@ -5759,10 +5839,7 @@ ${tle.line2}`;
     function drawWorldMap(ctx, width, height) {
       ctx.clearRect(0, 0, width, height);
 
-      const grd = ctx.createLinearGradient(0, 0, 0, height);
-      grd.addColorStop(0, "#f7fbff");
-      grd.addColorStop(1, "#dcecff");
-      ctx.fillStyle = grd;
+      ctx.fillStyle = "#eef2f5";
       ctx.fillRect(0, 0, width, height);
 
       // latitude / longitude grid
@@ -6101,9 +6178,15 @@ ${tle.line2}`;
             const parts = packetHex.split(/\s+/).filter(s => s.length > 0);
             const bytes = parts.map(h => parseInt(h, 16));
             if (bytes.length && bytes[0] === TELEMETRY_PACKET.header && typeof parseTelemetryPacket === 'function') {
+              const packetType = bytes[2];
               const payloadLength = bytes[5];
               const totalLength = 7 + payloadLength;
-              if (bytes.length >= totalLength && typeof updatePacketDisplay === 'function') {
+              if (
+                isTelemetryPacketType(packetType) &&
+                payloadLength === 23 &&
+                bytes.length >= totalLength &&
+                typeof updatePacketDisplay === 'function'
+              ) {
                 updatePacketDisplay(parseTelemetryPacket(bytes.slice(0, totalLength)));
               }
             } else if (bytes.length && typeof handleReceivedSerialBytes === 'function') {
