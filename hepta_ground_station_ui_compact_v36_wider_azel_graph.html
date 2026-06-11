@@ -49,14 +49,14 @@
 
     .top-area {
       display: grid;
-      grid-template-columns: 26% 34% 40%;
+      grid-template-columns: 26fr 34fr 40fr;
       gap: 8px;
       min-height: 0;
     }
 
     .bottom-area {
       display: grid;
-      grid-template-columns: 17% 16% 9% 32% 26%;
+      grid-template-columns: 17fr 16fr 9fr 32fr 26fr;
       gap: 8px;
       min-height: 0;
     }
@@ -189,33 +189,35 @@
       height: 100%;
       display: grid;
       grid-template-rows: 1fr 1fr 1fr;
-      gap: 6px;
+      gap: 4px;
       background: transparent;
       overflow: visible;
     }
 
     .pass-box {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
       border: 1px solid #1d2c35;
       border-radius: 4px;
       background: rgba(0, 0, 0, 0.22);
-      gap: 6px;
+      gap: 8px;
+      padding: 0 10px;
       min-width: 0;
       min-height: 0;
       height: 100%;
     }
 
     .pass-label {
-      font-size: 12px;
+      font-size: 10.5px;
       color: #8ea3af;
       writing-mode: horizontal-tb;
+      white-space: nowrap;
     }
 
     .pass-time {
-      font-size: 17px;
+      font-size: 15px;
       letter-spacing: 0.02em;
       white-space: nowrap;
       max-width: 100%;
@@ -1015,73 +1017,34 @@
       color: #2be05f;
     }
 
+    .tm-status-main.mission {
+      color: #005bd8;
+    }
+
     .tm-value-sub {
       display: none;
     }
 
     .telemetry-graph-body {
       display: grid;
-      grid-template-rows: 26px 1fr;
+      grid-template-rows: 1fr;
       gap: 6px;
       padding: 6px;
       text-align: left;
       color: #c8d8e3;
       align-items: stretch;
       justify-content: stretch;
-      overflow: hidden;
-    }
-
-    .telemetry-graph-tabs {
-      min-height: 0;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 5px;
-    }
-
-    .telemetry-graph-tab {
-      min-width: 0;
-      height: 26px;
-      border: 1px solid rgba(45, 70, 84, 0.86);
-      border-radius: 4px;
-      background: rgba(3, 10, 15, 0.58);
-      color: #aebfca;
-      font-size: 10.5px;
-      line-height: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      cursor: pointer;
-    }
-
-    .telemetry-graph-tab:hover {
-      border-color: rgba(40, 217, 232, 0.55);
-      color: #dce8f2;
-    }
-
-    .telemetry-graph-tab.active {
-      border-color: rgba(40, 217, 232, 0.82);
-      background: rgba(7, 31, 43, 0.94);
-      color: #28d9e8;
-      box-shadow: inset 0 0 0 1px rgba(40, 217, 232, 0.16);
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     .telemetry-graph-grid {
       min-height: 0;
       display: grid;
-      gap: 6px;
-    }
-
-    .telemetry-graph-grid.graph-count-2 {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .telemetry-graph-grid.graph-count-3 {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .telemetry-graph-grid.graph-count-6 {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      grid-template-rows: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: 145px;
+      gap: 6px;
+      padding-right: 2px;
     }
 
     .telemetry-graph-box {
@@ -1113,25 +1076,6 @@
       font-size: 10px;
       overflow: hidden;
       text-overflow: ellipsis;
-    }
-
-    .telemetry-graph-select {
-      width: min(132px, calc(100% - 38px));
-      height: 19px;
-      border: 1px solid rgba(45, 70, 84, 0.9);
-      border-radius: 3px;
-      background: #081219;
-      color: #dce8f2;
-      font-size: 11px;
-      line-height: 19px;
-      padding: 0 4px;
-      outline: none;
-    }
-
-    .telemetry-graph-select option {
-      font-size: 12px;
-      background: #081219;
-      color: #dce8f2;
     }
 
     .telemetry-graph-canvas-wrap {
@@ -1274,7 +1218,7 @@
     .command-log-header,
     .command-log-row {
       display: grid;
-      grid-template-columns: 52px 1fr;
+      grid-template-columns: 52px minmax(0, 1fr);
       gap: 5px;
       align-items: center;
     }
@@ -1285,7 +1229,7 @@
       color: #8ea3af;
       font-size: 8.5px;
       background: rgba(255, 255, 255, 0.03);
-      white-space: nowrap;
+      white-space: normal;
     }
 
     .command-log-list {
@@ -1302,7 +1246,8 @@
       font-family: Consolas, Menlo, monospace;
       font-size: 10px;
       line-height: 1.25;
-      white-space: nowrap;
+      white-space: normal;
+      align-items: start;
     }
 
     .command-log-time {
@@ -1313,8 +1258,13 @@
 
     .command-log-command {
       color: #28d9e8;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      overflow: visible;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .command-log-command.command-log-ack {
+      color: #2be05f;
     }
 
     .command-wait {
@@ -1328,8 +1278,8 @@
 
     .tle-body {
       display: grid;
-      grid-template-rows: 24px 40px 30px minmax(160px, 1fr) 14px;
-      gap: 8px;
+      grid-template-rows: 24px 40px 30px 82px 14px;
+      gap: 6px;
       align-items: stretch;
       justify-content: stretch;
       text-align: left;
@@ -1400,6 +1350,284 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    /* ===== HEPTA Operation Platform Theme ===== */
+
+    body {
+      background:
+        radial-gradient(circle at 18% 0%, rgba(0, 93, 214, 0.13), transparent 34%),
+        linear-gradient(180deg, #f6f9ff 0%, #edf4fb 100%);
+      color: #08245c;
+    }
+
+    .app {
+      background: transparent;
+    }
+
+    .header {
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 8px 8px 4px 4px;
+      background:
+        linear-gradient(90deg, #043b94 0%, #05245f 55%, #061a45 100%);
+      color: #ffffff;
+      box-shadow: 0 6px 18px rgba(10, 58, 128, 0.22);
+      letter-spacing: 0.03em;
+    }
+
+    .header::before {
+      content: "✦";
+      width: 20px;
+      height: 20px;
+      margin-right: 9px;
+      border: 1px solid rgba(255, 255, 255, 0.58);
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.12);
+      font-size: 13px;
+    }
+
+    .panel,
+    .footer {
+      border: 1px solid #d6e3f1;
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 251, 255, 0.96));
+      box-shadow:
+        0 8px 20px rgba(29, 71, 123, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.86);
+    }
+
+    .panel-title {
+      border-bottom: 1px solid #e2ebf5;
+      color: #06266f;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 247, 255, 0.96));
+      font-weight: 700;
+    }
+
+    .panel-body,
+    .tle-body,
+    .tm-value-body,
+    .packet-body,
+    .link-status-body,
+    .command-body,
+    .setting-single-body {
+      color: #0c2b66;
+    }
+
+    .footer {
+      color: #12336b;
+    }
+
+    .footer-item {
+      border-right-color: #d9e5f2;
+    }
+
+    .pass-box,
+    .link-status-card,
+    .packet-format-grid,
+    .packet-meta-card,
+    .packet-payload-card,
+    .tm-status-card,
+    .tm-value-card,
+    .telemetry-graph-box,
+    .packet-log,
+    .command-log,
+    .setting-block,
+    .mini-graph-box {
+      border-color: #d6e3f1;
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    }
+
+    .pass-label,
+    .packet-cell-label,
+    .packet-meta-label,
+    .packet-payload-label,
+    .tm-status-label,
+    .tm-value-label,
+    .link-status-label,
+    .link-status-unit,
+    .link-status-sub,
+    .command-log-time,
+    .packet-log-header,
+    .command-log-header {
+      color: #5f7195;
+    }
+
+    .pass-time,
+    .packet-cell-value,
+    .packet-meta-value,
+    .packet-payload-value,
+    .tm-status-main,
+    .tm-value-main,
+    .link-status-value,
+    .port-name,
+    .orbit-map-chip span,
+    .tracking-chip span,
+    .telemetry-graph-title span,
+    .command-log-command {
+      color: #005bd8;
+    }
+
+    .green,
+    .tm-status-main.normal,
+    .command-log-command.command-log-ack,
+    .packet-ok {
+      color: #087d31;
+    }
+
+    .red,
+    .packet-ng,
+    .packet-log-row.packet-log-ng {
+      color: #e01616;
+    }
+
+    .orange,
+    .tm-status-main.power-save {
+      color: #b46b00;
+    }
+
+    .cyan {
+      color: #005bd8;
+    }
+
+    .tle-textarea,
+    .command-input {
+      border-color: #c9d8eb;
+      background: #ffffff;
+      color: #09245c;
+      box-shadow: inset 0 1px 2px rgba(24, 70, 122, 0.06);
+    }
+
+    .tle-textarea:focus,
+    .command-input:focus {
+      border-color: #0a66dc;
+      box-shadow:
+        0 0 0 2px rgba(10, 102, 220, 0.13),
+        inset 0 1px 2px rgba(24, 70, 122, 0.06);
+    }
+
+    .gs-button,
+    .command-send-button,
+    .orbit-map-mode-button {
+      border-color: #0b63d8;
+      background: linear-gradient(180deg, #0b79f0, #005ad2);
+      color: #ffffff;
+      box-shadow: 0 5px 12px rgba(0, 91, 216, 0.20);
+      font-weight: 600;
+    }
+
+    .gs-button:hover,
+    .command-send-button:hover,
+    .orbit-map-mode-button:hover {
+      border-color: #004ead;
+      background: linear-gradient(180deg, #1688ff, #0052bf);
+    }
+
+    .tle-radio-option {
+      color: #0b2d6d;
+    }
+
+    .tle-radio-option input {
+      accent-color: #005bd8;
+    }
+
+    .packet-log-list {
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(0, 91, 216, 0.035) 0,
+          rgba(0, 91, 216, 0.035) 20px,
+          rgba(255, 255, 255, 0.0) 20px,
+          rgba(255, 255, 255, 0.0) 40px
+        );
+    }
+
+    .packet-log-row,
+    .command-log-row {
+      border-bottom-color: #e3edf7;
+      background: rgba(255, 255, 255, 0.72);
+      color: #102c63;
+    }
+
+    .packet-log-header,
+    .command-log-header,
+    .telemetry-graph-title,
+    .mini-graph-title {
+      border-bottom-color: #e1ebf6;
+      background: rgba(242, 247, 255, 0.92);
+      color: #0c2b66;
+    }
+
+    .orbit-map-chip,
+    .tracking-chip {
+      border-color: rgba(190, 209, 231, 0.92);
+      background: rgba(255, 255, 255, 0.82);
+      color: #0c2b66;
+      box-shadow: 0 4px 12px rgba(13, 57, 122, 0.08);
+    }
+
+    .rssi-graph-wrap,
+    .telemetry-graph-canvas-wrap,
+    .mini-graph-canvas-wrap {
+      background: #f8fbff;
+    }
+
+    .tracking-body {
+      background:
+        radial-gradient(circle at 50% 38%, rgba(0, 91, 216, 0.10), transparent 60%),
+        linear-gradient(180deg, #f9fcff, #eaf3ff);
+    }
+
+    .orbit-map-canvas,
+    .tracking-canvas,
+    .rssi-graph-canvas,
+    .telemetry-graph-canvas {
+      background: #f8fbff;
+    }
+
+    .antenna-dom-visual::before {
+      border-color: rgba(8, 145, 62, 0.55);
+      background:
+        radial-gradient(ellipse at 50% 58%, rgba(43, 224, 95, 0.16), rgba(203, 238, 216, 0.44) 42%, rgba(235, 247, 255, 0.76) 75%, rgba(255, 255, 255, 0.12) 76%),
+        linear-gradient(180deg, rgba(220, 238, 255, 0.42), rgba(255, 255, 255, 0.04));
+      box-shadow: inset 0 0 42px rgba(0, 91, 216, 0.08);
+    }
+
+    .antenna-dom-grid {
+      background:
+        linear-gradient(90deg, transparent 49.7%, rgba(21, 78, 138, 0.22) 50%, transparent 50.3%),
+        linear-gradient(0deg, transparent 49.5%, rgba(21, 78, 138, 0.18) 50%, transparent 50.5%),
+        repeating-linear-gradient(26deg, transparent 0 48px, rgba(87, 116, 150, 0.14) 49px 50px),
+        repeating-linear-gradient(154deg, transparent 0 48px, rgba(87, 116, 150, 0.14) 49px 50px);
+      box-shadow:
+        inset 0 0 0 1px rgba(8, 145, 62, 0.42),
+        inset 0 0 0 42px rgba(8, 145, 62, 0.05),
+        inset 0 0 0 84px rgba(0, 91, 216, 0.04);
+    }
+
+    .antenna-dom-grid::after {
+      border-left-color: rgba(21, 78, 138, 0.38);
+      color: rgba(7, 52, 116, 0.70);
+      text-shadow: none;
+    }
+
+    .antenna-dom-mast {
+      background: linear-gradient(180deg, #ffffff, #6d8db4);
+    }
+
+    .antenna-dom-dish {
+      border-color: rgba(27, 79, 145, 0.82);
+      background:
+        radial-gradient(ellipse at 50% 55%, rgba(0, 91, 216, 0.12), transparent 58%),
+        rgba(255, 255, 255, 0.72);
+      box-shadow: 0 0 10px rgba(0, 91, 216, 0.10);
     }
   </style>
 </head>
@@ -1576,7 +1804,7 @@
           <div class="panel-body tm-value-body">
             <div class="tm-value-grid">
               <div class="tm-status-card">
-                <div class="tm-status-label">状態</div>
+                <div class="tm-status-label">運用</div>
                 <div class="tm-status-main" id="tm-mode-value">--</div>
               </div>
 
@@ -1636,25 +1864,7 @@
         <div class="panel">
           <div class="panel-title">テレメトリ　リアルタイムグラフ</div>
           <div class="panel-body telemetry-graph-body">
-            <div class="telemetry-graph-box">
-              <div class="telemetry-graph-title">
-                <span>上段</span>
-                <select class="telemetry-graph-select" id="tm-graph1-select"></select>
-              </div>
-              <div class="telemetry-graph-canvas-wrap" id="tm-voltage-graph-container">
-                <canvas id="tm-voltage-graph-canvas" class="telemetry-graph-canvas"></canvas>
-              </div>
-            </div>
-
-            <div class="telemetry-graph-box">
-              <div class="telemetry-graph-title">
-                <span>下段</span>
-                <select class="telemetry-graph-select" id="tm-graph2-select"></select>
-              </div>
-              <div class="telemetry-graph-canvas-wrap" id="tm-temp-graph-container">
-                <canvas id="tm-temp-graph-canvas" class="telemetry-graph-canvas"></canvas>
-              </div>
-            </div>
+            <div class="telemetry-graph-grid" id="telemetry-graph-grid"></div>
           </div>
         </div>
 
@@ -1662,14 +1872,14 @@
           <div class="panel-title">コマンド / ACK ログ</div>
           <div class="panel-body command-body">
             <div class="command-input-area">
-              <input id="command-input" class="command-input" type="text" placeholder="コマンド入力欄 例: a / b / c" autocomplete="off">
+              <input id="command-input" class="command-input" type="text" placeholder="コマンド入力欄 例: a / b" autocomplete="off">
               <button class="gs-button command-send-button" id="command-send-button">送信</button>
             </div>
 
             <div class="command-log">
               <div class="command-log-header">
                 <div>時間</div>
-                <div>送信コマンド/ACK</div>
+                <div>送信コマンド / ACK</div>
               </div>
               <div class="command-log-list" id="command-log-list">
               </div>
@@ -1747,6 +1957,21 @@
     const COMMAND_API_HEALTH_URL = "http://127.0.0.1:8765/health";
     const DIRECT_SERIAL_COMMAND_LINE_ENDING = "";
     const USE_SIMULATED_RSSI = true;
+    const RSSI_SIM_REFERENCE_RANGE_KM = 500;
+    const RSSI_SIM_REFERENCE_DBM = -45;
+    const RSSI_SIM_NO_SIGNAL_DBM = -98;
+    const CANVAS_THEME = {
+      bgTop: "#f9fcff",
+      bgBottom: "#eaf3ff",
+      plotBg: "rgba(255, 255, 255, 0.84)",
+      grid: "rgba(87, 116, 150, 0.28)",
+      gridStrong: "rgba(21, 78, 138, 0.58)",
+      text: "#073474",
+      textMuted: "rgba(7, 52, 116, 0.72)",
+      labelBg: "rgba(255, 255, 255, 0.86)",
+      labelBorder: "rgba(34, 105, 196, 0.30)"
+    };
+    const ANTENNA_VISUAL_AZ_OFFSET_DEG = 180;
 
     const portStatusDot = document.getElementById("port-status-dot");
     const portStatusText = document.getElementById("port-status-text");
@@ -1770,6 +1995,8 @@
     let commandLogHistory = [];
     let lastDisplayedCommandAckKey = "";
     let lastDisplayedCommandTxKey = "";
+    let nextCommandSequenceNumber = 0x003B;
+    let nextCommandLogId = 1;
     let backendReceiverConnected = false;
 
     const packetUi = {
@@ -1812,6 +2039,7 @@
       // Payload length = 23 byte
       header: 0x7E,
       satId: 0x01,
+      typeHk: 0x10,
       types: {
         0x10: "HK Telemetry",
         0x20: "Mission Data",
@@ -1820,14 +2048,28 @@
       }
     };
 
+    const COMMAND_PACKET = {
+      header: 0x7E,
+      destinationId: 0x01,
+      parameter: 0x00,
+      commandIds: {
+        a: 0x11,
+        b: 0x12
+      },
+      labels: {
+        a: "SENSOR_MODE ON",
+        b: "SENSOR_MODE OFF"
+      }
+    };
+
     const telemetryGraphBody = document.querySelector(".telemetry-graph-body");
-    let activeTelemetryGraphTab = "power";
 
     let xbeeReader = null;
     let xbeeReadLoopActive = false;
     let rxCommandCount = 0;
     let activePassResetKey = null;
     let serialTextBuffer = "";
+    let commandAckByteTextBuffer = "";
     let rssiHistory = [];
     let simulatedRssiTimer = null;
     let simulatedRssiDbm = -64;
@@ -1924,30 +2166,34 @@
       const magXRaw = readInt16BE(payload[17], payload[18]);
       const magYRaw = readInt16BE(payload[19], payload[20]);
       const magZRaw = readInt16BE(payload[21], payload[22]);
+      const adcRes = 4096;
+      const adcVref = 3.3;
+      const voltageV = voltageRaw / adcRes * adcVref * 1.431;
+
 
       return {
         modeText: mode.text,
         modeClassName: mode.className,
 
         voltageRaw,
-        voltageV: voltageRaw / 1000,
+        voltageV,
         voltageHex: `${byteToHex(payload[1])} ${byteToHex(payload[2])}`,
 
         temperatureRaw,
         temperatureC: temperatureRaw / 10,
         temperatureHex: `${byteToHex(payload[3])} ${byteToHex(payload[4])}`,
 
-        accX: accXRaw / 100,
-        accY: accYRaw / 100,
-        accZ: accZRaw / 100,
+        accX: accXRaw / 512 * 9.8,
+        accY: accYRaw / 512 * 9.8,
+        accZ: accZRaw / 512 * 9.8,
 
-        gyroX: gyroXRaw / 10,
-        gyroY: gyroYRaw / 10,
-        gyroZ: gyroZRaw / 10,
+        gyroX: gyroXRaw * 125 / 2048,
+        gyroY: gyroYRaw * 125 / 2048,
+        gyroZ: gyroZRaw * 125 / 2048,
 
-        magX: magXRaw / 10,
-        magY: magYRaw / 10,
-        magZ: magZRaw / 10
+        magX: magXRaw,
+        magY: magYRaw,
+        magZ: magZRaw
       };
     }
 
@@ -1968,7 +2214,7 @@
       }
 
       setTelemetryText(packetUi.tmVoltageValue, `${decoded.voltageV.toFixed(2)} V`);
-      setTelemetryText(packetUi.tmVoltageRaw, `raw: ${decoded.voltageHex} = ${decoded.voltageRaw} mV`);
+      setTelemetryText(packetUi.tmVoltageRaw, `raw: ${decoded.voltageHex} = ${decoded.voltageRaw} ADC`);
       setTelemetryText(packetUi.tmTempValue, `${decoded.temperatureC.toFixed(1)} °C`);
       setTelemetryText(packetUi.tmTempRaw, `raw: ${decoded.temperatureHex} = ${decoded.temperatureRaw} /10`);
 
@@ -2268,6 +2514,7 @@
       if (!value || value.length === 0) return;
 
       const receivedBytes = Array.from(value);
+      updateCommandAckLogFromBytes(receivedBytes);
       updateRawPacketSummary(receivedBytes);
       addPacketLog({
         hex: bytesToHex(receivedBytes),
@@ -2307,6 +2554,7 @@
         packetByteBuffer.splice(0, totalLength);
 
         const packet = parseTelemetryPacket(rawPacket);
+        markCommandAckFromTelemetryPacket(packet);
         updatePacketDisplay(packet);
       }
     }
@@ -2332,7 +2580,6 @@
     }
 
     const TELEMETRY_GRAPH_ITEMS = {
-      receivedNumber: { label: "Received", unit: "num", defaultMin: 0, defaultMax: 500, fixed: 0 },
       voltageV: { label: "電圧", unit: "V", defaultMin: 3.0, defaultMax: 4.3, fixed: 2 },
       temperatureC: { label: "温度", unit: "°C", defaultMin: 0, defaultMax: 40, fixed: 1 },
       accX: { label: "加速度 X", unit: "m/s²", defaultMin: -12, defaultMax: 12, fixed: 2 },
@@ -2346,23 +2593,15 @@
       magZ: { label: "地磁気 Z", unit: "µT", defaultMin: -80, defaultMax: 80, fixed: 1 }
     };
 
-    const TELEMETRY_GRAPH_GROUPS = {
-      power: {
-        tabLabel: "温度 / 電圧",
-        keys: ["receivedNumber", "temperatureC", "voltageV"]
-      },
-      motion: {
-        tabLabel: "角速度 / 加速度",
-        keys: ["gyroX", "gyroY", "gyroZ", "accX", "accY", "accZ"]
-      },
-      magnetic: {
-        tabLabel: "地磁気",
-        keys: ["magX", "magY", "magZ"]
-      }
-    };
+    const TELEMETRY_GRAPH_DEFS = [
+      { label: "温度", unit: "°C", keys: ["temperatureC"] },
+      { label: "電圧", unit: "V", keys: ["voltageV"] },
+      { label: "加速度", unit: "m/s²", keys: ["accX", "accY", "accZ"] },
+      { label: "角速度", unit: "°/s", keys: ["gyroX", "gyroY", "gyroZ"] },
+      { label: "地磁気", unit: "µT", keys: ["magX", "magY", "magZ"] }
+    ];
 
     const TELEMETRY_GRAPH_COLORS = {
-      receivedNumber: { line: "rgba(40, 217, 232, 0.96)", point: "#28d9e8", shadow: "rgba(40, 217, 232, 0.45)" },
       voltageV: { line: "rgba(40, 217, 232, 0.96)", point: "#28d9e8", shadow: "rgba(40, 217, 232, 0.45)" },
       temperatureC: { line: "rgba(242, 164, 0, 0.96)", point: "#f2a400", shadow: "rgba(242, 164, 0, 0.45)" },
       accX: { line: "rgba(43, 224, 95, 0.94)", point: "#2be05f", shadow: "rgba(43, 224, 95, 0.40)" },
@@ -2380,49 +2619,26 @@
       if (!telemetryGraphBody) return;
 
       telemetryGraphBody.innerHTML = `
-        <div class="telemetry-graph-tabs" id="telemetry-graph-tabs"></div>
         <div class="telemetry-graph-grid" id="telemetry-graph-grid"></div>
       `;
 
-      const tabs = telemetryGraphBody.querySelector("#telemetry-graph-tabs");
       const grid = telemetryGraphBody.querySelector("#telemetry-graph-grid");
-      if (!tabs || !grid) return;
-
-      Object.entries(TELEMETRY_GRAPH_GROUPS).forEach(([key, group]) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "telemetry-graph-tab";
-        button.dataset.tab = key;
-        button.textContent = group.tabLabel;
-        button.addEventListener("click", () => {
-          activeTelemetryGraphTab = key;
-          renderTelemetryGraphTab();
-          drawTelemetryGraphs();
-        });
-        tabs.appendChild(button);
-      });
-
-      renderTelemetryGraphTab();
-    }
-
-    function renderTelemetryGraphTab() {
-      if (!telemetryGraphBody) return;
-
-      const tabs = telemetryGraphBody.querySelectorAll(".telemetry-graph-tab");
-      const grid = telemetryGraphBody.querySelector("#telemetry-graph-grid");
-      const group = TELEMETRY_GRAPH_GROUPS[activeTelemetryGraphTab] || TELEMETRY_GRAPH_GROUPS.power;
       if (!grid) return;
 
-      tabs.forEach(tab => {
-        tab.classList.toggle("active", tab.dataset.tab === activeTelemetryGraphTab);
-      });
+      renderTelemetryGraphGrid();
+    }
 
-      grid.className = `telemetry-graph-grid graph-count-${group.keys.length}`;
-      grid.innerHTML = group.keys.map(key => {
-        const item = TELEMETRY_GRAPH_ITEMS[key] || TELEMETRY_GRAPH_ITEMS.voltageV;
+    function renderTelemetryGraphGrid() {
+      if (!telemetryGraphBody) return;
+
+      const grid = telemetryGraphBody.querySelector("#telemetry-graph-grid");
+      if (!grid) return;
+
+      grid.className = "telemetry-graph-grid";
+      grid.innerHTML = TELEMETRY_GRAPH_DEFS.map(def => {
         return `
-          <div class="telemetry-graph-box" data-key="${key}">
-            <div class="telemetry-graph-title"><span>${item.label}</span><span>${item.unit}</span></div>
+          <div class="telemetry-graph-box" data-keys="${def.keys.join(",")}">
+            <div class="telemetry-graph-title"><span>${def.label}</span><span>${def.unit}</span></div>
             <div class="telemetry-graph-canvas-wrap">
               <canvas class="telemetry-graph-canvas"></canvas>
             </div>
@@ -2431,28 +2647,31 @@
       }).join("");
     }
 
-    function getTelemetryValueRange(key) {
-      const item = TELEMETRY_GRAPH_ITEMS[key] || TELEMETRY_GRAPH_ITEMS.voltageV;
+    function getTelemetryValueRange(keys) {
+      const graphKeys = Array.isArray(keys) && keys.length ? keys : ["voltageV"];
+      const items = graphKeys.map(key => TELEMETRY_GRAPH_ITEMS[key] || TELEMETRY_GRAPH_ITEMS.voltageV);
       const recent = telemetryHistory.slice(-120);
       const values = recent
-        .map(p => p[key])
+        .flatMap(p => graphKeys.map(key => p[key]))
         .filter(v => Number.isFinite(v));
+      const defaultMin = Math.min(...items.map(item => item.defaultMin));
+      const defaultMax = Math.max(...items.map(item => item.defaultMax));
 
       if (values.length === 0) {
-        return { min: item.defaultMin, max: item.defaultMax };
+        return { min: defaultMin, max: defaultMax };
       }
 
-      let min = Math.min(...values, item.defaultMin);
-      let max = Math.max(...values, item.defaultMax);
-      const defaultSpan = Math.max(item.defaultMax - item.defaultMin, 1);
+      let min = Math.min(...values, defaultMin);
+      let max = Math.max(...values, defaultMax);
+      const defaultSpan = Math.max(defaultMax - defaultMin, 1);
       const span = Math.max(max - min, defaultSpan * 0.20);
       const pad = span * 0.12;
       return { min: min - pad, max: max + pad };
     }
 
-    function drawTelemetryGraph(canvas, container, key) {
-      const item = TELEMETRY_GRAPH_ITEMS[key] || TELEMETRY_GRAPH_ITEMS.voltageV;
-      const colors = TELEMETRY_GRAPH_COLORS[key] || TELEMETRY_GRAPH_COLORS.voltageV;
+    function drawTelemetryGraph(canvas, container, keys) {
+      const graphKeys = Array.isArray(keys) && keys.length ? keys : ["voltageV"];
+      const item = TELEMETRY_GRAPH_ITEMS[graphKeys[0]] || TELEMETRY_GRAPH_ITEMS.voltageV;
       const canvasInfo = resizeTelemetryGraphCanvas(canvas, container);
       if (!canvasInfo) return;
 
@@ -2460,23 +2679,25 @@
       ctx.clearRect(0, 0, width, height);
 
       const bg = ctx.createLinearGradient(0, 0, 0, height);
-      bg.addColorStop(0, "#061926");
-      bg.addColorStop(1, "#02080d");
+      bg.addColorStop(0, CANVAS_THEME.bgTop);
+      bg.addColorStop(1, CANVAS_THEME.bgBottom);
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, width, height);
 
       const leftPad = 34;
       const rightPad = 7;
-      const topPad = 7;
+      const topPad = graphKeys.length > 1 ? 19 : 7;
       const bottomPad = 13;
       const plotW = Math.max(1, width - leftPad - rightPad);
       const plotH = Math.max(1, height - topPad - bottomPad);
+      ctx.fillStyle = CANVAS_THEME.plotBg;
+      ctx.fillRect(leftPad, topPad, plotW, plotH);
       const nowMs = Date.now();
       const windowMs = 10 * 60 * 1000;
 
       telemetryHistory = telemetryHistory.filter(p => nowMs - p.time <= windowMs);
 
-      const range = getTelemetryValueRange(key);
+      const range = getTelemetryValueRange(graphKeys);
 
       function xFromTime(time) {
         return leftPad + plotW * clamp((time - (nowMs - windowMs)) / windowMs, 0, 1);
@@ -2487,62 +2708,78 @@
       }
 
       ctx.save();
-      ctx.strokeStyle = "rgba(95, 118, 132, 0.30)";
+      ctx.strokeStyle = CANVAS_THEME.gridStrong;
       ctx.lineWidth = 1;
       ctx.strokeRect(leftPad, topPad, plotW, plotH);
 
       const guideValues = [range.min, (range.min + range.max) / 2, range.max];
       guideValues.forEach(v => {
         const y = yFromValue(v);
-        ctx.strokeStyle = "rgba(95, 118, 132, 0.20)";
+        ctx.strokeStyle = CANVAS_THEME.grid;
         ctx.beginPath();
         ctx.moveTo(leftPad, y);
         ctx.lineTo(leftPad + plotW, y);
         ctx.stroke();
 
-        ctx.fillStyle = "rgba(220, 232, 242, 0.58)";
+        ctx.fillStyle = CANVAS_THEME.textMuted;
         ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "right";
         ctx.fillText(v.toFixed(item.fixed === 2 ? 1 : 0), leftPad - 3, y + 3);
       });
       ctx.restore();
 
-      const points = telemetryHistory.map(p => ({
-        time: p.time,
-        value: p[key]
-      })).filter(p => Number.isFinite(p.value));
+      graphKeys.forEach((key, keyIndex) => {
+        const colors = TELEMETRY_GRAPH_COLORS[key] || TELEMETRY_GRAPH_COLORS.voltageV;
+        const points = telemetryHistory.map(p => ({
+          time: p.time,
+          value: p[key]
+        })).filter(p => Number.isFinite(p.value));
 
-      if (points.length >= 2) {
-        ctx.save();
-        ctx.strokeStyle = colors.line;
-        ctx.lineWidth = 1.8;
-        ctx.shadowColor = colors.shadow;
-        ctx.shadowBlur = 5;
-        ctx.beginPath();
-        points.forEach((p, i) => {
-          const x = xFromTime(p.time);
-          const y = yFromValue(p.value);
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-        ctx.restore();
-      }
+        if (points.length >= 2) {
+          ctx.save();
+          ctx.strokeStyle = colors.line;
+          ctx.lineWidth = 1.7;
+          ctx.shadowColor = colors.shadow;
+          ctx.shadowBlur = 4;
+          ctx.beginPath();
+          points.forEach((p, i) => {
+            const x = xFromTime(p.time);
+            const y = yFromValue(p.value);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+          ctx.restore();
+        }
 
-      if (points.length > 0) {
-        const latest = points[points.length - 1];
+        if (points.length > 0) {
+          const latest = points[points.length - 1];
+          ctx.save();
+          ctx.fillStyle = colors.point;
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(xFromTime(latest.time), yFromValue(latest.value), 2.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        if (graphKeys.length > 1) {
+          const axisLabel = (TELEMETRY_GRAPH_ITEMS[key]?.label || key).split(" ").pop();
+          const legendX = leftPad + keyIndex * 32;
+          ctx.save();
+          ctx.fillStyle = colors.point;
+          ctx.font = "9px Consolas, Menlo, monospace";
+          ctx.textAlign = "left";
+          ctx.fillText(axisLabel, legendX, 12);
+          ctx.restore();
+        }
+      });
+
+      if (!graphKeys.some(key => telemetryHistory.some(p => Number.isFinite(p[key])))) {
         ctx.save();
-        ctx.fillStyle = colors.point;
-        ctx.strokeStyle = "#dce8f2";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(xFromTime(latest.time), yFromValue(latest.value), 3.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      } else {
-        ctx.save();
-        ctx.fillStyle = "rgba(220, 232, 242, 0.58)";
+        ctx.fillStyle = CANVAS_THEME.textMuted;
         ctx.font = "9px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "center";
         //ctx.fillText("テレメトリ受信待ち", leftPad + plotW / 2, topPad + plotH / 2 + 3);
@@ -2550,7 +2787,7 @@
       }
 
       ctx.save();
-      ctx.fillStyle = "rgba(220, 232, 242, 0.50)";
+      ctx.fillStyle = CANVAS_THEME.textMuted;
       ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
       ctx.textAlign = "left";
       ctx.fillText("10分前", leftPad, height - 3);
@@ -2562,10 +2799,14 @@
     function drawTelemetryGraphs() {
       if (!telemetryGraphBody) return;
 
-      telemetryGraphBody.querySelectorAll(".telemetry-graph-box[data-key]").forEach(box => {
+      telemetryGraphBody.querySelectorAll(".telemetry-graph-box[data-keys]").forEach(box => {
         const canvas = box.querySelector("canvas");
         const container = box.querySelector(".telemetry-graph-canvas-wrap");
-        drawTelemetryGraph(canvas, container, box.dataset.key);
+        const keys = String(box.dataset.keys || box.dataset.key || "")
+          .split(",")
+          .map(key => key.trim())
+          .filter(Boolean);
+        drawTelemetryGraph(canvas, container, keys);
       });
     }
 
@@ -2597,8 +2838,8 @@
       ctx.clearRect(0, 0, width, height);
 
       const bg = ctx.createLinearGradient(0, 0, 0, height);
-      bg.addColorStop(0, "#061926");
-      bg.addColorStop(1, "#02080d");
+      bg.addColorStop(0, CANVAS_THEME.bgTop);
+      bg.addColorStop(1, CANVAS_THEME.bgBottom);
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, width, height);
 
@@ -2608,6 +2849,8 @@
       const bottomPad = 11;
       const plotW = Math.max(1, width - leftPad - rightPad);
       const plotH = Math.max(1, height - topPad - bottomPad);
+      ctx.fillStyle = CANVAS_THEME.plotBg;
+      ctx.fillRect(leftPad, topPad, plotW, plotH);
       const nowMs = Date.now();
       const windowMs = 3 * 60 * 1000;
 
@@ -2635,19 +2878,19 @@
       }
 
       ctx.save();
-      ctx.strokeStyle = "rgba(95, 118, 132, 0.30)";
+      ctx.strokeStyle = CANVAS_THEME.gridStrong;
       ctx.lineWidth = 1;
       ctx.strokeRect(leftPad, topPad, plotW, plotH);
 
       rssiTicks.forEach(v => {
         const y = yFromRssi(v);
-        ctx.strokeStyle = "rgba(95, 118, 132, 0.22)";
+        ctx.strokeStyle = CANVAS_THEME.grid;
         ctx.beginPath();
         ctx.moveTo(leftPad, y);
         ctx.lineTo(leftPad + plotW, y);
         ctx.stroke();
 
-        ctx.fillStyle = "rgba(220, 232, 242, 0.58)";
+        ctx.fillStyle = CANVAS_THEME.textMuted;
         ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "right";
         ctx.fillText(String(v), leftPad - 3, y + 3);
@@ -2675,7 +2918,7 @@
         const latest = rssiHistory[rssiHistory.length - 1];
         ctx.save();
         ctx.fillStyle = "#28d9e8";
-        ctx.strokeStyle = "#dce8f2";
+        ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(xFromTime(latest.time), yFromRssi(latest.rssi), 3.2, 0, Math.PI * 2);
@@ -2684,7 +2927,7 @@
         ctx.restore();
       } else {
         ctx.save();
-        ctx.fillStyle = "rgba(220, 232, 242, 0.58)";
+        ctx.fillStyle = CANVAS_THEME.textMuted;
         ctx.font = "9px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "center";
         //ctx.fillText("RSSIデータ待ち", leftPad + plotW / 2, topPad + plotH / 2 + 3);
@@ -2692,7 +2935,7 @@
       }
 
       ctx.save();
-      ctx.fillStyle = "rgba(220, 232, 242, 0.50)";
+      ctx.fillStyle = CANVAS_THEME.textMuted;
       ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
       ctx.textAlign = "left";
       ctx.fillText("3分前", leftPad, height - 3);
@@ -2720,10 +2963,30 @@
     }
 
     function nextSimulatedRssiDbm() {
-      const t = Date.now() / 1000;
-      const wave = Math.sin(t / 8) * 8 + Math.sin(t / 17) * 4;
-      const jitter = (Math.random() - 0.5) * 3;
-      simulatedRssiDbm = Math.max(-96, Math.min(-38, -66 + wave + jitter));
+      let targetDbm = RSSI_SIM_NO_SIGNAL_DBM;
+
+      try {
+        const satrec = orbitMapState && orbitMapState.satrec;
+        const look = satrec ? getLookAnglesFromTle(satrec, new Date(), getGroundStationSetting()) : null;
+
+        if (look && Number.isFinite(look.elDeg) && Number.isFinite(look.rangeKm) && look.rangeKm > 0) {
+          if (look.elDeg >= 0) {
+            const rangeLossDb = 20 * Math.log10(Math.max(look.rangeKm, 1) / RSSI_SIM_REFERENCE_RANGE_KM);
+            const elevationSin = Math.sin(deg2rad(clamp(look.elDeg, 0, 90)));
+            const lowElevationPenaltyDb = 18 * (1 - Math.sqrt(clamp(elevationSin, 0, 1)));
+            targetDbm = RSSI_SIM_REFERENCE_DBM - rangeLossDb - lowElevationPenaltyDb;
+          } else {
+            const belowHorizonFade = clamp((look.elDeg + 8) / 8, 0, 1);
+            targetDbm = RSSI_SIM_NO_SIGNAL_DBM + belowHorizonFade * 14;
+          }
+        }
+      } catch (error) {
+        targetDbm = RSSI_SIM_NO_SIGNAL_DBM;
+      }
+
+      const jitter = (Math.random() - 0.5) * 1.8;
+      const smoothed = simulatedRssiDbm * 0.72 + (targetDbm + jitter) * 0.28;
+      simulatedRssiDbm = Math.max(RSSI_SIM_NO_SIGNAL_DBM, Math.min(-38, smoothed));
       return simulatedRssiDbm;
     }
 
@@ -2777,10 +3040,10 @@
 
     function handleReceivedSerialText(text) {
       if (!text) return;
-      if (!isTelemetryDisplayAllowed()) return;
 
       serialTextBuffer += text;
       updateRssiFromReceivedText(text);
+      const telemetryAllowed = isTelemetryDisplayAllowed();
 
       const lines = serialTextBuffer.split(/\r?\n/);
       serialTextBuffer = lines.pop() || "";
@@ -2789,7 +3052,7 @@
       lines.forEach(line => {
         const trimmed = line.trim();
         if (trimmed.length > 0) {
-          updateTelemetryDisplayFromBackendText(trimmed);
+          if (telemetryAllowed) updateTelemetryDisplayFromBackendText(trimmed);
           updateCommandAckLog(trimmed);
           counted += 1;
         }
@@ -2797,7 +3060,7 @@
 
       // 改行なしのデータでも、受信チャンクが来たことはカウントできるようにする。
       if (counted === 0 && text.trim().length > 0 && serialTextBuffer.length > 0) {
-        updateTelemetryDisplayFromBackendText(serialTextBuffer);
+        if (telemetryAllowed) updateTelemetryDisplayFromBackendText(serialTextBuffer);
         updateCommandAckLog(serialTextBuffer);
         counted = 1;
         serialTextBuffer = "";
@@ -2807,16 +3070,86 @@
     }
 
 
-    function updateCommandAckLog(text, ackKey) {
+    function getAckModeFromText(text) {
       const line = String(text || "").trim();
-      const match = line.match(/^SENSOR_MODE\s*=\s*(ON|OFF)$/i);
+      const directMatch = line.match(/^SENSOR_MODE\s*=?\s*(ON|OFF)$/i);
+      if (directMatch) return directMatch[1].toUpperCase();
+      const ackMatch = line.match(/\bACK\b.*\b(ON|OFF)\b/i);
+      if (ackMatch) return ackMatch[1].toUpperCase();
+      return "";
+    }
+
+    function updateCommandAckLogFromBytes(bytes) {
+      if (!bytes || !bytes.length) return false;
+
+      const text = bytes.map(byte => {
+        if (byte === 0x0A || byte === 0x0D) return "\n";
+        if (byte >= 0x20 && byte <= 0x7E) return String.fromCharCode(byte);
+        return "\n";
+      }).join("");
+
+      commandAckByteTextBuffer = `${commandAckByteTextBuffer}${text}`.slice(-256);
+      const match = commandAckByteTextBuffer.match(/SENSOR_MODE\s*=?\s*(ON|OFF)/i);
       if (!match) return false;
 
-      const displayKey = ackKey || line.toUpperCase();
-      if (displayKey === lastDisplayedCommandAckKey) return true;
-      lastDisplayedCommandAckKey = displayKey;
+      const mode = match[1].toUpperCase();
+      commandAckByteTextBuffer = "";
+      return updateCommandAckLog(`SENSOR_MODE = ${mode}`, `bytes|${mode}|${Date.now()}`);
+    }
 
-      updateCommandLog(`ACK SENSOR_MODE=${match[1].toUpperCase()}`);
+    function renderCommandLog() {
+      if (!commandLogList) return;
+      commandLogList.innerHTML = commandLogHistory.map(row => `
+        <div class="command-log-row" title="${row.command.replace(/"/g, '&quot;')}">
+          <div class="command-log-time">${row.time}</div>
+          <div class="command-log-command ${row.type === "ack" ? "command-log-ack" : ""}">${row.command}</div>
+        </div>
+      `).join("");
+    }
+
+    function markMatchingCommandAck(mode) {
+      const expectedAck = `SENSOR_MODE = ${mode}`;
+      const row = commandLogHistory.find(item =>
+        item.type === "tx" &&
+        !item.ackReceived &&
+        String(item.expectedAck || "").toUpperCase() === expectedAck
+      );
+      if (!row) return false;
+
+      row.ackReceived = true;
+      updateCommandLog({
+        command: `ACK ${expectedAck}`,
+        type: "ack"
+      });
+      return true;
+    }
+
+    function markCommandAckFromTelemetryPacket(packet) {
+      if (!packet || !packet.checksumOk || packet.packetType !== TELEMETRY_PACKET.typeHk) return false;
+      if (!packet.payload || packet.payload.length < 1) return false;
+
+      const mode = packet.payload[0] === 0x01 ? "ON" : packet.payload[0] === 0x00 ? "OFF" : "";
+      if (!mode) return false;
+
+      return markMatchingCommandAck(mode);
+    }
+
+    function updateCommandAckLog(text, ackKey) {
+      const mode = getAckModeFromText(text);
+      if (!mode) return false;
+
+      const displayKey = ackKey || String(text || "").trim().toUpperCase();
+      if (markMatchingCommandAck(mode)) {
+        lastDisplayedCommandAckKey = displayKey;
+      } else if (displayKey === lastDisplayedCommandAckKey) {
+        return true;
+      } else {
+        lastDisplayedCommandAckKey = displayKey;
+        updateCommandLog({
+          command: `ACK SENSOR_MODE=${mode}`,
+          type: "ack"
+        });
+      }
       return true;
     }
 
@@ -2831,33 +3164,97 @@
 
     function updateCommandTxLogFromObject(commandTx) {
       if (!commandTx) return false;
-      const key = `${commandTx.timestamp || ""}|${commandTx.command || ""}|${commandTx.hex || ""}`;
+      const key = `${commandTx.timestamp || ""}|${commandTx.command || ""}|${commandTx.hex || ""}|${commandTx.ack_received ? "ack" : "wait"}`;
       if (key === lastDisplayedCommandTxKey) return true;
       lastDisplayedCommandTxKey = key;
 
       const command = String(commandTx.command || "").trim();
-      const hex = String(commandTx.hex || "").trim();
+      const packetHex = String(commandTx.packet_hex || commandTx.hex || "").trim();
       const expected = String(commandTx.expected_ack || "").trim();
-      updateCommandLog(`TX ${command}${hex ? ` [${hex}]` : ""}${expected ? ` / wait ${expected}` : ""}`);
+      const label = String(commandTx.packet_label || commandTx.label || "").trim();
+      if (commandTx.ack_received && expected) {
+        const mode = getAckModeFromText(expected);
+        if (mode && markMatchingCommandAck(mode)) return true;
+      }
+
+      updateCommandLog({
+        command: formatCommandPacketLog(command, packetHex, expected, label),
+        type: "tx",
+        expectedAck: expected.toUpperCase(),
+        ackReceived: Boolean(commandTx.ack_received)
+      });
       return true;
     }
 
 
-    function updateCommandLog(commandText) {
+    function normalizeCommandText(commandText) {
+      return String(commandText || "").trim().toLowerCase();
+    }
+
+    function isAllowedCommand(commandText) {
+      return Object.prototype.hasOwnProperty.call(COMMAND_PACKET.commandIds, normalizeCommandText(commandText));
+    }
+
+    function buildCommandPacketInfo(commandText, sequenceNumber) {
+      const command = normalizeCommandText(commandText);
+      const commandId = COMMAND_PACKET.commandIds[command];
+      if (commandId === undefined) return null;
+
+      const seq = Number(sequenceNumber) & 0xFFFF;
+      const body = [
+        COMMAND_PACKET.destinationId,
+        commandId,
+        COMMAND_PACKET.parameter,
+        (seq >> 8) & 0xFF,
+        seq & 0xFF
+      ];
+      const checksum = calculatePacketChecksum(body);
+      const bytes = [COMMAND_PACKET.header, ...body, checksum];
+
+      return {
+        command,
+        label: COMMAND_PACKET.labels[command] || command.toUpperCase(),
+        bytes,
+        hex: bytesToHex(bytes),
+        destinationId: COMMAND_PACKET.destinationId,
+        commandId,
+        parameter: COMMAND_PACKET.parameter,
+        sequence: seq,
+        checksum
+      };
+    }
+
+    function consumeCommandPacketInfo(commandText) {
+      const packet = buildCommandPacketInfo(commandText, nextCommandSequenceNumber);
+      if (!packet) return null;
+      nextCommandSequenceNumber = (nextCommandSequenceNumber + 1) & 0xFFFF;
+      return packet;
+    }
+
+    function formatCommandPacketLog(commandText, packetHex, expectedAck, packetLabel) {
+      const command = normalizeCommandText(commandText);
+      const label = packetLabel || COMMAND_PACKET.labels[command] || command.toUpperCase();
+      const packet = packetHex || buildCommandPacketInfo(command, nextCommandSequenceNumber)?.hex || "";
+      return `TX ${command.toUpperCase()} ${label}${packet ? ` | ${packet}` : ""}`;
+    }
+
+    function updateCommandLog(commandEntry) {
       if (!commandLogList) return;
+      const entry = typeof commandEntry === "string"
+        ? { command: commandEntry }
+        : commandEntry;
+      const commandText = String(entry.command || "");
 
       commandLogHistory.unshift({
+        id: nextCommandLogId++,
         time: formatTime(new Date()),
-        command: commandText
+        command: commandText,
+        type: String(entry.type || ""),
+        expectedAck: String(entry.expectedAck || "").toUpperCase(),
+        ackReceived: Boolean(entry.ackReceived)
       });
       commandLogHistory = commandLogHistory.slice(0, 8);
-
-      commandLogList.innerHTML = commandLogHistory.map(row => `
-        <div class="command-log-row" title="${row.command.replace(/"/g, '&quot;')}">
-          <div class="command-log-time">${row.time}</div>
-          <div class="command-log-command">${row.command}</div>
-        </div>
-      `).join("");
+      renderCommandLog();
     }
 
     async function sendXbeeCommand() {
@@ -2866,6 +3263,11 @@
       const commandText = commandInput.value.trim();
       if (!commandText) {
         alert("送信するコマンドを入力してください。");
+        return;
+      }
+
+      if (!isAllowedCommand(commandText)) {
+        alert("送信できるコマンドは a または b です。");
         return;
       }
 
@@ -2881,7 +3283,18 @@
             throw new Error(`Command API returned ${response.status}`);
           }
 
-          updateCommandLog(commandText);
+          const result = await response.json().catch(() => ({}));
+          updateCommandLog({
+            command: formatCommandPacketLog(
+              commandText,
+              result.packet_hex || result.hex || "",
+              result.expected_ack || "",
+              result.packet_label || ""
+            ),
+            type: "tx",
+            expectedAck: String(result.expected_ack || "").toUpperCase(),
+            ackReceived: false
+          });
           commandInput.value = "";
           commandInput.focus();
         } catch (error) {
@@ -2902,8 +3315,19 @@
 
       try {
         const encoder = new TextEncoder();
-        await xbeeWriter.write(encoder.encode(`${commandText}${DIRECT_SERIAL_COMMAND_LINE_ENDING}`));
-        updateCommandLog(commandText);
+        const packetInfo = consumeCommandPacketInfo(commandText);
+        await xbeeWriter.write(encoder.encode(`${packetInfo.command}${DIRECT_SERIAL_COMMAND_LINE_ENDING}`));
+        updateCommandLog({
+          command: formatCommandPacketLog(
+            packetInfo.command,
+            packetInfo.hex,
+            packetInfo.command === "a" ? "SENSOR_MODE = ON" : "SENSOR_MODE = OFF",
+            packetInfo.label
+          ),
+          type: "tx",
+          expectedAck: packetInfo.command === "a" ? "SENSOR_MODE = ON" : "SENSOR_MODE = OFF",
+          ackReceived: false
+        });
         commandInput.value = "";
         commandInput.focus();
       } catch (error) {
@@ -3253,6 +3677,10 @@
 
     function formatTime(date) {
       return `${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
+    }
+
+    function formatUtcTimeShort(date) {
+      return `${pad2(date.getUTCHours())}:${pad2(date.getUTCMinutes())}`;
     }
 
     function formatDateTime(date) {
@@ -3858,7 +4286,11 @@ ${tle.line2}`;
       };
     }
 
-    function makeAntenna3DLabel(text, color = "#dce8f2") {
+    function getAntennaVisualAzDeg(look) {
+      return normalizeDeg((look?.azDeg || 0) + ANTENNA_VISUAL_AZ_OFFSET_DEG);
+    }
+
+    function makeAntenna3DLabel(text, color = "#073474") {
       const THREE = THREE_LIB;
       const canvas = document.createElement("canvas");
       canvas.width = 128;
@@ -3868,9 +4300,9 @@ ${tle.line2}`;
       ctx.font = "bold 24px Segoe UI, Noto Sans JP, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = "rgba(3, 10, 15, 0.70)";
+      ctx.fillStyle = CANVAS_THEME.labelBg;
       ctx.fillRect(0, 6, canvas.width, 36);
-      ctx.strokeStyle = "rgba(40, 217, 232, 0.38)";
+      ctx.strokeStyle = CANVAS_THEME.labelBorder;
       ctx.strokeRect(0.5, 6.5, canvas.width - 1, 35);
       ctx.fillStyle = color;
       ctx.fillText(text, canvas.width / 2, canvas.height / 2);
@@ -3898,6 +4330,77 @@ ${tle.line2}`;
       );
     }
 
+    function makeParabolicDishMesh(THREE, radius = 0.48, depth = 0.18) {
+      const radialSegments = 56;
+      const ringSegments = 10;
+      const vertices = [];
+      const indices = [];
+
+      for (let rIndex = 0; rIndex <= ringSegments; rIndex++) {
+        const rRatio = rIndex / ringSegments;
+        const r = radius * rRatio;
+        const z = -depth * rRatio * rRatio;
+
+        for (let s = 0; s <= radialSegments; s++) {
+          const a = Math.PI * 2 * s / radialSegments;
+          vertices.push(Math.cos(a) * r, Math.sin(a) * r, z);
+        }
+      }
+
+      const stride = radialSegments + 1;
+      for (let rIndex = 0; rIndex < ringSegments; rIndex++) {
+        for (let s = 0; s < radialSegments; s++) {
+          const a = rIndex * stride + s;
+          const b = a + 1;
+          const c = (rIndex + 1) * stride + s;
+          const d = c + 1;
+          indices.push(a, c, b, b, c, d);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+
+      return new THREE.Mesh(
+        geometry,
+        new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          roughness: 0.30,
+          metalness: 0.10,
+          transparent: true,
+          opacity: 0.88,
+          side: THREE.DoubleSide
+        })
+      );
+    }
+
+    function makeAntennaRod(THREE, start, end, radius = 0.012, color = 0x0b63d8) {
+      const delta = end.clone().sub(start);
+      const length = Math.max(delta.length(), 0.001);
+      const rod = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, length, 12),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.36, metalness: 0.16 })
+      );
+      rod.position.copy(start).add(end).multiplyScalar(0.5);
+      rod.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), delta.normalize());
+      return rod;
+    }
+
+    function makeDishSignalRing(THREE, radius, z, opacity) {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(radius, 0.006, 8, 80),
+        new THREE.MeshBasicMaterial({
+          color: 0x0b63d8,
+          transparent: true,
+          opacity
+        })
+      );
+      ring.position.z = z;
+      return ring;
+    }
+
     function ensureAntenna3DScene(width, height) {
       if (!THREE_LIB || !antennaVisualCanvas) return null;
       const THREE = THREE_LIB;
@@ -3908,7 +4411,7 @@ ${tle.line2}`;
           antialias: true,
           alpha: true
         });
-        renderer.setClearColor(0x02080d, 1);
+        renderer.setClearColor(0xf1f7ff, 1);
 
         const scene = new THREE.Scene();
         scene.fog = null;
@@ -3933,67 +4436,103 @@ ${tle.line2}`;
           controls.update();
         }
 
-        scene.add(new THREE.AmbientLight(0x6fa8b8, 1.2));
-        const keyLight = new THREE.DirectionalLight(0xdce8f2, 2.2);
+        scene.add(new THREE.AmbientLight(0xc7dcf6, 1.35));
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
         keyLight.position.set(3, 6, 5);
         scene.add(keyLight);
 
         const ground = new THREE.Mesh(
           new THREE.CircleGeometry(5.2, 96),
-          new THREE.MeshBasicMaterial({ color: 0x113b34, transparent: true, opacity: 0.56, side: THREE.DoubleSide })
+          new THREE.MeshBasicMaterial({ color: 0xd7ecff, transparent: true, opacity: 0.82, side: THREE.DoubleSide })
         );
         ground.rotation.x = -Math.PI / 2;
         scene.add(ground);
 
-        const grid = new THREE.GridHelper(10, 10, 0x28d9e8, 0x244654);
+        const grid = new THREE.GridHelper(10, 10, 0x1e6ed0, 0xa4bddb);
         grid.material.transparent = true;
-        grid.material.opacity = 0.22;
+        grid.material.opacity = 0.46;
         scene.add(grid);
 
-        scene.add(makeAntenna3DRing(5.1, 0, 0xdce8f2, 0.38));
+        scene.add(makeAntenna3DRing(5.1, 0, 0x2d5b95, 0.46));
         scene.add(makeAntenna3DRing(5.1, AOS_LOS_ELEVATION_THRESHOLD_DEG, 0x2be05f, 0.52));
-        scene.add(makeAntenna3DRing(5.1, 30, 0x5f7684, 0.24));
+        scene.add(makeAntenna3DRing(5.1, 30, 0x7f9abc, 0.34));
         scene.add(makeAntenna3DRing(5.1, PASS_MIN_MAX_ELEVATION_DEG, 0xf2a400, 0.52));
 
         [
-          ["N", 0, 5.35, "#dce8f2"],
-          ["E", 5.35, 0, "#dce8f2"],
-          ["S", 0, -5.35, "#dce8f2"],
-          ["W", -5.35, 0, "#dce8f2"]
-        ].forEach(([label, x, z, color]) => {
+          ["N", 0],
+          ["E", 90],
+          ["S", 180],
+          ["W", 270]
+        ].forEach(([label, azDeg]) => {
+          const az = deg2rad(normalizeDeg(azDeg + ANTENNA_VISUAL_AZ_OFFSET_DEG));
+          const x = Math.sin(az) * 5.35;
+          const z = Math.cos(az) * 5.35;
+          const color = "#073474";
           const sprite = makeAntenna3DLabel(label, color);
           sprite.position.set(x, 0.18, z);
           scene.add(sprite);
         });
 
         const gsGroup = new THREE.Group();
-        const mast = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.055, 0.075, 0.62, 24),
-          new THREE.MeshStandardMaterial({ color: 0xdce8f2, roughness: 0.45, metalness: 0.25 })
+        const basePlate = new THREE.Mesh(
+          new THREE.BoxGeometry(0.82, 0.07, 0.26),
+          new THREE.MeshStandardMaterial({ color: 0xf7fbff, roughness: 0.32, metalness: 0.08 })
         );
-        mast.position.y = 0.31;
-        gsGroup.add(mast);
+        basePlate.position.y = 0.04;
+        gsGroup.add(basePlate);
 
-        const base = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.34, 0.42, 0.10, 40),
-          new THREE.MeshStandardMaterial({ color: 0x28d9e8, roughness: 0.36, metalness: 0.18, transparent: true, opacity: 0.42 })
-        );
-        base.position.y = 0.05;
-        gsGroup.add(base);
+        [
+          [-0.24, 0],
+          [0.24, 0],
+          [0, 0]
+        ].forEach(([x, z]) => {
+          const foot = new THREE.Mesh(
+            new THREE.BoxGeometry(0.18, 0.04, 0.18),
+            new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.32, metalness: 0.08 })
+          );
+          foot.position.set(x, 0.095, z);
+          gsGroup.add(foot);
+        });
+
+        gsGroup.add(makeAntennaRod(THREE, new THREE.Vector3(-0.24, 0.115, 0), new THREE.Vector3(-0.08, 0.58, 0), 0.030, 0x3a4654));
+        gsGroup.add(makeAntennaRod(THREE, new THREE.Vector3(0.24, 0.115, 0), new THREE.Vector3(0.08, 0.58, 0), 0.030, 0x3a4654));
+        gsGroup.add(makeAntennaRod(THREE, new THREE.Vector3(-0.08, 0.58, 0), new THREE.Vector3(0.08, 0.58, 0), 0.022, 0x3a4654));
+        gsGroup.add(makeAntennaRod(THREE, new THREE.Vector3(0, 0.115, 0), new THREE.Vector3(0, 0.72, 0), 0.024, 0x3a4654));
 
         const dishPivot = new THREE.Group();
-        dishPivot.position.y = 0.64;
+        dishPivot.position.y = 0.78;
+        const dishSurface = makeParabolicDishMesh(THREE, 0.58, 0.20);
+        dishPivot.add(dishSurface);
         const dish = new THREE.Mesh(
-          new THREE.TorusGeometry(0.36, 0.018, 10, 48),
-          new THREE.MeshStandardMaterial({ color: 0xdce8f2, roughness: 0.25, metalness: 0.35 })
+          new THREE.TorusGeometry(0.58, 0.026, 10, 72),
+          new THREE.MeshStandardMaterial({ color: 0xeaf3ff, roughness: 0.25, metalness: 0.35 })
         );
+        dish.position.z = -0.20;
         dishPivot.add(dish);
-        const feed = new THREE.Mesh(
-          new THREE.SphereGeometry(0.055, 18, 12),
-          new THREE.MeshStandardMaterial({ color: 0x28d9e8, emissive: 0x0c5660, emissiveIntensity: 1.2 })
+        const dishAxis = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.016, 0.016, 0.74, 16),
+          new THREE.MeshStandardMaterial({ color: 0x3a4654, roughness: 0.35, metalness: 0.15 })
         );
-        feed.position.z = 0.24;
+        dishAxis.rotation.x = Math.PI / 2;
+        dishAxis.position.z = 0.37;
+        dishPivot.add(dishAxis);
+        const feedPos = new THREE.Vector3(0, 0, 0.76);
+        [
+          new THREE.Vector3(0.38, 0, -0.12),
+          new THREE.Vector3(-0.38, 0, -0.12),
+          new THREE.Vector3(0, 0.38, -0.12)
+        ].forEach(start => {
+          dishPivot.add(makeAntennaRod(THREE, start, feedPos, 0.010, 0x3a4654));
+        });
+        const feed = new THREE.Mesh(
+          new THREE.SphereGeometry(0.064, 18, 12),
+          new THREE.MeshStandardMaterial({ color: 0x3a4654, roughness: 0.28, metalness: 0.10 })
+        );
+        feed.position.copy(feedPos);
         dishPivot.add(feed);
+        dishPivot.add(makeDishSignalRing(THREE, 0.25, 0.92, 0.18));
+        dishPivot.add(makeDishSignalRing(THREE, 0.38, 1.08, 0.13));
+        dishPivot.add(makeDishSignalRing(THREE, 0.51, 1.24, 0.09));
         gsGroup.add(dishPivot);
         scene.add(gsGroup);
 
@@ -4015,8 +4554,14 @@ ${tle.line2}`;
           new THREE.LineBasicMaterial({ color: 0xf2a400, transparent: true, opacity: 0.92 })
         );
         scene.add(beam);
+        const beamTube = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.025, 0.025, 1, 16),
+          new THREE.MeshBasicMaterial({ color: 0x2be05f, transparent: true, opacity: 0.20 })
+        );
+        scene.add(beamTube);
 
-        const satLabel = makeAntenna3DLabel("SAT", "#fff3c7");
+        const satLabel = makeAntenna3DLabel("SAT", "#b46b00");
+        satLabel.scale.set(1.95, 0.76, 1);
         scene.add(satLabel);
 
         const statusLabel = makeAntenna3DLabel("TLE待ち", "#8ea3af");
@@ -4032,6 +4577,7 @@ ${tle.line2}`;
           satelliteHalo,
           satGroup,
           beam,
+          beamTube,
           satLabel,
           statusLabel,
           controls,
@@ -4057,7 +4603,7 @@ ${tle.line2}`;
 
     function lookToAntenna3DVector(look) {
       const THREE = THREE_LIB;
-      const az = deg2rad(look.azDeg);
+      const az = deg2rad(getAntennaVisualAzDeg(look));
       const el = deg2rad(look.elDeg);
       const cosEl = Math.cos(el);
       return new THREE.Vector3(
@@ -4065,6 +4611,20 @@ ${tle.line2}`;
         Math.sin(el),
         Math.cos(az) * cosEl
       ).normalize();
+    }
+
+    function updateAntenna3DBeamTube(mesh, start, end, colorHex, opacity) {
+      const THREE = THREE_LIB;
+      const delta = end.clone().sub(start);
+      const length = delta.length();
+      if (!mesh || length <= 0.001) return;
+
+      mesh.visible = true;
+      mesh.position.copy(start).add(delta.multiplyScalar(0.5));
+      mesh.scale.set(1, length, 1);
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), end.clone().sub(start).normalize());
+      mesh.material.color.setHex(colorHex);
+      mesh.material.opacity = opacity;
     }
 
     function startAntenna3DAnimation() {
@@ -4095,8 +4655,8 @@ ${tle.line2}`;
       ctx.clearRect(0, 0, width, height);
 
       const bg = ctx.createLinearGradient(0, 0, 0, height);
-      bg.addColorStop(0, "#061926");
-      bg.addColorStop(1, "#02080d");
+      bg.addColorStop(0, CANVAS_THEME.bgTop);
+      bg.addColorStop(1, CANVAS_THEME.bgBottom);
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, width, height);
 
@@ -4105,7 +4665,7 @@ ${tle.line2}`;
       const radius = Math.max(44, Math.min(width, height) * 0.52);
 
       ctx.save();
-      ctx.strokeStyle = "rgba(40, 217, 232, 0.18)";
+      ctx.strokeStyle = "rgba(30, 110, 208, 0.28)";
       ctx.lineWidth = 1;
       [1, 0.72, 0.44].forEach(scale => {
         ctx.beginPath();
@@ -4113,17 +4673,17 @@ ${tle.line2}`;
         ctx.stroke();
       });
 
-      ctx.strokeStyle = "rgba(220, 232, 242, 0.18)";
+      ctx.strokeStyle = "rgba(87, 116, 150, 0.30)";
       ["N", "E", "S", "W"].forEach((label, index) => {
-        const angle = -Math.PI / 2 + index * Math.PI / 2;
+        const angle = -Math.PI / 2 + index * Math.PI / 2 + deg2rad(ANTENNA_VISUAL_AZ_OFFSET_DEG);
         const x = cx + Math.cos(angle) * radius;
         const y = cy + Math.sin(angle) * radius * 0.34;
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.lineTo(x, y);
         ctx.stroke();
-        ctx.fillStyle = "rgba(220, 232, 242, 0.76)";
-        ctx.font = "11px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.fillStyle = CANVAS_THEME.text;
+        ctx.font = "bold 12px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(label, x, y - 4);
       });
@@ -4131,39 +4691,60 @@ ${tle.line2}`;
 
       const mastTopY = cy - radius * 0.18;
       ctx.save();
-      ctx.strokeStyle = "#dce8f2";
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#3a4654";
+      ctx.lineWidth = 3.2;
       ctx.beginPath();
       ctx.moveTo(cx, cy + 16);
       ctx.lineTo(cx, mastTopY);
+      ctx.moveTo(cx - 17, cy + 16);
+      ctx.lineTo(cx, mastTopY);
+      ctx.moveTo(cx + 17, cy + 16);
+      ctx.lineTo(cx, mastTopY);
       ctx.stroke();
-      ctx.fillStyle = "rgba(40, 217, 232, 0.38)";
-      ctx.strokeStyle = "rgba(220, 232, 242, 0.82)";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.74)";
+      ctx.strokeStyle = "rgba(58, 70, 84, 0.78)";
       ctx.lineWidth = 1.4;
       ctx.beginPath();
-      ctx.ellipse(cx, cy + 18, 30, 9, 0, 0, Math.PI * 2);
+      ctx.rect(cx - 28, cy + 17, 56, 7);
       ctx.fill();
       ctx.stroke();
       ctx.restore();
 
       const activeColor = passVisible ? "#2be05f" : "#2be05f";
       const lookForDraw = look || { azDeg: 45, elDeg: 18, rangeKm: 0 };
-      const azRad = deg2rad(lookForDraw.azDeg);
+      const azRad = deg2rad(getAntennaVisualAzDeg(lookForDraw));
       const elNorm = clamp((lookForDraw.elDeg + 5) / 95, 0, 1);
       const satRadius = radius * 0.44;
       const satX = cx + Math.cos(azRad) * satRadius + Math.sin(azRad) * radius * 0.12;
       const satY = height * 0.44 - elNorm * radius * 0.42 - Math.sin(azRad) * radius * 0.08;
+      const dishScreenAngle = Math.atan2(satY - mastTopY, satX - cx);
 
       ctx.save();
       ctx.translate(cx, mastTopY);
-      ctx.rotate(azRad * 0.45);
-      ctx.strokeStyle = "#dce8f2";
-      ctx.fillStyle = "rgba(220, 232, 242, 0.14)";
-      ctx.lineWidth = 2;
+      ctx.rotate(dishScreenAngle);
+      ctx.strokeStyle = "#3a4654";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.86)";
+      ctx.lineWidth = 2.4;
       ctx.beginPath();
-      ctx.ellipse(0, 0, 22, 10, -deg2rad(clamp(lookForDraw.elDeg, 0, 80)) * 0.55, 0, Math.PI * 2);
+      ctx.moveTo(-10, -24);
+      ctx.quadraticCurveTo(15, 0, -10, 24);
+      ctx.quadraticCurveTo(-1, 0, -10, -24);
       ctx.fill();
       ctx.stroke();
+      ctx.strokeStyle = "#3a4654";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(38, 0);
+      ctx.moveTo(-5, -20);
+      ctx.lineTo(38, 0);
+      ctx.moveTo(-5, 20);
+      ctx.lineTo(38, 0);
+      ctx.stroke();
+      ctx.fillStyle = "#0b63d8";
+      ctx.beginPath();
+      ctx.arc(40, 0, 4.2, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
 
       if (look) {
@@ -4189,14 +4770,14 @@ ${tle.line2}`;
         ctx.strokeStyle = "#fff3c7";
         ctx.lineWidth = 1.4;
         ctx.stroke();
-        ctx.fillStyle = "#dce8f2";
+        ctx.fillStyle = CANVAS_THEME.text;
         ctx.font = "11px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "left";
         ctx.fillText("SAT", satX + 10, satY - 8);
         ctx.restore();
       } else {
         ctx.save();
-        ctx.fillStyle = "rgba(220, 232, 242, 0.72)";
+        ctx.fillStyle = CANVAS_THEME.textMuted;
         ctx.font = "12px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "center";
         ctx.fillText("TLE loading", cx, height / 2);
@@ -4211,7 +4792,7 @@ ${tle.line2}`;
 
       const activeColor = passVisible ? "#2be05f" : "#2be05f";
       const drawLook = look || { azDeg: 45, elDeg: 18 };
-      const azRad = deg2rad(drawLook.azDeg);
+      const azRad = deg2rad(getAntennaVisualAzDeg(drawLook));
       const elNorm = clamp((drawLook.elDeg + 5) / 95, 0, 1);
       const satX = 50 + Math.cos(azRad) * 33 + Math.sin(azRad) * 4;
       const satY = 47 - elNorm * 18 - Math.sin(azRad) * 5;
@@ -4259,6 +4840,7 @@ ${tle.line2}`;
       if (!look) {
         state.satGroup.visible = false;
         state.beam.visible = false;
+        state.beamTube.visible = false;
         state.satLabel.visible = false;
         state.statusLabel.visible = true;
         state.statusLabel.material.opacity = 1;
@@ -4272,9 +4854,9 @@ ${tle.line2}`;
       }
 
       const direction = lookToAntenna3DVector(look);
-      const rangeScale = clamp(look.rangeKm / 420, 3.3, 6.2);
+      const rangeScale = clamp(look.rangeKm / 340, 4.4, 7.4);
       const satPos = direction.clone().multiplyScalar(rangeScale);
-      const gsTip = new THREE.Vector3(0, 0.64, 0);
+      const gsTip = new THREE.Vector3(0, 0.78, 0).add(direction.clone().multiplyScalar(0.76));
       const activeColor = passVisible ? 0x2be05f : (displayVisible ? 0xf2a400 : 0x8ea3af);
 
       state.satGroup.visible = true;
@@ -4290,6 +4872,7 @@ ${tle.line2}`;
       state.beam.material.color.setHex(activeColor);
       state.beam.material.opacity = displayVisible ? 0.92 : 0.38;
       state.beam.geometry.setFromPoints([gsTip, satPos]);
+      updateAntenna3DBeamTube(state.beamTube, gsTip, satPos, activeColor, displayVisible ? 0.18 : 0.08);
       state.dishPivot.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), direction);
 
       if (antennaAzLabel) antennaAzLabel.textContent = `${look.azDeg.toFixed(1)}°`;
@@ -4443,6 +5026,104 @@ ${tle.line2}`;
       return { startMs, endMs, nowMs, points };
     }
 
+    function drawAzimuthCompassGraph(ctx, width, height, plot, series, lookNow) {
+      const cx = plot.left + plot.width / 2;
+      const cy = plot.top + plot.height / 2;
+      const radius = Math.max(1, Math.min(plot.width, plot.height) * 0.42);
+
+      ctx.save();
+      ctx.fillStyle = CANVAS_THEME.plotBg;
+      ctx.fillRect(plot.left, plot.top, plot.width, plot.height);
+
+      [0.25, 0.50, 0.75, 1.0].forEach((scale, index) => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius * scale, 0, Math.PI * 2);
+        ctx.strokeStyle = index === 3 ? CANVAS_THEME.gridStrong : CANVAS_THEME.grid;
+        ctx.lineWidth = index === 3 ? 1.2 : 1;
+        ctx.stroke();
+      });
+
+      for (let deg = 0; deg < 360; deg += 30) {
+        const rad = deg2rad(deg - 90);
+        const isCardinal = deg % 90 === 0;
+        const inner = isCardinal ? 0 : radius * 0.18;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(rad) * inner, cy + Math.sin(rad) * inner);
+        ctx.lineTo(cx + Math.cos(rad) * radius, cy + Math.sin(rad) * radius);
+        ctx.strokeStyle = isCardinal ? "rgba(7, 52, 116, 0.48)" : "rgba(87, 116, 150, 0.24)";
+        ctx.lineWidth = isCardinal ? 1.1 : 1;
+        ctx.stroke();
+      }
+
+      [
+        ["N", 0, 0, -1],
+        ["E", 90, 1, 0],
+        ["S", 180, 0, 1],
+        ["W", 270, -1, 0]
+      ].forEach(([label, deg, dx, dy]) => {
+        ctx.fillStyle = CANVAS_THEME.text;
+        ctx.font = "bold 10px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(label, cx + dx * (radius + 10), cy + dy * (radius + 10));
+      });
+
+      [0, 90, 180, 270].forEach(deg => {
+        const rad = deg2rad(deg - 90);
+        ctx.fillStyle = CANVAS_THEME.textMuted;
+        ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(String(deg), cx + Math.cos(rad) * radius * 0.70, cy + Math.sin(rad) * radius * 0.70);
+      });
+
+      if (series.points.length > 1) {
+        ctx.beginPath();
+        series.points.forEach((p, index) => {
+          const rad = deg2rad(normalizeDeg(p.az) - 90);
+          const r = radius * (0.18 + 0.78 * p.ratio);
+          const x = cx + Math.cos(rad) * r;
+          const y = cy + Math.sin(rad) * r;
+          if (index === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = "rgba(0, 149, 184, 0.98)";
+        ctx.lineWidth = 1.9;
+        ctx.shadowColor = "rgba(0, 149, 184, 0.22)";
+        ctx.shadowBlur = 4;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+
+      const graphNowVisible = lookNow && lookNow.elDeg >= TRACKING_DISPLAY_MIN_ELEVATION_DEG;
+      if (graphNowVisible) {
+        const rad = deg2rad(normalizeDeg(lookNow.azDeg) - 90);
+        const endX = cx + Math.cos(rad) * radius * 0.92;
+        const endY = cy + Math.sin(rad) * radius * 0.92;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(endX, endY);
+        ctx.strokeStyle = "#0b63d8";
+        ctx.lineWidth = 2.2;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(endX, endY, 4.2, 0, Math.PI * 2);
+        ctx.fillStyle = "#28d9e8";
+        ctx.fill();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.fillStyle = CANVAS_THEME.text;
+        ctx.font = "bold 9px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(`${lookNow.azDeg.toFixed(1)}°`, cx, cy + radius + 14);
+      }
+
+      ctx.restore();
+    }
+
     function drawSingleTimeSeriesGraph(canvas, container, type) {
       const canvasInfo = resizeCanvasToContainer(canvas, container);
       if (!canvasInfo) return;
@@ -4451,8 +5132,8 @@ ${tle.line2}`;
       ctx.clearRect(0, 0, width, height);
 
       const bg = ctx.createLinearGradient(0, 0, 0, height);
-      bg.addColorStop(0, "#061926");
-      bg.addColorStop(1, "#02080d");
+      bg.addColorStop(0, CANVAS_THEME.bgTop);
+      bg.addColorStop(1, CANVAS_THEME.bgBottom);
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, width, height);
 
@@ -4468,56 +5149,69 @@ ${tle.line2}`;
       const bottomPad = 14;
       const plotW = Math.max(1, width - leftPad - rightPad);
       const plotH = Math.max(1, height - topPad - bottomPad);
+      ctx.fillStyle = CANVAS_THEME.plotBg;
+      ctx.fillRect(leftPad, topPad, plotW, plotH);
 
       ctx.save();
-      ctx.strokeStyle = "rgba(95, 118, 132, 0.30)";
+      ctx.strokeStyle = CANVAS_THEME.gridStrong;
       ctx.lineWidth = 1;
       ctx.strokeRect(leftPad, topPad, plotW, plotH);
       ctx.restore();
 
       const isAz = type === "az";
-      function yFromValue(v) {
-        if (isAz) {
-          return topPad + (360 - normalizeDeg(v)) / 360 * plotH;
+      if (isAz) {
+        drawAzimuthCompassGraph(ctx, width, height, {
+          left: leftPad,
+          top: topPad,
+          width: plotW,
+          height: plotH
+        }, series, lookNow);
+
+        if (!satrec) {
+          ctx.save();
+          ctx.fillStyle = CANVAS_THEME.textMuted;
+          ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("TLEを反映してください", width / 2, height / 2 + 4);
+          ctx.restore();
         }
+
+        if (satrec && series.points.length === 0) {
+          ctx.save();
+          ctx.fillStyle = CANVAS_THEME.textMuted;
+          ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("No graph points", width / 2, height / 2 + 4);
+          ctx.restore();
+        }
+
+        return lookNow;
+      }
+
+      function yFromValue(v) {
         return topPad + (90 - clamp(v, -5, 90)) / 95 * plotH;
       }
 
       // horizontal guide lines
       ctx.save();
       ctx.lineWidth = 1;
-      if (isAz) {
-        [0, 90, 180, 270, 360].forEach((val) => {
-          const y = yFromValue(val === 360 ? 360 : val);
-          ctx.strokeStyle = "rgba(95, 118, 132, 0.22)";
-          ctx.beginPath();
-          ctx.moveTo(leftPad, y);
-          ctx.lineTo(leftPad + plotW, y);
-          ctx.stroke();
-          const label = val === 360 ? "360" : String(val);
-          ctx.fillStyle = "rgba(220, 232, 242, 0.62)";
-          ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
-          ctx.fillText(label, 2, y + 3);
-        });
-      } else {
-        [0, 30, 60, 90].forEach((val) => {
-          const y = yFromValue(val);
-          ctx.strokeStyle = val === AOS_LOS_ELEVATION_THRESHOLD_DEG
-            ? "rgba(43, 224, 95, 0.42)"
-            : "rgba(95, 118, 132, 0.22)";
-          ctx.setLineDash(val === AOS_LOS_ELEVATION_THRESHOLD_DEG ? [5, 4] : []);
-          ctx.beginPath();
-          ctx.moveTo(leftPad, y);
-          ctx.lineTo(leftPad + plotW, y);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.fillStyle = val === AOS_LOS_ELEVATION_THRESHOLD_DEG
-            ? "rgba(43, 224, 95, 0.78)"
-            : "rgba(220, 232, 242, 0.62)";
-          ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
-          ctx.fillText(String(val), 3, y + 3);
-        });
-      }
+      [0, 30, 60, 90].forEach((val) => {
+        const y = yFromValue(val);
+        ctx.strokeStyle = val === AOS_LOS_ELEVATION_THRESHOLD_DEG
+          ? "rgba(43, 224, 95, 0.42)"
+          : CANVAS_THEME.grid;
+        ctx.setLineDash(val === AOS_LOS_ELEVATION_THRESHOLD_DEG ? [5, 4] : []);
+        ctx.beginPath();
+        ctx.moveTo(leftPad, y);
+        ctx.lineTo(leftPad + plotW, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = val === AOS_LOS_ELEVATION_THRESHOLD_DEG
+          ? "rgba(43, 224, 95, 0.78)"
+          : CANVAS_THEME.textMuted;
+        ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
+        ctx.fillText(String(val), 3, y + 3);
+      });
       ctx.restore();
 
       // series line
@@ -4541,7 +5235,7 @@ ${tle.line2}`;
       // current time cursor
       const nowX = leftPad + plotW * clamp((series.nowMs - series.startMs) / Math.max(series.endMs - series.startMs, 1), 0, 1);
       ctx.save();
-      ctx.strokeStyle = "rgba(220, 232, 242, 0.60)";
+      ctx.strokeStyle = "rgba(21, 78, 138, 0.62)";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(nowX, topPad);
@@ -4567,17 +5261,19 @@ ${tle.line2}`;
 
       // x-axis labels (minimal, to avoid clipping)
       ctx.save();
-      ctx.fillStyle = "rgba(220, 232, 242, 0.55)";
+      ctx.fillStyle = CANVAS_THEME.textMuted;
       ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("開始", leftPad, height - 3);
+      ctx.fillText(formatUtcTimeShort(new Date(series.startMs)), leftPad, height - 3);
+      ctx.textAlign = "center";
+      ctx.fillText(`${formatUtcTimeShort(new Date((series.startMs + series.endMs) / 2))} UTC`, leftPad + plotW / 2, height - 3);
       ctx.textAlign = "right";
-      ctx.fillText("終了", leftPad + plotW, height - 3);
+      ctx.fillText(formatUtcTimeShort(new Date(series.endMs)), leftPad + plotW, height - 3);
       ctx.restore();
 
       if (!satrec) {
         ctx.save();
-        ctx.fillStyle = "rgba(220, 232, 242, 0.72)";
+        ctx.fillStyle = CANVAS_THEME.textMuted;
         ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "center";
         ctx.fillText("TLEを反映してください", width / 2, height / 2 + 4);
@@ -4586,7 +5282,7 @@ ${tle.line2}`;
 
       if (satrec && series.points.length === 0) {
         ctx.save();
-        ctx.fillStyle = "rgba(220, 232, 242, 0.72)";
+        ctx.fillStyle = CANVAS_THEME.textMuted;
         ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
         ctx.textAlign = "center";
         ctx.fillText("No graph points", width / 2, height / 2 + 4);
@@ -4883,12 +5579,12 @@ ${tle.line2}`;
       if (currentSegment.length > 1) segments.push(currentSegment);
 
       ctx.save();
-      ctx.fillStyle = "rgba(43, 224, 95, 0.10)";
-      ctx.strokeStyle = "rgba(43, 224, 95, 0.72)";
+      ctx.fillStyle = "rgba(28, 180, 82, 0.12)";
+      ctx.strokeStyle = "rgba(8, 145, 62, 0.78)";
       ctx.lineWidth = 1.5;
       ctx.setLineDash([6, 4]);
-      ctx.shadowColor = "rgba(43, 224, 95, 0.45)";
-      ctx.shadowBlur = 8;
+      ctx.shadowColor = "rgba(8, 145, 62, 0.22)";
+      ctx.shadowBlur = 4;
 
       segments.forEach(segment => {
         ctx.beginPath();
@@ -4918,7 +5614,7 @@ ${tle.line2}`;
         height
       );
       ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
-      ctx.fillStyle = "rgba(216, 255, 232, 0.92)";
+      ctx.fillStyle = "#08783a";
       ctx.fillText(`Visible El >= ${AOS_LOS_ELEVATION_THRESHOLD_DEG}deg`, labelPos.x + 6, labelPos.y - 6);
       ctx.restore();
     }
@@ -5064,14 +5760,14 @@ ${tle.line2}`;
       ctx.clearRect(0, 0, width, height);
 
       const grd = ctx.createLinearGradient(0, 0, 0, height);
-      grd.addColorStop(0, "#061926");
-      grd.addColorStop(1, "#02080d");
+      grd.addColorStop(0, "#f7fbff");
+      grd.addColorStop(1, "#dcecff");
       ctx.fillStyle = grd;
       ctx.fillRect(0, 0, width, height);
 
       // latitude / longitude grid
       ctx.save();
-      ctx.strokeStyle = "rgba(95, 118, 132, 0.25)";
+      ctx.strokeStyle = "rgba(88, 120, 158, 0.30)";
       ctx.lineWidth = 1;
 
       const lonStep = orbitMapViewMode === "follow" ? 10 : 30;
@@ -5100,7 +5796,7 @@ ${tle.line2}`;
 
       // equator / prime meridian
       ctx.save();
-      ctx.strokeStyle = "rgba(40, 217, 232, 0.32)";
+      ctx.strokeStyle = "rgba(20, 102, 189, 0.46)";
       ctx.lineWidth = 1;
       const eq1 = lonLatToMapXY(orbitMapView.centerLon - orbitMapView.lonSpan / 2, 0, width, height);
       const eq2 = lonLatToMapXY(orbitMapView.centerLon + orbitMapView.lonSpan / 2, 0, width, height);
@@ -5118,8 +5814,8 @@ ${tle.line2}`;
 
       // Natural Earth land polygons
       ctx.save();
-      ctx.fillStyle = "rgba(34, 76, 67, 0.72)";
-      ctx.strokeStyle = "rgba(98, 180, 153, 0.45)";
+      ctx.fillStyle = "rgba(95, 165, 134, 0.70)";
+      ctx.strokeStyle = "rgba(42, 115, 89, 0.46)";
       ctx.lineWidth = 1;
 
       WORLD_LAND_POLYGONS.forEach(poly => {
@@ -5132,10 +5828,10 @@ ${tle.line2}`;
       if (!track || track.length < 2) return;
 
       ctx.save();
-      ctx.strokeStyle = "rgba(40, 217, 232, 0.95)";
+      ctx.strokeStyle = "rgba(0, 149, 184, 0.98)";
       ctx.lineWidth = 2;
-      ctx.shadowColor = "rgba(40, 217, 232, 0.75)";
-      ctx.shadowBlur = 8;
+      ctx.shadowColor = "rgba(0, 149, 184, 0.24)";
+      ctx.shadowBlur = 4;
 
       ctx.beginPath();
       let started = false;
@@ -5175,7 +5871,7 @@ ${tle.line2}`;
       if (label) {
         ctx.shadowBlur = 0;
         ctx.font = "10px Segoe UI, Noto Sans JP, sans-serif";
-        ctx.fillStyle = "#dce8f2";
+        ctx.fillStyle = CANVAS_THEME.text;
         ctx.fillText(label, x + 8, y - 8);
       }
       ctx.restore();
@@ -5204,7 +5900,7 @@ ${tle.line2}`;
 
       // 下部の情報チップと軌道表示が被らないように、地図描画だけ少し上で止める
       ctx.save();
-      ctx.fillStyle = "rgba(2, 8, 12, 0.72)";
+      ctx.fillStyle = "rgba(234, 243, 255, 0.94)";
       ctx.fillRect(0, mapHeight, width, height - mapHeight);
       ctx.restore();
 
