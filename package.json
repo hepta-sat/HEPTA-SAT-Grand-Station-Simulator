@@ -4,12 +4,5 @@
   "private": true,
   "scripts": {
     "start": "node start-server.js"
-  },
-  "devDependencies": {
-    "http-server": "^14.1.1"
-  },
-  "dependencies": {
-    "@types/three": "^0.184.1",
-    "three": "^0.184.0"
   }
 }

@@ -87,6 +87,11 @@ function tryListen(port) {
     console.log(`Serving ${root} on ${url}`);
     console.log('Python is not required. Use the UI connection button to select the XBee serial port.');
 
+    if (process.env.HEPTA_NO_OPEN === '1') {
+      console.log('Browser auto-open skipped because HEPTA_NO_OPEN=1.');
+      return;
+    }
+
     // Open default browser on Windows, macOS, Linux
     const startCmd = process.platform === 'win32' ? `start "" "${url}"` : process.platform === 'darwin' ? `open "${url}"` : `xdg-open "${url}"`;
     exec(startCmd, (err) => {

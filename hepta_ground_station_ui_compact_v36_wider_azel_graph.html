@@ -2155,7 +2155,7 @@
   <script type="importmap">
     {
       "imports": {
-        "three": "./node_modules/three/build/three.module.min.js"
+        "three": "./vendor/three/build/three.module.min.js"
       }
     }
   </script>
@@ -4816,8 +4816,8 @@ ${tle.line2}`;
     let antenna3dAnimationStarted = false;
 
     Promise.all([
-      import("./node_modules/three/build/three.module.min.js"),
-      import("./node_modules/three/examples/jsm/controls/OrbitControls.js")
+      import("./vendor/three/build/three.module.min.js"),
+      import("./vendor/three/examples/jsm/controls/OrbitControls.js")
     ])
       .then(([threeModule, controlsModule]) => {
         THREE_LIB = threeModule;
