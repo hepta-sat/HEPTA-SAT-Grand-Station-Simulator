@@ -15,7 +15,9 @@ TELEMETRY_PACKET_HEADER = 0x7E
 TELEMETRY_PACKET_SAT_ID = 0x01
 TELEMETRY_PACKET_TYPE_HK = 0x10
 TELEMETRY_PACKET_TYPES = (0x10, 0x11, 0x12, 0x20, 0x30)
+TELEMETRY_PACKET_BASIC_PAYLOAD_LENGTH = 5
 TELEMETRY_PACKET_PAYLOAD_LENGTH = 23
+TELEMETRY_PACKET_PAYLOAD_LENGTHS = (TELEMETRY_PACKET_BASIC_PAYLOAD_LENGTH, TELEMETRY_PACKET_PAYLOAD_LENGTH)
 COMMAND_PACKET_PARAMETER = 0x00
 COMMAND_PACKET_IDS = {
 	"a": 0x11,
@@ -77,6 +79,13 @@ def encode_i16(value: int) -> list[int]:
 
 def calculate_packet_checksum(bytes_without_header_and_checksum: list[int]) -> int:
 	return sum(bytes_without_header_and_checksum) & 0xFF
+
+
+def is_packet_checksum_ok(packet: bytes) -> bool:
+	checksum = packet[-1]
+	without_header = calculate_packet_checksum(list(packet[1:-1]))
+	with_header = calculate_packet_checksum(list(packet[:-1]))
+	return checksum == without_header or checksum == with_header
 
 
 def build_hk_packet(voltage_v: float, ax: float, ay: float, az: float,
@@ -497,6 +506,22 @@ def write_text_telemetry_state(timestamp: str, source_text: str) -> None:
 		print("[WARN] failed to write data.json")
 
 
+def build_text_telemetry_object() -> dict:
+	return {
+		"voltageV": telemetry_state.get("voltage"),
+		"temperatureC": telemetry_state.get("temperature"),
+		"accX": telemetry_state.get("ax"),
+		"accY": telemetry_state.get("ay"),
+		"accZ": telemetry_state.get("az"),
+		"gyroX": telemetry_state.get("gx"),
+		"gyroY": telemetry_state.get("gy"),
+		"gyroZ": telemetry_state.get("gz"),
+		"magX": telemetry_state.get("mx"),
+		"magY": telemetry_state.get("my"),
+		"magZ": telemetry_state.get("mz"),
+	}
+
+
 def warn_if_sample_looks_suspicious(timestamp: str) -> None:
 	global last_warning_signature
 
@@ -624,6 +649,68 @@ def format_payload(data: bytes, use_hex: bool) -> str:
 		return f"<binary> {data.hex(' ')}"
 
 
+def parse_hex_text_payload(text: str) -> bytes | None:
+	cleaned = text.strip()
+	if not cleaned:
+		return None
+
+	if re.fullmatch(r"(?:0x)?[0-9A-Fa-f]{1,2}(?:[\s,;:]+(?:0x)?[0-9A-Fa-f]{1,2})*", cleaned):
+		values = re.findall(r"(?:0x)?([0-9A-Fa-f]{1,2})", cleaned)
+		return bytes(int(value, 16) for value in values)
+
+	if re.fullmatch(r"(?:0x)?(?:[0-9A-Fa-f]{2}){7,64}", cleaned):
+		hex_text = cleaned[2:] if cleaned.lower().startswith("0x") else cleaned
+		return bytes.fromhex(hex_text)
+
+	return None
+
+
+def extract_complete_packets_from_hex_text(buffer: str) -> tuple[list[bytes], str]:
+	packets: list[bytes] = []
+	text = buffer
+
+	while True:
+		header_match = re.search(r"(?i)(?:^|[^0-9A-F])7E(?:[^0-9A-F]|$)", text)
+		if not header_match:
+			return packets, text[-8:]
+
+		start = header_match.start()
+		if start < len(text) and not re.match(r"(?i)7E", text[start:start + 2]):
+			start += 1
+		text = text[start:]
+
+		tokens = re.findall(r"(?i)(?:0x)?[0-9A-F]{1,2}", text)
+		if len(tokens) < 7:
+			return packets, text[-96:]
+
+		values = [int(token.replace("0x", "").replace("0X", ""), 16) for token in tokens]
+		if values[0] != TELEMETRY_PACKET_HEADER:
+			text = text[2:]
+			continue
+
+		packet_type = values[2]
+		payload_length = values[5]
+		if packet_type not in TELEMETRY_PACKET_TYPES or payload_length not in TELEMETRY_PACKET_PAYLOAD_LENGTHS:
+			text = text[2:]
+			continue
+
+		total_length = 7 + payload_length
+		if len(values) < total_length:
+			return packets, text[-160:]
+
+		packet = bytes(values[:total_length])
+		if is_packet_checksum_ok(packet):
+			packets.append(packet)
+
+		consumed = 0
+		for _ in range(total_length):
+			match = re.search(r"(?i)(?:0x)?[0-9A-F]{1,2}", text[consumed:])
+			if not match:
+				break
+			consumed += match.end()
+		text = text[consumed:]
+
+
 def extract_complete_telemetry_packets(buffer: bytearray) -> list[bytes]:
 	packets: list[bytes] = []
 
@@ -642,7 +729,11 @@ def extract_complete_telemetry_packets(buffer: bytearray) -> list[bytes]:
 		packet_type = buffer[2]
 		payload_length = buffer[5]
 
-		if packet_type in TELEMETRY_PACKET_TYPES and payload_length != TELEMETRY_PACKET_PAYLOAD_LENGTH:
+		if packet_type not in TELEMETRY_PACKET_TYPES:
+			del buffer[0]
+			continue
+
+		if payload_length not in TELEMETRY_PACKET_PAYLOAD_LENGTHS:
 			del buffer[0]
 			continue
 
@@ -655,12 +746,27 @@ def extract_complete_telemetry_packets(buffer: bytearray) -> list[bytes]:
 			break
 
 		packet = bytes(buffer[:total_length])
-		del buffer[:total_length]
+		if not is_packet_checksum_ok(packet):
+			del buffer[0]
+			continue
 
-		if packet_type in TELEMETRY_PACKET_TYPES and payload_length == TELEMETRY_PACKET_PAYLOAD_LENGTH:
-			packets.append(packet)
+		del buffer[:total_length]
+		packets.append(packet)
 
 	return packets
+
+
+def is_telemetry_packet(payload: bytes) -> bool:
+	if len(payload) < 7:
+		return False
+	if payload[0] != TELEMETRY_PACKET_HEADER:
+		return False
+	if payload[2] not in TELEMETRY_PACKET_TYPES:
+		return False
+	payload_length = payload[5]
+	if payload_length not in TELEMETRY_PACKET_PAYLOAD_LENGTHS or len(payload) != 7 + payload_length:
+		return False
+	return is_packet_checksum_ok(payload)
 
 
 def write_received_data(timestamp: str, payload: bytes, formatted: str, rssi: float | None = None) -> None:
@@ -672,6 +778,8 @@ def write_received_data(timestamp: str, payload: bytes, formatted: str, rssi: fl
 		"hex": packet_hex,
 		"packet_text": formatted,
 	}
+	if is_telemetry_packet(payload):
+		data_obj["packet_hex"] = packet_hex
 	if rssi is not None:
 		data_obj["rssi"] = rssi
 	attach_recent_command_ack(data_obj)
@@ -694,6 +802,7 @@ def write_rssi_data(timestamp: str, rssi: float) -> None:
 		"hex": "",
 		"packet_text": f"RSSI={rssi:.0f}",
 		"rssi": rssi,
+		"telemetry": build_text_telemetry_object(),
 	}
 	attach_recent_command_ack(data_obj)
 	try:
@@ -745,6 +854,7 @@ def main() -> None:
 				print(f"[uplink] 送信: {args.uplink_cmd!r}")
 
 			telemetry_packet_buffer = bytearray()
+			telemetry_hex_text_buffer = ""
 
 			while True:
 				payload = ser.readline()
@@ -776,7 +886,31 @@ def main() -> None:
 				print(f"[{timestamp}] {formatted}")
 
 				line = formatted.strip()
-				if re.fullmatch(r"num\s*=\s*\d+", line, re.IGNORECASE):
+				telemetry_line = line
+				hex_text_payload = parse_hex_text_payload(line)
+				if hex_text_payload:
+					decoded_text = format_payload(hex_text_payload, False).strip()
+					telemetry_hex_text_buffer += decoded_text if decoded_text and not decoded_text.startswith("<binary>") else line
+					packets, telemetry_hex_text_buffer = extract_complete_packets_from_hex_text(telemetry_hex_text_buffer)
+					if packets:
+						for packet in packets:
+							packet_formatted = packet.hex(" ")
+							print(f"[{timestamp}] {packet_formatted}")
+							write_received_data(timestamp, packet, packet_formatted)
+						continue
+					if decoded_text and not decoded_text.startswith("<binary>"):
+						telemetry_line = decoded_text
+				else:
+					telemetry_hex_text_buffer += line
+					packets, telemetry_hex_text_buffer = extract_complete_packets_from_hex_text(telemetry_hex_text_buffer)
+					if packets:
+						for packet in packets:
+							packet_formatted = packet.hex(" ")
+							print(f"[{timestamp}] {packet_formatted}")
+							write_received_data(timestamp, packet, packet_formatted)
+						continue
+
+				if re.fullmatch(r"num\s*=\s*\d+", telemetry_line, re.IGNORECASE):
 					clear_sensor_telemetry_state()
 					write_received_data(timestamp, payload, formatted)
 					continue
@@ -789,13 +923,13 @@ def main() -> None:
 					write_rssi_data(timestamp, rssi_value)
 					continue
 
-				field_name, field_value = parse_telemetry_line(line)
+				field_name, field_value = parse_telemetry_line(telemetry_line)
 				if field_name is not None and field_value is not None:
 					telemetry_state[field_name] = field_value
 					if field_name == "rssi":
-						write_received_data(timestamp, payload, formatted, field_value)
+						write_rssi_data(timestamp, field_value)
 					else:
-						write_text_telemetry_state(timestamp, line)
+						write_text_telemetry_state(timestamp, telemetry_line)
 					warn_if_sample_looks_suspicious(timestamp)
 				else:
 					write_received_data(timestamp, payload, formatted)

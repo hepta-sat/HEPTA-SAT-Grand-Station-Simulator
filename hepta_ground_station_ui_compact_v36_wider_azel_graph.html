@@ -2348,10 +2348,12 @@
       //   Acc XYZ[0.01 m/s^2](int16 x3)
       //   Gyro XYZ[0.1 deg/s](int16 x3)
       //   Mag XYZ[0.1 uT](int16 x3)
-      // Payload length = 23 byte
+      // Payload length = 5 byte (basic) or 23 byte (mission)
       header: 0x7E,
       satId: 0x01,
       typeHk: 0x10,
+      basicPayloadLength: 5,
+      missionPayloadLength: 23,
       telemetryTypes: [0x10, 0x11, 0x12, 0x20, 0x30],
       types: {
         0x10: "Standby Telemetry",
@@ -2390,6 +2392,7 @@
     let simulatedRssiDbm = -64;
 
     let packetByteBuffer = [];
+    let serialHexTextBuffer = "";
     let packetLogHistory = [];
     let telemetryHistory = [];
     const backendTelemetryState = {
@@ -2426,8 +2429,13 @@
       const payloadStart = 6;
       const payloadEnd = payloadStart + payloadLength;
       const checksum = rawBytes[payloadEnd];
-      const checkTarget = rawBytes.slice(1, payloadEnd);
-      const expectedChecksum = calculatePacketChecksum(checkTarget);
+      const expectedChecksum = calculatePacketChecksum(rawBytes.slice(1, payloadEnd));
+      const expectedChecksumWithHeader = calculatePacketChecksum(rawBytes.slice(0, payloadEnd));
+      const checksumMode = checksum === expectedChecksum
+        ? "no-header"
+        : checksum === expectedChecksumWithHeader
+          ? "with-header"
+          : "ng";
       const packetType = rawBytes[2];
       const sequence = (rawBytes[3] << 8) | rawBytes[4];
 
@@ -2442,7 +2450,9 @@
         payload: rawBytes.slice(payloadStart, payloadEnd),
         checksum,
         expectedChecksum,
-        checksumOk: checksum === expectedChecksum
+        expectedChecksumWithHeader,
+        checksumMode,
+        checksumOk: checksumMode !== "ng"
       };
     }
 
@@ -2454,6 +2464,7 @@
     function decodeMode(modeByte) {
       if (modeByte === 0x00) return { text: "Standby", className: "normal" };
       if (modeByte === 0x01) return { text: "Mission", className: "mission" };
+      if (modeByte === 0x02) return { text: "Power Save", className: "power-save" };
       return { text: `UNKNOWN(${byteToHex(modeByte)})`, className: "" };
     }
 
@@ -2468,6 +2479,11 @@
 
     function isTelemetryPacketType(packetType) {
       return TELEMETRY_PACKET.telemetryTypes.includes(packetType);
+    }
+
+    function isTelemetryPayloadLength(payloadLength) {
+      return payloadLength === TELEMETRY_PACKET.basicPayloadLength
+        || payloadLength === TELEMETRY_PACKET.missionPayloadLength;
     }
 
     function getPowerModeFromVoltage(voltageV) {
@@ -2497,24 +2513,25 @@
       // Payload[5-10] : 加速度XYZ 0.01 m/s^2, int16 x3
       // Payload[11-16]: 角速度XYZ 0.1 deg/s, int16 x3
       // Payload[17-22]: 地磁気XYZ 0.1 uT, int16 x3
-      if (!payload || payload.length < 23) return null;
+      if (!payload || payload.length < TELEMETRY_PACKET.basicPayloadLength) return null;
 
       const packetTypeMode = decodePacketTypeMode(packetType);
       const mode = packetTypeMode || decodeMode(payload[0]);
       const voltageRaw = ((payload[1] & 0xFF) << 8) | (payload[2] & 0xFF);
       const temperatureRaw = readInt16BE(payload[3], payload[4]);
+      const hasMissionTelemetry = payload.length >= TELEMETRY_PACKET.missionPayloadLength;
 
-      const accXRaw = readInt16BE(payload[5], payload[6]);
-      const accYRaw = readInt16BE(payload[7], payload[8]);
-      const accZRaw = readInt16BE(payload[9], payload[10]);
+      const accXRaw = hasMissionTelemetry ? readInt16BE(payload[5], payload[6]) : null;
+      const accYRaw = hasMissionTelemetry ? readInt16BE(payload[7], payload[8]) : null;
+      const accZRaw = hasMissionTelemetry ? readInt16BE(payload[9], payload[10]) : null;
 
-      const gyroXRaw = readInt16BE(payload[11], payload[12]);
-      const gyroYRaw = readInt16BE(payload[13], payload[14]);
-      const gyroZRaw = readInt16BE(payload[15], payload[16]);
+      const gyroXRaw = hasMissionTelemetry ? readInt16BE(payload[11], payload[12]) : null;
+      const gyroYRaw = hasMissionTelemetry ? readInt16BE(payload[13], payload[14]) : null;
+      const gyroZRaw = hasMissionTelemetry ? readInt16BE(payload[15], payload[16]) : null;
 
-      const magXRaw = readInt16BE(payload[17], payload[18]);
-      const magYRaw = readInt16BE(payload[19], payload[20]);
-      const magZRaw = readInt16BE(payload[21], payload[22]);
+      const magXRaw = hasMissionTelemetry ? readInt16BE(payload[17], payload[18]) : null;
+      const magYRaw = hasMissionTelemetry ? readInt16BE(payload[19], payload[20]) : null;
+      const magZRaw = hasMissionTelemetry ? readInt16BE(payload[21], payload[22]) : null;
       const adcRes = 4096;
       const adcVref = 3.3;
       const voltageV = voltageRaw / adcRes * adcVref * 1.431;
@@ -2533,13 +2550,13 @@
         temperatureC: temperatureRaw / 10,
         temperatureHex: `${byteToHex(payload[3])} ${byteToHex(payload[4])}`,
 
-        accX: accXRaw / 512 * 9.8,
-        accY: accYRaw / 512 * 9.8,
-        accZ: accZRaw / 512 * 9.8,
+        accX: accXRaw === null ? null : accXRaw / 512 * 9.8,
+        accY: accYRaw === null ? null : accYRaw / 512 * 9.8,
+        accZ: accZRaw === null ? null : accZRaw / 512 * 9.8,
 
-        gyroX: gyroXRaw * 125 / 2048,
-        gyroY: gyroYRaw * 125 / 2048,
-        gyroZ: gyroZRaw * 125 / 2048,
+        gyroX: gyroXRaw === null ? null : gyroXRaw * 125 / 2048,
+        gyroY: gyroYRaw === null ? null : gyroYRaw * 125 / 2048,
+        gyroZ: gyroZRaw === null ? null : gyroZRaw * 125 / 2048,
 
         magX: magXRaw,
         magY: magYRaw,
@@ -2552,7 +2569,7 @@
     }
 
     function updateDecodedTelemetryDisplay(packet) {
-      const decoded = packet && isTelemetryPacketType(packet.packetType)
+      const decoded = packet && packet.checksumOk && isTelemetryPacketType(packet.packetType)
         ? decodeHkPayload(packet.payload, packet.packetType)
         : null;
 
@@ -2567,17 +2584,17 @@
       setTelemetryText(packetUi.tmTempValue, `${decoded.temperatureC.toFixed(1)} °C`);
       setTelemetryText(packetUi.tmTempRaw, `raw: ${decoded.temperatureHex} = ${decoded.temperatureRaw} /10`);
 
-      setTelemetryText(packetUi.tmAccXValue, `${decoded.accX.toFixed(2)} m/s²`);
-      setTelemetryText(packetUi.tmAccYValue, `${decoded.accY.toFixed(2)} m/s²`);
-      setTelemetryText(packetUi.tmAccZValue, `${decoded.accZ.toFixed(2)} m/s²`);
+      setTelemetryText(packetUi.tmAccXValue, decoded.accX === null ? "--" : decoded.accX.toFixed(2) + " m/s^2");
+      setTelemetryText(packetUi.tmAccYValue, decoded.accY === null ? "--" : decoded.accY.toFixed(2) + " m/s^2");
+      setTelemetryText(packetUi.tmAccZValue, decoded.accZ === null ? "--" : decoded.accZ.toFixed(2) + " m/s^2");
 
-      setTelemetryText(packetUi.tmGyroXValue, `${decoded.gyroX.toFixed(1)} °/s`);
-      setTelemetryText(packetUi.tmGyroYValue, `${decoded.gyroY.toFixed(1)} °/s`);
-      setTelemetryText(packetUi.tmGyroZValue, `${decoded.gyroZ.toFixed(1)} °/s`);
+      setTelemetryText(packetUi.tmGyroXValue, decoded.gyroX === null ? "--" : decoded.gyroX.toFixed(1) + " deg/s");
+      setTelemetryText(packetUi.tmGyroYValue, decoded.gyroY === null ? "--" : decoded.gyroY.toFixed(1) + " deg/s");
+      setTelemetryText(packetUi.tmGyroZValue, decoded.gyroZ === null ? "--" : decoded.gyroZ.toFixed(1) + " deg/s");
 
-      setTelemetryText(packetUi.tmMagXValue, `${decoded.magX.toFixed(1)} µT`);
-      setTelemetryText(packetUi.tmMagYValue, `${decoded.magY.toFixed(1)} µT`);
-      setTelemetryText(packetUi.tmMagZValue, `${decoded.magZ.toFixed(1)} µT`);
+      setTelemetryText(packetUi.tmMagXValue, decoded.magX === null ? "--" : decoded.magX.toFixed(1) + " uT");
+      setTelemetryText(packetUi.tmMagYValue, decoded.magY === null ? "--" : decoded.magY.toFixed(1) + " uT");
+      setTelemetryText(packetUi.tmMagZValue, decoded.magZ === null ? "--" : decoded.magZ.toFixed(1) + " uT");
 
       const historyPoint = {
         time: Date.now(),
@@ -2650,17 +2667,17 @@
         setTelemetryText(packetUi.tmTempRaw, "raw: text telemetry");
       }
 
-      if (decoded.accX !== null) setTelemetryText(packetUi.tmAccXValue, `${decoded.accX.toFixed(2)} m/s²`);
-      if (decoded.accY !== null) setTelemetryText(packetUi.tmAccYValue, `${decoded.accY.toFixed(2)} m/s²`);
-      if (decoded.accZ !== null) setTelemetryText(packetUi.tmAccZValue, `${decoded.accZ.toFixed(2)} m/s²`);
+      if (decoded.accX !== null) setTelemetryText(packetUi.tmAccXValue, decoded.accX === null ? "--" : decoded.accX.toFixed(2) + " m/s^2");
+      if (decoded.accY !== null) setTelemetryText(packetUi.tmAccYValue, decoded.accY === null ? "--" : decoded.accY.toFixed(2) + " m/s^2");
+      if (decoded.accZ !== null) setTelemetryText(packetUi.tmAccZValue, decoded.accZ === null ? "--" : decoded.accZ.toFixed(2) + " m/s^2");
 
-      if (decoded.gyroX !== null) setTelemetryText(packetUi.tmGyroXValue, `${decoded.gyroX.toFixed(1)} °/s`);
-      if (decoded.gyroY !== null) setTelemetryText(packetUi.tmGyroYValue, `${decoded.gyroY.toFixed(1)} °/s`);
-      if (decoded.gyroZ !== null) setTelemetryText(packetUi.tmGyroZValue, `${decoded.gyroZ.toFixed(1)} °/s`);
+      if (decoded.gyroX !== null) setTelemetryText(packetUi.tmGyroXValue, decoded.gyroX === null ? "--" : decoded.gyroX.toFixed(1) + " deg/s");
+      if (decoded.gyroY !== null) setTelemetryText(packetUi.tmGyroYValue, decoded.gyroY === null ? "--" : decoded.gyroY.toFixed(1) + " deg/s");
+      if (decoded.gyroZ !== null) setTelemetryText(packetUi.tmGyroZValue, decoded.gyroZ === null ? "--" : decoded.gyroZ.toFixed(1) + " deg/s");
 
-      if (decoded.magX !== null) setTelemetryText(packetUi.tmMagXValue, `${decoded.magX.toFixed(1)} µT`);
-      if (decoded.magY !== null) setTelemetryText(packetUi.tmMagYValue, `${decoded.magY.toFixed(1)} µT`);
-      if (decoded.magZ !== null) setTelemetryText(packetUi.tmMagZValue, `${decoded.magZ.toFixed(1)} µT`);
+      if (decoded.magX !== null) setTelemetryText(packetUi.tmMagXValue, decoded.magX === null ? "--" : decoded.magX.toFixed(1) + " uT");
+      if (decoded.magY !== null) setTelemetryText(packetUi.tmMagYValue, decoded.magY === null ? "--" : decoded.magY.toFixed(1) + " uT");
+      if (decoded.magZ !== null) setTelemetryText(packetUi.tmMagZValue, decoded.magZ === null ? "--" : decoded.magZ.toFixed(1) + " uT");
 
       const historyPoint = {
         time: Date.now(),
@@ -2799,7 +2816,7 @@
     function getCurrentSatelliteElevationDegForTelemetryGate() {
       try {
         if (!orbitMapState || !orbitMapState.satrec) return null;
-        const look = getLookAnglesFromTle(orbitMapState.satrec, new Date(), getGroundStationSetting());
+        const look = getLookAnglesFromTle(orbitMapState.satrec, getOrbitMapDisplayDate(), getGroundStationSetting());
         if (!look || !Number.isFinite(look.elDeg)) return null;
         return look.elDeg;
       } catch (error) {
@@ -2816,7 +2833,7 @@
       if (!isReceiverConnected()) return false;
       if (!currentPass || !currentPass.aosDate || !currentPass.losDate) return false;
 
-      const now = Date.now();
+      const now = getOrbitMapDisplayDate().getTime();
       const aosTime = currentPass.aosDate.getTime();
       const losTime = currentPass.losDate.getTime();
       return Number.isFinite(aosTime) && Number.isFinite(losTime) && now >= aosTime && now <= losTime;
@@ -2902,7 +2919,12 @@
         const payloadLength = packetByteBuffer[5];
         const totalLength = 7 + payloadLength;
 
-        if (isTelemetryPacketType(packetType) && payloadLength !== 23) {
+        if (!isTelemetryPacketType(packetType)) {
+          packetByteBuffer.shift();
+          continue;
+        }
+
+        if (!isTelemetryPayloadLength(payloadLength)) {
           packetByteBuffer.shift();
           continue;
         }
@@ -2918,6 +2940,13 @@
         packetByteBuffer.splice(0, totalLength);
 
         const packet = parseTelemetryPacket(rawPacket);
+        if (!packet.checksumOk) {
+          addPacketLog({
+            hex: bytesToHex(rawPacket),
+            ok: false
+          });
+          continue;
+        }
         markCommandAckFromTelemetryPacket(packet);
         updatePacketDisplay(packet);
       }
@@ -3402,6 +3431,82 @@
       }
     }
 
+    function parseHexTextBytes(text) {
+      const cleaned = String(text || "").trim();
+      if (!cleaned) return null;
+
+      if (/^(?:0x)?[0-9A-Fa-f]{1,2}(?:[\s,;:]+(?:0x)?[0-9A-Fa-f]{1,2})*$/.test(cleaned)) {
+        return cleaned.match(/(?:0x)?([0-9A-Fa-f]{1,2})/g)
+          .map(part => parseInt(part.replace(/^0x/i, ""), 16));
+      }
+
+      const compact = cleaned.replace(/^0x/i, "");
+      if (/^(?:[0-9A-Fa-f]{2}){7,64}$/.test(compact)) {
+        return compact.match(/../g).map(part => parseInt(part, 16));
+      }
+
+      return null;
+    }
+
+    function extractPacketsFromHexTextBuffer() {
+      const packets = [];
+
+      while (true) {
+        const headerMatch = serialHexTextBuffer.match(/(?:^|[^0-9A-Fa-f])7E(?:[^0-9A-Fa-f]|$)/i);
+        if (!headerMatch) {
+          serialHexTextBuffer = serialHexTextBuffer.slice(-8);
+          break;
+        }
+
+        const headerOffset = headerMatch[0].toUpperCase().indexOf("7E");
+        serialHexTextBuffer = serialHexTextBuffer.slice(headerMatch.index + headerOffset);
+
+        const tokens = serialHexTextBuffer.match(/(?:0x)?[0-9A-Fa-f]{1,2}/g) || [];
+        if (tokens.length < 7) {
+          serialHexTextBuffer = serialHexTextBuffer.slice(-96);
+          break;
+        }
+
+        const values = tokens.map(token => parseInt(token.replace(/^0x/i, ""), 16));
+        const packetType = values[2];
+        const payloadLength = values[5];
+
+        if (values[0] !== TELEMETRY_PACKET.header || !isTelemetryPacketType(packetType) || !isTelemetryPayloadLength(payloadLength)) {
+          serialHexTextBuffer = serialHexTextBuffer.slice(2);
+          continue;
+        }
+
+        const totalLength = 7 + payloadLength;
+        if (values.length < totalLength) {
+          serialHexTextBuffer = serialHexTextBuffer.slice(-160);
+          break;
+        }
+
+        const packet = values.slice(0, totalLength);
+        const parsed = parseTelemetryPacket(packet);
+        if (parsed.checksumOk) {
+          packets.push(packet);
+        }
+
+        let consumed = 0;
+        for (let i = 0; i < totalLength; i++) {
+          const match = serialHexTextBuffer.slice(consumed).match(/(?:0x)?[0-9A-Fa-f]{1,2}/i);
+          if (!match) break;
+          consumed += match.index + match[0].length;
+        }
+        serialHexTextBuffer = serialHexTextBuffer.slice(consumed);
+      }
+
+      return packets;
+    }
+
+    function feedHexTextPacketStream(text) {
+      serialHexTextBuffer += String(text || "");
+      extractPacketsFromHexTextBuffer().forEach(packet => {
+        handleReceivedSerialBytes(new Uint8Array(packet));
+      });
+    }
+
     function handleReceivedSerialText(text) {
       if (!text) return;
 
@@ -3416,6 +3521,7 @@
       lines.forEach(line => {
         const trimmed = line.trim();
         if (trimmed.length > 0) {
+          feedHexTextPacketStream(trimmed);
           if (telemetryAllowed) updateTelemetryDisplayFromBackendText(trimmed);
           updateCommandAckLog(trimmed);
           counted += 1;
@@ -3424,6 +3530,7 @@
 
       // 改行なしのデータでも、受信チャンクが来たことはカウントできるようにする。
       if (counted === 0 && text.trim().length > 0 && serialTextBuffer.length > 0) {
+        feedHexTextPacketStream(serialTextBuffer);
         if (telemetryAllowed) updateTelemetryDisplayFromBackendText(serialTextBuffer);
         updateCommandAckLog(serialTextBuffer);
         counted = 1;
@@ -4062,9 +4169,10 @@
     let currentPassList = [];
     let pendingCustomTle = null;
     let selectedPassIndex = -1;
+    let orbitMapState = null;
     const PASS_LIST_LOOKAHEAD_HOURS = 96;
     const PASS_LIST_MAX_ROWS = 24;
-    const PASS_START_BEFORE_AOS_MS = 3 * 60 * 1000;
+    const PASS_START_BEFORE_AOS_MS = 10 * 1000;
 
     // Az/Elグラフは、パスの見え始め・見え終わりを少し広く見るため、
     // 仰角5degを描画開始・終了の基準にする。
@@ -4339,7 +4447,7 @@
 
     function updateCurrentClock() {
       if (currentTimeEl) {
-        currentTimeEl.textContent = formatTime(new Date());
+        currentTimeEl.textContent = formatTime(getOrbitMapDisplayDate());
       }
     }
 
@@ -6104,7 +6212,7 @@ ${tle.line2}`;
       latSpan: 180
     };
 
-    let orbitMapState = {
+    orbitMapState = {
       satrec: null,
       track: [],
       periodMin: null,
@@ -6204,7 +6312,7 @@ ${tle.line2}`;
     }
 
     function getOrbitMapDisplayDate() {
-      if (!orbitMapState.displayDate) {
+      if (!orbitMapState || !orbitMapState.displayDate) {
         return new Date();
       }
 
@@ -6917,11 +7025,14 @@ ${tle.line2}`;
               const totalLength = 7 + payloadLength;
               if (
                 isTelemetryPacketType(packetType) &&
-                payloadLength === 23 &&
+                isTelemetryPayloadLength(payloadLength) &&
                 bytes.length >= totalLength &&
                 typeof updatePacketDisplay === 'function'
               ) {
-                updatePacketDisplay(parseTelemetryPacket(bytes.slice(0, totalLength)));
+                const packet = parseTelemetryPacket(bytes.slice(0, totalLength));
+                if (packet.checksumOk) {
+                  updatePacketDisplay(packet);
+                }
               }
             } else if (bytes.length && typeof handleReceivedSerialBytes === 'function') {
               handleReceivedSerialBytes(new Uint8Array(bytes));
