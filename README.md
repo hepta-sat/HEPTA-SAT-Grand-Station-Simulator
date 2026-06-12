@@ -1,24 +1,31 @@
 # HEPTA_GSApp
 
-HEPTA ground station UIです。GitHubの「Download ZIP」で取得して展開した場合でも、Node.jsが入っていれば起動できます。
+HEPTA ground station UIです。
 
-## 起動方法
+## いちばん簡単な起動方法
 
-コマンドプロンプトでこのフォルダを開いて、次を実行します。
+GitHubの「Download ZIP」で取得して展開したら、展開したフォルダの中にある `start.bat` をダブルクリックしてください。
+
+## コマンドで起動する方法
+
+`npm start` は、必ず `package.json` があるフォルダで実行してください。
+
+例:
 
 ```bat
-npm start
-```
-
-PowerShellで `npm.ps1` の実行ポリシーエラーが出る場合は、次のどちらかで起動してください。
-
-```bat
+cd /d C:\Users\User\Downloads\HEPTA_GSApp-main
 npm.cmd start
 ```
 
-または、同梱の `start.bat` をダブルクリックしてください。
+フォルダ名は、実際にzipを展開した場所に合わせて変更してください。
 
-起動するとブラウザが開きます。開かない場合は、コマンドプロンプトに表示されるURLをChromeまたはEdgeで開いてください。
+悪い例:
+
+```bat
+C:\>npm start
+```
+
+この場合、npmは `C:\package.json` を探すため、`ENOENT Could not read package.json` になります。
 
 ## 必要なもの
 
@@ -27,6 +34,8 @@ npm.cmd start
 - XBee / USBシリアルドライバ
 
 ## 接続方法
+
+起動するとブラウザが開きます。開かない場合は、コマンドプロンプトに表示されるURLをChromeまたはEdgeで開いてください。
 
 ブラウザが開いたら、画面下部の接続ボタンからXBeeのシリアルポートを選択してください。
 
