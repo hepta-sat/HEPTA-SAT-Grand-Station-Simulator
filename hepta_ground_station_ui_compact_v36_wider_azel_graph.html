@@ -5943,21 +5943,20 @@ ${tle.line2}`;
         ctx.fillText(`${deg}°`, cx + Math.cos(rad) * radius * 0.48, cy + Math.sin(rad) * radius * 0.48);
       });
 
-      const graphNowVisible = lookNow && lookNow.elDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG;
-      if (graphNowVisible) {
+      if (lookNow) {
         const rad = deg2rad(normalizeDeg(lookNow.azDeg) - 90);
         const endX = cx + Math.cos(rad) * radius * 0.92;
         const endY = cy + Math.sin(rad) * radius * 0.92;
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.lineTo(endX, endY);
-        ctx.strokeStyle = "#0b63d8";
+        ctx.strokeStyle = lookNow.elDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG ? "#0b63d8" : "rgba(142, 163, 175, 0.92)";
         ctx.lineWidth = 2.8;
         ctx.stroke();
 
         ctx.beginPath();
         ctx.arc(endX, endY, 5.0, 0, Math.PI * 2);
-        ctx.fillStyle = "#28d9e8";
+        ctx.fillStyle = lookNow.elDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG ? "#28d9e8" : "#8ea3af";
         ctx.fill();
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 1.2;
@@ -6149,8 +6148,7 @@ ${tle.line2}`;
     function drawAzelGraphs() {
       const lookNowAz = drawSingleTimeSeriesGraph(azGraphCanvas, azGraphContainer, "az");
       const lookNowEl = drawSingleTimeSeriesGraph(elGraphCanvas, elGraphContainer, "el");
-      const graphNowVisible = lookNowAz && lookNowAz.elDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG;
-      if (graphAzLabel) graphAzLabel.textContent = graphNowVisible ? `${lookNowAz.azDeg.toFixed(1)}°` : "--";
+      if (graphAzLabel) graphAzLabel.textContent = lookNowAz ? `${lookNowAz.azDeg.toFixed(1)}°` : "--";
       if (graphElLabel) graphElLabel.textContent = (lookNowEl && lookNowEl.elDeg >= TRACKING_DISPLAY_MIN_ELEVATION_DEG) ? `${lookNowEl.elDeg.toFixed(1)}°` : "--";
     }
 
