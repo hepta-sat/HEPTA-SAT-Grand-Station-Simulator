@@ -1075,7 +1075,7 @@
       border: 1px solid rgba(45, 70, 84, 0.8);
       border-radius: 4px;
       background: rgba(3, 10, 15, 0.45);
-      padding: 3px 5px;
+      padding: 3px 3px;
       overflow: hidden;
     }
 
@@ -1089,8 +1089,8 @@
 
     .tm-value-card {
       display: grid;
-      grid-template-columns: 40px minmax(0, 1fr);
-      gap: 4px;
+      grid-template-columns: 20px minmax(0, 1fr);
+      gap: 3px;
       align-items: center;
     }
 
@@ -1107,11 +1107,12 @@
     .tm-value-main {
       color: #28d9e8;
       font-family: Consolas, Menlo, monospace;
-      font-size: 10.5px;
+      font-size: 9.4px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       margin-top: 0;
+      text-align: left;
     }
 
     .tm-status-main.power-save {
@@ -2203,41 +2204,41 @@
               </div>
 
               <div class="tm-value-card">
-                <div class="tm-value-label">Acc X</div>
+                <div class="tm-value-label">AX</div>
                 <div class="tm-value-main" id="tm-acc-x-value">--</div>
               </div>
               <div class="tm-value-card">
-                <div class="tm-value-label">Acc Y</div>
+                <div class="tm-value-label">AY</div>
                 <div class="tm-value-main" id="tm-acc-y-value">--</div>
               </div>
               <div class="tm-value-card">
-                <div class="tm-value-label">Acc Z</div>
+                <div class="tm-value-label">AZ</div>
                 <div class="tm-value-main" id="tm-acc-z-value">--</div>
               </div>
 
               <div class="tm-value-card">
-                <div class="tm-value-label">Gyro X</div>
+                <div class="tm-value-label">GX</div>
                 <div class="tm-value-main" id="tm-gyro-x-value">--</div>
               </div>
               <div class="tm-value-card">
-                <div class="tm-value-label">Gyro Y</div>
+                <div class="tm-value-label">GY</div>
                 <div class="tm-value-main" id="tm-gyro-y-value">--</div>
               </div>
               <div class="tm-value-card">
-                <div class="tm-value-label">Gyro Z</div>
+                <div class="tm-value-label">GZ</div>
                 <div class="tm-value-main" id="tm-gyro-z-value">--</div>
               </div>
 
               <div class="tm-value-card">
-                <div class="tm-value-label">Mag X</div>
+                <div class="tm-value-label">MX</div>
                 <div class="tm-value-main" id="tm-mag-x-value">--</div>
               </div>
               <div class="tm-value-card">
-                <div class="tm-value-label">Mag Y</div>
+                <div class="tm-value-label">MY</div>
                 <div class="tm-value-main" id="tm-mag-y-value">--</div>
               </div>
               <div class="tm-value-card">
-                <div class="tm-value-label">Mag Z</div>
+                <div class="tm-value-label">MZ</div>
                 <div class="tm-value-main" id="tm-mag-z-value">--</div>
               </div>
             </div>
@@ -2252,7 +2253,7 @@
         </div>
 
         <div class="panel">
-          <div class="panel-title">コマンド / ACK ログ</div>
+          <div class="panel-title">コマンドログ</div>
           <div class="panel-body command-body">
             <div class="command-input-area">
               <input id="command-input" class="command-input" type="text" placeholder="コマンド入力欄 例: a / b" autocomplete="off">
@@ -2262,7 +2263,7 @@
             <div class="command-log">
               <div class="command-log-header">
                 <div>時間</div>
-                <div>送信コマンド / ACK</div>
+                <div>送信コマンド</div>
               </div>
               <div class="command-log-list" id="command-log-list">
               </div>
@@ -2369,6 +2370,7 @@
 
     let xbeePort = null;
     let xbeeWriter = null;
+    let serialPortSelectionInProgress = false;
 
     const XBEE_BAUD_RATE = 9600;
     const USE_BACKEND_COMMAND_API = false;
@@ -2681,6 +2683,17 @@
       if (el) el.textContent = text;
     }
 
+    function getTelemetryHistoryTimeMs() {
+      try {
+        const displayDate = getOrbitMapDisplayDate();
+        const displayMs = displayDate instanceof Date ? displayDate.getTime() : NaN;
+        if (Number.isFinite(displayMs)) return displayMs;
+      } catch (error) {
+        // Fall back to wall-clock time if the orbit display is not ready yet.
+      }
+      return Date.now();
+    }
+
     function updateDecodedTelemetryDisplay(packet) {
       const decoded = packet && packet.checksumOk && isTelemetryPacketType(packet.packetType)
         ? decodeHkPayload(packet.payload, packet.packetType)
@@ -2697,20 +2710,20 @@
       setTelemetryText(packetUi.tmTempValue, `${decoded.temperatureC.toFixed(1)} °C`);
       setTelemetryText(packetUi.tmTempRaw, `raw: ${decoded.temperatureHex} = ${decoded.temperatureRaw} /10`);
 
-      setTelemetryText(packetUi.tmAccXValue, decoded.accX === null ? "--" : decoded.accX.toFixed(2) + " m/s^2");
-      setTelemetryText(packetUi.tmAccYValue, decoded.accY === null ? "--" : decoded.accY.toFixed(2) + " m/s^2");
-      setTelemetryText(packetUi.tmAccZValue, decoded.accZ === null ? "--" : decoded.accZ.toFixed(2) + " m/s^2");
+      setTelemetryText(packetUi.tmAccXValue, decoded.accX === null ? "--" : decoded.accX.toFixed(2) + " m/s2");
+      setTelemetryText(packetUi.tmAccYValue, decoded.accY === null ? "--" : decoded.accY.toFixed(2) + " m/s2");
+      setTelemetryText(packetUi.tmAccZValue, decoded.accZ === null ? "--" : decoded.accZ.toFixed(2) + " m/s2");
 
-      setTelemetryText(packetUi.tmGyroXValue, decoded.gyroX === null ? "--" : decoded.gyroX.toFixed(1) + " deg / s");
-      setTelemetryText(packetUi.tmGyroYValue, decoded.gyroY === null ? "--" : decoded.gyroY.toFixed(1) + " deg / s");
-      setTelemetryText(packetUi.tmGyroZValue, decoded.gyroZ === null ? "--" : decoded.gyroZ.toFixed(1) + " deg / s");
+      setTelemetryText(packetUi.tmGyroXValue, decoded.gyroX === null ? "--" : decoded.gyroX.toFixed(1) + " deg/s");
+      setTelemetryText(packetUi.tmGyroYValue, decoded.gyroY === null ? "--" : decoded.gyroY.toFixed(1) + " deg/s");
+      setTelemetryText(packetUi.tmGyroZValue, decoded.gyroZ === null ? "--" : decoded.gyroZ.toFixed(1) + " deg/s");
 
       setTelemetryText(packetUi.tmMagXValue, decoded.magX === null ? "--" : decoded.magX.toFixed(1) + " uT");
       setTelemetryText(packetUi.tmMagYValue, decoded.magY === null ? "--" : decoded.magY.toFixed(1) + " uT");
       setTelemetryText(packetUi.tmMagZValue, decoded.magZ === null ? "--" : decoded.magZ.toFixed(1) + " uT");
 
       const historyPoint = {
-        time: Date.now(),
+        time: getTelemetryHistoryTimeMs(),
         modeText: decoded.modeText
       };
 
@@ -2780,20 +2793,20 @@
         setTelemetryText(packetUi.tmTempRaw, "raw: text telemetry");
       }
 
-      if (decoded.accX !== null) setTelemetryText(packetUi.tmAccXValue, decoded.accX === null ? "--" : decoded.accX.toFixed(2) + " m/s^2");
-      if (decoded.accY !== null) setTelemetryText(packetUi.tmAccYValue, decoded.accY === null ? "--" : decoded.accY.toFixed(2) + " m/s^2");
-      if (decoded.accZ !== null) setTelemetryText(packetUi.tmAccZValue, decoded.accZ === null ? "--" : decoded.accZ.toFixed(2) + " m/s^2");
+      if (decoded.accX !== null) setTelemetryText(packetUi.tmAccXValue, decoded.accX === null ? "--" : decoded.accX.toFixed(2) + " m/s2");
+      if (decoded.accY !== null) setTelemetryText(packetUi.tmAccYValue, decoded.accY === null ? "--" : decoded.accY.toFixed(2) + " m/s2");
+      if (decoded.accZ !== null) setTelemetryText(packetUi.tmAccZValue, decoded.accZ === null ? "--" : decoded.accZ.toFixed(2) + " m/s2");
 
-      if (decoded.gyroX !== null) setTelemetryText(packetUi.tmGyroXValue, decoded.gyroX === null ? "--" : decoded.gyroX.toFixed(1) + " deg / s");
-      if (decoded.gyroY !== null) setTelemetryText(packetUi.tmGyroYValue, decoded.gyroY === null ? "--" : decoded.gyroY.toFixed(1) + " deg / s");
-      if (decoded.gyroZ !== null) setTelemetryText(packetUi.tmGyroZValue, decoded.gyroZ === null ? "--" : decoded.gyroZ.toFixed(1) + " deg / s");
+      if (decoded.gyroX !== null) setTelemetryText(packetUi.tmGyroXValue, decoded.gyroX === null ? "--" : decoded.gyroX.toFixed(1) + " deg/s");
+      if (decoded.gyroY !== null) setTelemetryText(packetUi.tmGyroYValue, decoded.gyroY === null ? "--" : decoded.gyroY.toFixed(1) + " deg/s");
+      if (decoded.gyroZ !== null) setTelemetryText(packetUi.tmGyroZValue, decoded.gyroZ === null ? "--" : decoded.gyroZ.toFixed(1) + " deg/s");
 
       if (decoded.magX !== null) setTelemetryText(packetUi.tmMagXValue, decoded.magX === null ? "--" : decoded.magX.toFixed(1) + " uT");
       if (decoded.magY !== null) setTelemetryText(packetUi.tmMagYValue, decoded.magY === null ? "--" : decoded.magY.toFixed(1) + " uT");
       if (decoded.magZ !== null) setTelemetryText(packetUi.tmMagZValue, decoded.magZ === null ? "--" : decoded.magZ.toFixed(1) + " uT");
 
       const historyPoint = {
-        time: Date.now(),
+        time: getTelemetryHistoryTimeMs(),
         modeText: decoded.modeText
       };
 
@@ -2943,7 +2956,8 @@
     }
 
     function isTelemetryDisplayAllowed() {
-      return true;
+      const elevationDeg = getCurrentSatelliteElevationDegForTelemetryGate();
+      return elevationDeg !== null && elevationDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG;
     }
 
     function clearTelemetryReceiveDisplaysForLowElevation() {
@@ -3187,7 +3201,7 @@
       const plotH = Math.max(1, height - topPad - bottomPad);
       ctx.fillStyle = CANVAS_THEME.plotBg;
       ctx.fillRect(leftPad, topPad, plotW, plotH);
-      const nowMs = Date.now();
+      const nowMs = getTelemetryHistoryTimeMs();
       const axisRange = getPassGraphTimeRange(10 * 60 * 1000, nowMs);
 
       telemetryHistory = telemetryHistory.filter(p => nowMs - p.time <= 30 * 60 * 1000);
@@ -3372,7 +3386,7 @@
       const plotH = Math.max(1, height - topPad - bottomPad);
       ctx.fillStyle = CANVAS_THEME.plotBg;
       ctx.fillRect(leftPad, topPad, plotW, plotH);
-      const nowMs = Date.now();
+      const nowMs = getTelemetryHistoryTimeMs();
       const axisRange = getPassGraphTimeRange(3 * 60 * 1000, nowMs);
 
       rssiHistory = rssiHistory.filter(p => nowMs - p.time <= 30 * 60 * 1000);
@@ -3474,10 +3488,16 @@
 
     function updateRssiDisplay(rssiDbm) {
       const hasValue = rssiDbm !== null && Number.isFinite(rssiDbm);
+      if (hasValue && !isTelemetryDisplayAllowed()) {
+        if (rssiValueEl) rssiValueEl.textContent = "--";
+        drawRssiGraph();
+        return;
+      }
+
       if (rssiValueEl) rssiValueEl.textContent = hasValue ? String(Math.round(rssiDbm)) : "--";
 
       if (hasValue) {
-        rssiHistory.push({ time: Date.now(), rssi: rssiDbm });
+        rssiHistory.push({ time: getTelemetryHistoryTimeMs(), rssi: rssiDbm });
         if (rssiHistory.length > 600) rssiHistory = rssiHistory.slice(-600);
       }
 
@@ -3715,7 +3735,7 @@
 
     function renderCommandLog() {
       if (!commandLogList) return;
-      commandLogList.innerHTML = commandLogHistory.map(row => `
+      commandLogList.innerHTML = commandLogHistory.filter(row => row.type !== "ack").map(row => `
         <div class="command-log-row" title="${row.command.replace(/"/g, '&quot;')}">
           <div class="command-log-time">${row.time}</div>
           <div class="command-log-command ${row.type === "ack" ? "command-log-ack" : ""}">${row.command}</div>
@@ -3733,10 +3753,7 @@
       if (!row) return false;
 
       row.ackReceived = true;
-      updateCommandLog({
-        command: `ACK ${expectedAck}`,
-        type: "ack"
-      });
+      renderCommandLog();
       return true;
     }
 
@@ -3769,10 +3786,6 @@
         return true;
       } else {
         lastDisplayedCommandAckKey = displayKey;
-        updateCommandLog({
-          command: `ACK ${getCommandModeLabel(mode)}`,
-          type: "ack"
-        });
       }
       return true;
     }
@@ -4136,6 +4149,22 @@
       return Boolean(xbeePort && xbeePort.readable);
     }
 
+    async function requestXbeePortFromBrowser() {
+      if (serialPortSelectionInProgress) return null;
+      serialPortSelectionInProgress = true;
+      updatePortStatus("selected", "ポート選択中...");
+      if (selectPortButton) selectPortButton.disabled = true;
+      if (connectPortButton) connectPortButton.disabled = true;
+
+      try {
+        return await navigator.serial.requestPort();
+      } finally {
+        serialPortSelectionInProgress = false;
+        if (selectPortButton) selectPortButton.disabled = false;
+        if (connectPortButton && !isXbeePortOpen()) connectPortButton.disabled = false;
+      }
+    }
+
     function getSerialOpenFailureMessage(error) {
       const errorName = error && error.name ? error.name : "Error";
       const errorMessage = error && error.message ? error.message : "";
@@ -4169,7 +4198,8 @@
           return;
         }
 
-        xbeePort = await navigator.serial.requestPort();
+        xbeePort = await requestXbeePortFromBrowser();
+        if (!xbeePort) return;
 
         const portName = getPortDisplayName(xbeePort);
 
@@ -4193,7 +4223,8 @@
         }
 
         if (!xbeePort) {
-          xbeePort = await navigator.serial.requestPort();
+          xbeePort = await requestXbeePortFromBrowser();
+          if (!xbeePort) return false;
           const selectedName = getPortDisplayName(xbeePort);
           selectedPortName.textContent = selectedName;
           updatePortStatus("selected", "選択済み");
