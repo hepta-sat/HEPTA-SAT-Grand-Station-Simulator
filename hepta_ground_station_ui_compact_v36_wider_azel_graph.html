@@ -4857,7 +4857,25 @@ ${tle.line2}`;
     let antenna3dSceneState = null;
     let antenna3dAnimationStarted = false;
 
-    import("./vendor/three/build/three.module.min.js")
+    const THREE_MODULE_URLS = [
+      "./vendor/three/build/three.module.min.js",
+      "https://unpkg.com/three@0.184.0/build/three.module.min.js"
+    ];
+
+    async function importFirstAvailableModule(urls, label) {
+      let lastError = null;
+      for (const url of urls) {
+        try {
+          return await import(url);
+        } catch (error) {
+          lastError = error;
+          console.warn(`${label} load failed from ${url}`, error);
+        }
+      }
+      throw lastError || new Error(`${label} load failed`);
+    }
+
+    importFirstAvailableModule(THREE_MODULE_URLS, "Three.js")
       .then((threeModule) => {
         THREE_LIB = threeModule;
         window.THREE_LIB = threeModule;
