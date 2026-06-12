@@ -599,6 +599,12 @@
       font-family: Consolas, Menlo, monospace;
     }
 
+    .tracking-chip.status-chip {
+      font-size: 9.4px;
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+
     .graph-overlay {
       position: absolute;
       top: 7px;
@@ -1315,7 +1321,7 @@
 
     .tle-body {
       display: grid;
-      grid-template-rows: 24px 40px 30px 82px 14px;
+      grid-template-rows: 24px minmax(0, 1fr) 0;
       gap: 6px;
       align-items: stretch;
       justify-content: stretch;
@@ -1323,6 +1329,60 @@
       color: #c8d8e3;
       overflow: hidden;
       padding: 8px;
+    }
+
+    .tle-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      min-height: 0;
+    }
+
+    .tle-tab-button {
+      border: 1px solid #263946;
+      border-radius: 4px;
+      background: rgba(3, 10, 15, 0.45);
+      color: #8ea3af;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 0;
+    }
+
+    .tle-tab-button.active {
+      border-color: #28d9e8;
+      background: rgba(40, 217, 232, 0.14);
+      color: #28d9e8;
+    }
+
+    .tle-tab-page {
+      display: none;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .tle-tab-page.active {
+      display: grid;
+    }
+
+    .tle-form-grid {
+      grid-template-rows: 24px 40px 30px 82px;
+      gap: 6px;
+      align-items: stretch;
+    }
+
+    .sat1-panel {
+      grid-template-rows: 34px 28px minmax(0, 1fr);
+      gap: 7px;
+      min-height: 0;
+      align-items: stretch;
+    }
+
+    .custom-panel {
+      grid-template-rows: 34px 28px minmax(0, 1fr);
+      gap: 7px;
+      min-height: 0;
+      align-items: stretch;
     }
 
     .tle-radio-group {
@@ -1381,12 +1441,98 @@
 
     .tle-status {
       display: block;
-      min-height: 14px;
+      min-height: 0;
       font-size: 10.5px;
       color: #8ea3af;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .pass-select-panel {
+      grid-template-rows: auto 1fr;
+      gap: 5px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .pass-list {
+      min-height: 0;
+      height: 100%;
+      overflow: auto;
+      border: 1px solid #1d2c35;
+      border-radius: 4px;
+      background: rgba(3, 10, 15, 0.45);
+    }
+
+    .pass-list-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 9.8px;
+    }
+
+    .pass-list-table th,
+    .pass-list-table td {
+      padding: 3px 5px;
+      border-bottom: 1px solid rgba(45, 70, 84, 0.72);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+      line-height: 1.18;
+    }
+
+    .pass-list-table th:nth-child(1),
+    .pass-list-table td:nth-child(1),
+    .pass-list-table th:nth-child(2),
+    .pass-list-table td:nth-child(2) {
+      width: 40%;
+    }
+
+    .pass-list-table th:nth-child(3),
+    .pass-list-table td:nth-child(3) {
+      width: 20%;
+    }
+
+    .pass-list-table th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      color: #8ea3af;
+      background: #081219;
+      font-weight: 600;
+    }
+
+    .pass-list-table td {
+      color: #c8d8e3;
+      font-family: Consolas, Menlo, monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pass-list-table td:nth-child(2) {
+      font-family: inherit;
+    }
+
+    .pass-list-table td:nth-child(3) {
+      color: #28d9e8;
+      text-align: right;
+    }
+
+    .pass-list-table tbody tr {
+      cursor: pointer;
+    }
+
+    .pass-list-table tbody tr:hover td,
+    .pass-list-table tbody tr.selected td {
+      background: rgba(40, 217, 232, 0.12);
+    }
+
+    .pass-list-empty {
+      padding: 8px 6px;
+      color: #8ea3af;
+      font-size: 10.5px;
+      text-align: center;
     }
 
     /* ===== HEPTA Operation Platform Theme ===== */
@@ -1568,6 +1714,45 @@
       accent-color: #005bd8;
     }
 
+    .tle-tab-button {
+      border-color: #c9d8eb;
+      background: #f8fbff;
+      color: #375884;
+    }
+
+    .tle-tab-button.active {
+      border-color: #0a66dc;
+      background: rgba(10, 102, 220, 0.10);
+      color: #005bd8;
+    }
+
+    .pass-list-empty {
+      color: #5f7195;
+    }
+
+    .pass-list {
+      border-color: #d6e3f1;
+      background: #ffffff;
+    }
+
+    .pass-list-table th,
+    .pass-list-table td {
+      border-bottom-color: #e3edf7;
+    }
+
+    .pass-list-table th {
+      color: #5f7195;
+      background: #f5f7fa;
+    }
+
+    .pass-list-table td {
+      color: #102c63;
+    }
+
+    .pass-list-table td:nth-child(3) {
+      color: #005bd8;
+    }
+
     .packet-log-list {
       background:
         repeating-linear-gradient(
@@ -1693,42 +1878,56 @@
 
           <!-- TLE入力 -->
           <div class="panel">
-            <div class="panel-title">TLE入力 / 軌道選択</div>
+            <div class="panel-title">軌道選択</div>
 
             <div class="panel-body tle-body">
 
-              <div class="tle-radio-group">
-                <label class="tle-radio-option">
-                  <input type="radio" name="tle-source" value="custom">
-                  Custom
-                </label>
-
-                <label class="tle-radio-option">
-                  <input type="radio" name="tle-source" value="sat1" checked>
-                  SAT1
-                </label>
+              <div class="tle-tabs">
+                <button class="tle-tab-button active" type="button" data-tle-tab="sat1">SAT1</button>
+                <button class="tle-tab-button" type="button" data-tle-tab="custom">Custom</button>
               </div>
 
-              <textarea id="tle-input" class="tle-textarea" spellcheck="false" wrap="off"></textarea>
+              <div class="tle-tab-page sat1-panel active" id="tle-tab-sat1">
+                <textarea id="sat1-tle-display" class="tle-textarea" spellcheck="false" wrap="off" readonly></textarea>
 
-              <div class="tle-button-row">
-                <button class="gs-button" id="apply-tle-button">TLE反映</button>
+                <div class="tle-button-row">
+                  <button class="gs-button" id="apply-sat1-tle-button">TLE反映</button>
+                </div>
+
+                <div class="pass-list">
+                  <table class="pass-list-table">
+                    <thead>
+                      <tr>
+                        <th>AOS(JST)</th>
+                        <th>LOS(JST)</th>
+                        <th>最大仰角</th>
+                      </tr>
+                    </thead>
+                    <tbody id="sat1-pass-list-body"></tbody>
+                  </table>
+                  <div class="pass-list-empty" id="sat1-pass-list-empty">TLEを反映してください</div>
+                </div>
               </div>
 
-              <div class="pass-info">
-                <div class="pass-box">
-                  <div class="pass-label green">AOS予測</div>
-                  <div class="pass-time green" id="aos-time">--:--:--</div>
+              <div class="tle-tab-page custom-panel" id="tle-tab-custom">
+                <textarea id="tle-input" class="tle-textarea" spellcheck="false" wrap="off"></textarea>
+
+                <div class="tle-button-row">
+                  <button class="gs-button" id="apply-tle-button">TLE反映</button>
                 </div>
 
-                <div class="pass-box">
-                  <div class="pass-label">現在時刻</div>
-                  <div class="pass-time" id="current-time">--:--:--</div>
-                </div>
-
-                <div class="pass-box">
-                  <div class="pass-label red">LOS予測</div>
-                  <div class="pass-time red" id="los-time">--:--:--</div>
+                <div class="pass-list">
+                  <table class="pass-list-table">
+                    <thead>
+                      <tr>
+                        <th>AOS(JST)</th>
+                        <th>LOS(JST)</th>
+                        <th>最大仰角</th>
+                      </tr>
+                    </thead>
+                    <tbody id="pass-list-body"></tbody>
+                  </table>
+                  <div class="pass-list-empty" id="pass-list-empty">TLEを反映してください</div>
                 </div>
               </div>
 
@@ -1777,7 +1976,7 @@
                 <div class="tracking-chip">Az <span id="antenna-az-label">--</span></div>
                 <div class="tracking-chip">El <span id="antenna-el-label">--</span></div>
                 <div class="tracking-chip">Range <span id="antenna-range-label">--</span></div>
-                <div class="tracking-chip">Status <span id="antenna-status-label">--</span></div>
+                <div class="tracking-chip status-chip">Status <span id="antenna-status-label">--</span></div>
               </div>
             </div>
           </div>
@@ -3050,7 +3249,7 @@
 
       try {
         const satrec = orbitMapState && orbitMapState.satrec;
-        const look = satrec ? getLookAnglesFromTle(satrec, new Date(), getGroundStationSetting()) : null;
+        const look = satrec ? getLookAnglesFromTle(satrec, getOrbitMapDisplayDate(), getGroundStationSetting()) : null;
 
         if (look && Number.isFinite(look.elDeg) && Number.isFinite(look.rangeKm) && look.rangeKm > 0) {
           if (look.elDeg >= 0) {
@@ -3747,11 +3946,21 @@
        TLE Generator
     ========================= */
 
-    const tleSourceRadios = document.querySelectorAll('input[name="tle-source"]');
     const tleInput = document.getElementById("tle-input");
+    const sat1TleDisplay = document.getElementById("sat1-tle-display");
     const tleStatus = document.getElementById("tle-status");
+    const tleTabButtons = document.querySelectorAll("[data-tle-tab]");
+    const tleTabPages = {
+      sat1: document.getElementById("tle-tab-sat1"),
+      custom: document.getElementById("tle-tab-custom")
+    };
+    const passListBody = document.getElementById("pass-list-body");
+    const passListEmpty = document.getElementById("pass-list-empty");
+    const sat1PassListBody = document.getElementById("sat1-pass-list-body");
+    const sat1PassListEmpty = document.getElementById("sat1-pass-list-empty");
 
     const applyTleButton = document.getElementById("apply-tle-button");
+    const applySat1TleButton = document.getElementById("apply-sat1-tle-button");
 
     const aosTimeEl = document.getElementById("aos-time");
     const currentTimeEl = document.getElementById("current-time");
@@ -3767,6 +3976,13 @@
       aosDate: null,
       losDate: null
     };
+
+    let currentPassList = [];
+    let pendingCustomTle = null;
+    let selectedPassIndex = -1;
+    const PASS_LIST_LOOKAHEAD_HOURS = 96;
+    const PASS_LIST_MAX_ROWS = 24;
+    const PASS_START_BEFORE_AOS_MS = 3 * 60 * 1000;
 
     // Az/Elグラフは、パスの見え始め・見え終わりを少し広く見るため、
     // 仰角5degを描画開始・終了の基準にする。
@@ -3790,6 +4006,19 @@
       return `${pad2(date.getUTCHours())}:${pad2(date.getUTCMinutes())}`;
     }
 
+    function formatUtcDateTime(date) {
+      return `${date.getUTCFullYear()}/${pad2(date.getUTCMonth() + 1)}/${pad2(date.getUTCDate())} ${pad2(date.getUTCHours())}:${pad2(date.getUTCMinutes())}:${pad2(date.getUTCSeconds())}`;
+    }
+
+    function formatUtcDateTimeCompact(date) {
+      return `${pad2(date.getUTCFullYear() % 100)}/${pad2(date.getUTCMonth() + 1)}/${pad2(date.getUTCDate())} ${pad2(date.getUTCHours())}:${pad2(date.getUTCMinutes())}:${pad2(date.getUTCSeconds())}`;
+    }
+
+    function formatJstDateTimeCompact(date) {
+      const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+      return `${pad2(jstDate.getUTCFullYear() % 100)}/${pad2(jstDate.getUTCMonth() + 1)}/${pad2(jstDate.getUTCDate())} ${pad2(jstDate.getUTCHours())}:${pad2(jstDate.getUTCMinutes())}:${pad2(jstDate.getUTCSeconds())}`;
+    }
+
     function formatDateTime(date) {
       return `${pad2(date.getMonth() + 1)}/${pad2(date.getDate())} ${formatTime(date)}`;
     }
@@ -3799,6 +4028,127 @@
       currentPass.losDate = losDate || null;
       if (aosTimeEl) aosTimeEl.textContent = aosDate ? formatDateTime(aosDate) : "--:--:--";
       if (losTimeEl) losTimeEl.textContent = losDate ? formatDateTime(losDate) : "--:--:--";
+    }
+
+    function setActiveTleTab(tabName) {
+      const nextTab = tleTabPages[tabName] ? tabName : "sat1";
+      tleTabButtons.forEach((button) => {
+        const active = button.dataset.tleTab === nextTab;
+        button.classList.toggle("active", active);
+      });
+      Object.entries(tleTabPages).forEach(([name, page]) => {
+        if (page) page.classList.toggle("active", name === nextTab);
+      });
+    }
+
+    function getPassListElements(source = getSelectedTleSource()) {
+      if (source === "sat1") {
+        return { body: sat1PassListBody, empty: sat1PassListEmpty };
+      }
+      return { body: passListBody, empty: passListEmpty };
+    }
+
+    function renderPassList(passes = currentPassList, emptyMessage = "TLEを反映してください", source = getSelectedTleSource()) {
+      currentPassList = Array.isArray(passes) ? passes : [];
+      const { body, empty } = getPassListElements(source);
+      if (!body || !empty) return;
+
+      body.innerHTML = currentPassList.map((pass, index) => {
+        const maxEl = Number.isFinite(pass.maxElevationDeg) ? pass.maxElevationDeg.toFixed(1) : "--";
+        return `
+          <tr data-pass-index="${index}" class="${index === selectedPassIndex ? "selected" : ""}" title="AOS ${formatUtcDateTime(pass.aosDate)} UTC / LOS ${formatUtcDateTime(pass.losDate)} UTC">
+            <td>${formatJstDateTimeCompact(pass.aosDate)}</td>
+            <td>${formatJstDateTimeCompact(pass.losDate)}</td>
+            <td>${maxEl} deg</td>
+          </tr>
+        `;
+      }).join("");
+
+      empty.textContent = currentPassList.length ? "" : emptyMessage;
+      empty.style.display = currentPassList.length ? "none" : "block";
+    }
+
+    function setPassListCalculating(source = getSelectedTleSource()) {
+      currentPassList = [];
+      selectedPassIndex = -1;
+      const { body, empty } = getPassListElements(source);
+      if (body) body.innerHTML = "";
+      if (empty) {
+        empty.textContent = "パス計算中...";
+        empty.style.display = "block";
+      }
+    }
+
+    async function selectCustomPassForOrbit(index) {
+      const pass = currentPassList[index];
+      if (!pendingCustomTle || !pass) return;
+
+      selectedPassIndex = index;
+      currentTle = {
+        name: pendingCustomTle.name,
+        line1: pendingCustomTle.line1,
+        line2: pendingCustomTle.line2
+      };
+
+      setPassTimes(pass.aosDate, pass.losDate);
+      renderPassList(currentPassList, "条件に合うパスがありません");
+      resetTrackingForTleChange();
+      const passStartDate = new Date(pass.aosDate.getTime() - PASS_START_BEFORE_AOS_MS);
+      orbitMapState.displayDate = passStartDate;
+      orbitMapState.displayRealStartMs = Date.now();
+      setPassStatus("", "");
+      await refreshOrbitMap();
+    }
+
+    async function applyTleForPassSelection(source, line1, line2, satelliteName) {
+      const listSource = source === "sat1" ? "sat1" : "custom";
+      pendingCustomTle = {
+        name: satelliteName,
+        line1,
+        line2
+      };
+      selectedPassIndex = -1;
+      currentTle = { name: satelliteName, line1: "", line2: "" };
+      resetTrackingForTleChange();
+      orbitMapState.message = "パスを選択してください";
+      drawOrbitMap();
+
+      setPassTimesCalculating();
+      setPassListCalculating(listSource);
+      setPassStatus("SGP4でパス一覧を計算中...", "cyan");
+      console.log(`${satelliteName} TLE:`, pendingCustomTle);
+
+      try {
+        await waitForSatelliteJs();
+
+        const gs = getGroundStationSetting();
+        const passes = findPassesBySgp4(line1, line2, gs);
+
+        renderPassList(passes, "条件に合うパスがありません", listSource);
+        if (passes.length > 0) {
+          await selectCustomPassForOrbit(0);
+        } else {
+          setPassTimes(null, null);
+          setPassStatus(
+            `条件に合うパスがありません：El ${AOS_LOS_ELEVATION_THRESHOLD_DEG}°以上 / ${gs.name} (${gs.lat.toFixed(4)}, ${gs.lon.toFixed(4)})`,
+            "red"
+          );
+        }
+      } catch (error) {
+        console.error(error);
+        pendingCustomTle = null;
+        setPassTimes(null, null);
+        renderPassList([], "パスを計算できませんでした", listSource);
+        orbitMapState.satrec = null;
+        orbitMapState.track = [];
+        orbitMapState.periodMin = null;
+        orbitMapState.displayDate = null;
+        orbitMapState.displayRealStartMs = null;
+        orbitMapState.message = "TLE/SGP4エラー";
+        resetAzelGraphWindowCache();
+        clearTrackingLabels();
+        setPassStatus(`エラー：${error.message}`, "red");
+      }
     }
 
     function setPassStatus(message, className = "") {
@@ -3812,14 +4162,76 @@
       if (losTimeEl) losTimeEl.textContent = "計算中";
     }
 
+    function chooseTleTrailingToken(token, minDigits, buildBase) {
+      const cleaned = String(token || "").trim();
+      const candidates = [];
+      if (cleaned) candidates.push(cleaned);
+      if (cleaned.length > minDigits) candidates.push(cleaned.slice(0, -1));
+
+      const expectedChecksum = cleaned.slice(-1);
+      const uniqueCandidates = [...new Set(candidates)].filter(Boolean);
+      const checksumMatch = uniqueCandidates.find(candidate => tleChecksum(buildBase(candidate)) === expectedChecksum);
+      return checksumMatch || uniqueCandidates[uniqueCandidates.length - 1] || "";
+    }
+
+    function normalizeTleLine1(line) {
+      if (line.length >= 68) return line;
+
+      const parts = line.split(/\s+/);
+      if (parts.length < 9 || parts[0] !== "1") return line;
+
+      const satMatch = parts[1].match(/^(\d{1,5})([A-Za-z]?)$/);
+      if (!satMatch) return line;
+
+      const satNum = satMatch[1].padStart(5, "0").slice(-5);
+      const classification = (satMatch[2] || "U").toUpperCase().slice(0, 1);
+      const intlDesignator = (parts[2] || "").padEnd(8, " ").slice(0, 8);
+      const epoch = (parts[3] || "").padStart(14, " ").slice(-14);
+      const meanMotionDot = (parts[4] || "").padStart(10, " ").slice(-10);
+      const meanMotionDdot = (parts[5] || "").padStart(8, " ").slice(-8);
+      const bstar = (parts[6] || "").padStart(8, " ").slice(-8);
+      const ephemerisType = (parts[7] || "0").slice(0, 1);
+      const buildBase = elementSetNumber =>
+        `1 ${satNum}${classification} ${intlDesignator} ${epoch} ${meanMotionDot} ${meanMotionDdot} ${bstar} ${ephemerisType} ${String(elementSetNumber || "").padStart(4, " ").slice(-4)}`;
+      const elementSetNumber = chooseTleTrailingToken(parts[8], 3, buildBase);
+
+      return addChecksum(buildBase(elementSetNumber));
+    }
+
+    function normalizeTleLine2(line) {
+      if (line.length >= 68) return line;
+
+      const parts = line.split(/\s+/);
+      if (parts.length < 9 || parts[0] !== "2") return line;
+
+      const satNum = (parts[1] || "").padStart(5, "0").slice(-5);
+      const inclination = (parts[2] || "").padStart(8, " ").slice(-8);
+      const raan = (parts[3] || "").padStart(8, " ").slice(-8);
+      const eccentricity = (parts[4] || "").padStart(7, "0").slice(-7);
+      const argPerigee = (parts[5] || "").padStart(8, " ").slice(-8);
+      const meanAnomaly = (parts[6] || "").padStart(8, " ").slice(-8);
+      const meanMotion = (parts[7] || "").padStart(11, " ").slice(-11);
+      const buildBase = revNumber =>
+        `2 ${satNum} ${inclination} ${raan} ${eccentricity} ${argPerigee} ${meanAnomaly} ${meanMotion}${String(revNumber || "").padStart(5, " ").slice(-5)}`;
+      const revNumber = chooseTleTrailingToken(parts[8], 3, buildBase);
+
+      return addChecksum(buildBase(revNumber));
+    }
+
+    function normalizeTleLine(line) {
+      if (line.startsWith("1 ")) return normalizeTleLine1(line);
+      if (line.startsWith("2 ")) return normalizeTleLine2(line);
+      return line;
+    }
+
     function extractTleLines(text) {
       const lines = text
         .split(/\r?\n/)
         .map(line => line.trim())
         .filter(line => line.length > 0);
 
-      const line1 = lines.find(line => line.startsWith("1 ")) || "";
-      const line2 = lines.find(line => line.startsWith("2 ")) || "";
+      const line1 = normalizeTleLine(lines.find(line => line.startsWith("1 ")) || "");
+      const line2 = normalizeTleLine(lines.find(line => line.startsWith("2 ")) || "");
 
       return { line1, line2 };
     }
@@ -4138,26 +4550,14 @@
 
       resetTrackingForTleChange();
 
-      tleInput.value = `${tle.line1}
+      if (sat1TleDisplay) {
+        sat1TleDisplay.value = `${tle.line1}
 ${tle.line2}`;
+      }
 
-      setPassTimesCalculating();
-      setPassStatus(`SAT1生成：El ${AOS_LOS_ELEVATION_THRESHOLD_DEG}° / 最大El ${PASS_MIN_MAX_ELEVATION_DEG}°以上のパスを計算中...`, "cyan");
-
-      (async () => {
-        try {
-          await waitForSatelliteJs();
-          const result = findNextPassBySgp4(tle.line1, tle.line2, getGroundStationSetting());
-          setPassTimes(result.aosDate, result.losDate);
-          setPassStatus("", "");
-          await refreshOrbitMap();
-        } catch (error) {
-          console.error(error);
-          setPassTimes(null, null);
-          setPassStatus(`エラー：${error.message}`, "red");
-          await refreshOrbitMap();
-        }
-      })();
+      setPassTimes(null, null);
+      renderPassList([], "TLEを反映してください", "sat1");
+      setPassStatus("", "");
     }
 
     function getElevationDegFromTle(satrec, date, gs) {
@@ -4311,6 +4711,87 @@ ${tle.line2}`;
     }
 
 
+    function findPassesBySgp4(line1, line2, gs, options = {}) {
+      const satelliteLib = window.satellite;
+      if (!satelliteLib) {
+        throw new Error("satellite.js is not loaded.");
+      }
+
+      const satrec = satelliteLib.twoline2satrec(line1, line2);
+      if (satrec.error && satrec.error !== 0) {
+        throw new Error("SGP4 could not parse the TLE.");
+      }
+
+      const startDate = options.startDate || new Date();
+      const stepMs = options.stepMs || 10 * 1000;
+      const maxMs = (options.lookaheadHours || PASS_LIST_LOOKAHEAD_HOURS) * 60 * 60 * 1000;
+      const maxRows = options.maxRows || PASS_LIST_MAX_ROWS;
+      const thresholdDeg = AOS_LOS_ELEVATION_THRESHOLD_DEG;
+      const minMaxElevationDeg = PASS_MIN_MAX_ELEVATION_DEG;
+      const passes = [];
+
+      let prevTime = startDate;
+      let prevEl = getElevationDegFromTle(satrec, prevTime, gs);
+
+      if (prevEl === null || Number.isNaN(prevEl)) {
+        throw new Error("SGP4 propagation failed.");
+      }
+
+      let candidateAosDate = prevEl >= thresholdDeg ? startDate : null;
+      let candidateMaxEl = prevEl;
+      let candidateMaxDate = startDate;
+
+      for (let dt = stepMs; dt <= maxMs; dt += stepMs) {
+        const t = new Date(startDate.getTime() + dt);
+        const el = getElevationDegFromTle(satrec, t, gs);
+
+        if (el === null || Number.isNaN(el)) {
+          continue;
+        }
+
+        if (!candidateAosDate && prevEl < thresholdDeg && el >= thresholdDeg) {
+          candidateAosDate = refineElevationCrossing(satrec, gs, prevTime, t, thresholdDeg, "rise");
+          candidateMaxEl = el;
+          candidateMaxDate = t;
+        }
+
+        if (candidateAosDate) {
+          if (el > candidateMaxEl) {
+            candidateMaxEl = el;
+            candidateMaxDate = t;
+          }
+
+          if (prevEl >= thresholdDeg && el < thresholdDeg) {
+            const candidateLosDate = refineElevationCrossing(satrec, gs, prevTime, t, thresholdDeg, "set");
+            const peak = estimatePassMaxElevation(satrec, gs, candidateAosDate, candidateLosDate);
+            const maxEl = peak ? peak.maxEl : candidateMaxEl;
+            const maxDate = peak ? peak.maxDate : candidateMaxDate;
+
+            if (maxEl >= minMaxElevationDeg) {
+              passes.push({
+                aosDate: candidateAosDate,
+                losDate: candidateLosDate,
+                maxElevationDeg: maxEl,
+                maxElevationDate: maxDate,
+                groundStationName: gs.name
+              });
+
+              if (passes.length >= maxRows) break;
+            }
+
+            candidateAosDate = null;
+            candidateMaxEl = -999;
+            candidateMaxDate = t;
+          }
+        }
+
+        prevTime = t;
+        prevEl = el;
+      }
+
+      return passes;
+    }
+
     /* =========================
        Antenna Tracking Visual / Az-El Graph
     ========================= */
@@ -4446,7 +4927,7 @@ ${tle.line2}`;
       for (let rIndex = 0; rIndex <= ringSegments; rIndex++) {
         const rRatio = rIndex / ringSegments;
         const r = radius * rRatio;
-        const z = -depth * rRatio * rRatio;
+        const z = depth * (rRatio * rRatio - 1);
 
         for (let s = 0; s <= radialSegments; s++) {
           const a = Math.PI * 2 * s / radialSegments;
@@ -4473,11 +4954,11 @@ ${tle.line2}`;
       return new THREE.Mesh(
         geometry,
         new THREE.MeshStandardMaterial({
-          color: 0xffffff,
-          roughness: 0.30,
-          metalness: 0.10,
+          color: 0xf8fbff,
+          roughness: 0.22,
+          metalness: 0.08,
           transparent: true,
-          opacity: 0.88,
+          opacity: 0.98,
           side: THREE.DoubleSide
         })
       );
@@ -4506,6 +4987,15 @@ ${tle.line2}`;
       );
       ring.position.z = z;
       return ring;
+    }
+
+    function makeSquareFrustum(THREE, topRadius, bottomRadius, height, color = 0xf7fbff) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(topRadius, bottomRadius, height, 4, 1),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.34, metalness: 0.05 })
+      );
+      mesh.rotation.y = Math.PI / 4;
+      return mesh;
     }
 
     function ensureAntenna3DScene(width, height) {
@@ -4572,7 +5062,7 @@ ${tle.line2}`;
           ["W", 270]
         ].forEach(([label, azDeg]) => {
           const az = deg2rad(normalizeDeg(azDeg + ANTENNA_VISUAL_AZ_OFFSET_DEG));
-          const x = Math.sin(az) * 5.35;
+          const x = -Math.sin(az) * 5.35;
           const z = Math.cos(az) * 5.35;
           const color = "#073474";
           const sprite = makeAntenna3DLabel(label, color);
@@ -4581,65 +5071,106 @@ ${tle.line2}`;
         });
 
         const gsGroup = new THREE.Group();
-        const basePlate = new THREE.Mesh(
-          new THREE.BoxGeometry(0.82, 0.07, 0.26),
-          new THREE.MeshStandardMaterial({ color: 0xf7fbff, roughness: 0.32, metalness: 0.08 })
+        const baseFoundation = makeSquareFrustum(THREE, 0.44, 0.76, 0.46, 0xf7fbff);
+        baseFoundation.position.y = 0.23;
+        baseFoundation.scale.z = 0.78;
+        gsGroup.add(baseFoundation);
+
+        const baseCap = new THREE.Mesh(
+          new THREE.BoxGeometry(0.86, 0.08, 0.58),
+          new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.30, metalness: 0.06 })
         );
-        basePlate.position.y = 0.04;
-        gsGroup.add(basePlate);
+        baseCap.position.y = 0.49;
+        gsGroup.add(baseCap);
 
-        [
-          [-0.24, 0],
-          [0.24, 0],
-          [0, 0]
-        ].forEach(([x, z]) => {
-          const foot = new THREE.Mesh(
-            new THREE.BoxGeometry(0.18, 0.04, 0.18),
-            new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.32, metalness: 0.08 })
-          );
-          foot.position.set(x, 0.095, z);
-          gsGroup.add(foot);
-        });
+        const mast = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.14, 0.18, 0.88, 28),
+          new THREE.MeshStandardMaterial({ color: 0xf3f8ff, roughness: 0.30, metalness: 0.12 })
+        );
+        mast.position.y = 0.94;
+        gsGroup.add(mast);
 
-        gsGroup.add(makeAntennaRod(THREE, new THREE.Vector3(-0.24, 0.115, 0), new THREE.Vector3(-0.08, 0.58, 0), 0.030, 0x3a4654));
-        gsGroup.add(makeAntennaRod(THREE, new THREE.Vector3(0.24, 0.115, 0), new THREE.Vector3(0.08, 0.58, 0), 0.030, 0x3a4654));
-        gsGroup.add(makeAntennaRod(THREE, new THREE.Vector3(-0.08, 0.58, 0), new THREE.Vector3(0.08, 0.58, 0), 0.022, 0x3a4654));
-        gsGroup.add(makeAntennaRod(THREE, new THREE.Vector3(0, 0.115, 0), new THREE.Vector3(0, 0.72, 0), 0.024, 0x3a4654));
+        const mastCollar = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.23, 0.23, 0.10, 28),
+          new THREE.MeshStandardMaterial({ color: 0xdfeaf4, roughness: 0.28, metalness: 0.18 })
+        );
+        mastCollar.position.y = 1.40;
+        gsGroup.add(mastCollar);
+
+        const yoke = new THREE.Group();
+        yoke.position.y = 1.50;
+        yoke.add(makeAntennaRod(THREE, new THREE.Vector3(-0.46, 0, 0), new THREE.Vector3(0.46, 0, 0), 0.050, 0xdfeaf4));
+        yoke.add(makeAntennaRod(THREE, new THREE.Vector3(-0.36, -0.02, 0), new THREE.Vector3(-0.36, 0.34, 0), 0.034, 0x3a4654));
+        yoke.add(makeAntennaRod(THREE, new THREE.Vector3(0.36, -0.02, 0), new THREE.Vector3(0.36, 0.34, 0), 0.034, 0x3a4654));
+        gsGroup.add(yoke);
 
         const dishPivot = new THREE.Group();
-        dishPivot.position.y = 0.78;
-        const dishSurface = makeParabolicDishMesh(THREE, 0.58, 0.20);
+        dishPivot.position.y = 1.54;
+
+        const dishSurface = makeParabolicDishMesh(THREE, 0.94, 0.44);
         dishPivot.add(dishSurface);
-        const dish = new THREE.Mesh(
-          new THREE.TorusGeometry(0.58, 0.026, 10, 72),
-          new THREE.MeshStandardMaterial({ color: 0xeaf3ff, roughness: 0.25, metalness: 0.35 })
+
+        const dishRim = new THREE.Mesh(
+          new THREE.TorusGeometry(0.94, 0.032, 12, 108),
+          new THREE.MeshStandardMaterial({ color: 0xf7fbff, roughness: 0.24, metalness: 0.20 })
         );
-        dish.position.z = -0.20;
-        dishPivot.add(dish);
-        const dishAxis = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.016, 0.016, 0.74, 16),
-          new THREE.MeshStandardMaterial({ color: 0x3a4654, roughness: 0.35, metalness: 0.15 })
-        );
-        dishAxis.rotation.x = Math.PI / 2;
-        dishAxis.position.z = 0.37;
-        dishPivot.add(dishAxis);
-        const feedPos = new THREE.Vector3(0, 0, 0.76);
+        dishPivot.add(dishRim);
+
         [
-          new THREE.Vector3(0.38, 0, -0.12),
-          new THREE.Vector3(-0.38, 0, -0.12),
-          new THREE.Vector3(0, 0.38, -0.12)
+          [0.34, -0.38, 0.11],
+          [0.58, -0.27, 0.10],
+          [0.78, -0.14, 0.09]
+        ].forEach(([radius, z, opacity]) => {
+          const innerRing = new THREE.Mesh(
+            new THREE.TorusGeometry(radius, 0.005, 8, 88),
+            new THREE.MeshBasicMaterial({ color: 0x9fb2c4, transparent: true, opacity })
+          );
+          innerRing.position.z = z;
+          dishPivot.add(innerRing);
+        });
+
+        const backHub = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.16, 0.16, 0.20, 24),
+          new THREE.MeshStandardMaterial({ color: 0xdfeaf4, roughness: 0.28, metalness: 0.18 })
+        );
+        backHub.rotation.x = Math.PI / 2;
+        backHub.position.z = -0.48;
+        dishPivot.add(backHub);
+
+        [
+          [0.58, 0.36],
+          [-0.58, 0.36],
+          [0.58, -0.36],
+          [-0.58, -0.36]
+        ].forEach(([x, y]) => {
+          dishPivot.add(makeAntennaRod(THREE, new THREE.Vector3(0, 0, -0.52), new THREE.Vector3(x, y, -0.18), 0.012, 0xb9c7d3));
+        });
+
+        const feedPos = new THREE.Vector3(0, 0, 1.12);
+        [
+          new THREE.Vector3(0.62, 0, 0.02),
+          new THREE.Vector3(-0.62, 0, 0.02),
+          new THREE.Vector3(0, 0.62, 0.02),
+          new THREE.Vector3(0, -0.62, 0.02)
         ].forEach(start => {
           dishPivot.add(makeAntennaRod(THREE, start, feedPos, 0.010, 0x3a4654));
         });
+
         const feed = new THREE.Mesh(
-          new THREE.SphereGeometry(0.064, 18, 12),
-          new THREE.MeshStandardMaterial({ color: 0x3a4654, roughness: 0.28, metalness: 0.10 })
+          new THREE.CylinderGeometry(0.060, 0.078, 0.18, 18),
+          new THREE.MeshStandardMaterial({ color: 0x3a4654, roughness: 0.28, metalness: 0.12 })
         );
+        feed.rotation.x = Math.PI / 2;
         feed.position.copy(feedPos);
         dishPivot.add(feed);
-        dishPivot.add(makeDishSignalRing(THREE, 0.25, 0.92, 0.18));
-        dishPivot.add(makeDishSignalRing(THREE, 0.38, 1.08, 0.13));
-        dishPivot.add(makeDishSignalRing(THREE, 0.51, 1.24, 0.09));
+
+        const feedCap = new THREE.Mesh(
+          new THREE.SphereGeometry(0.062, 18, 12),
+          new THREE.MeshStandardMaterial({ color: 0x566575, roughness: 0.32, metalness: 0.10 })
+        );
+        feedCap.position.set(0, 0, 1.24);
+        dishPivot.add(feedCap);
+
         gsGroup.add(dishPivot);
         scene.add(gsGroup);
 
@@ -4714,7 +5245,7 @@ ${tle.line2}`;
       const el = deg2rad(look.elDeg);
       const cosEl = Math.cos(el);
       return new THREE.Vector3(
-        Math.sin(az) * cosEl,
+        -Math.sin(az) * cosEl,
         Math.sin(el),
         Math.cos(az) * cosEl
       ).normalize();
@@ -4925,7 +5456,7 @@ ${tle.line2}`;
       const height = Math.max(1, Math.floor(rect.height));
       const satrec = orbitMapState.satrec;
       const gs = getGroundStationSetting();
-      const look = satrec ? getLookAnglesFromTle(satrec, new Date(), gs) : null;
+      const look = satrec ? getLookAnglesFromTle(satrec, getOrbitMapDisplayDate(), gs) : null;
       const displayVisible = look && look.elDeg >= TRACKING_DISPLAY_MIN_ELEVATION_DEG;
       const passVisible = look && look.elDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG;
 
@@ -4963,7 +5494,7 @@ ${tle.line2}`;
       const direction = lookToAntenna3DVector(look);
       const rangeScale = clamp(look.rangeKm / 340, 4.4, 7.4);
       const satPos = direction.clone().multiplyScalar(rangeScale);
-      const gsTip = new THREE.Vector3(0, 0.78, 0).add(direction.clone().multiplyScalar(0.76));
+      const gsTip = new THREE.Vector3(0, 1.54, 0).add(direction.clone().multiplyScalar(0.96));
       const activeColor = passVisible ? 0x2be05f : (displayVisible ? 0xf2a400 : 0x8ea3af);
 
       state.satGroup.visible = true;
@@ -4985,7 +5516,7 @@ ${tle.line2}`;
       if (antennaAzLabel) antennaAzLabel.textContent = `${look.azDeg.toFixed(1)}°`;
       if (antennaElLabel) antennaElLabel.textContent = `${look.elDeg.toFixed(1)}°`;
       if (antennaRangeLabel) antennaRangeLabel.textContent = `${look.rangeKm.toFixed(0)} km`;
-      if (antennaStatusLabel) antennaStatusLabel.textContent = displayVisible ? (passVisible ? "AOS中" : "El 0〜5°") : "地平線下";
+      if (antennaStatusLabel) antennaStatusLabel.textContent = passVisible ? "可視範囲内" : "可視範囲外";
 
       state.renderer.render(state.scene, state.camera);
     }
@@ -5124,7 +5655,8 @@ ${tle.line2}`;
             points.push({
               ratio: sampleRatio,
               az: look.azDeg,
-              el: look.elDeg
+              el: look.elDeg,
+              visible: look.elDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG
             });
           }
         }
@@ -5184,25 +5716,7 @@ ${tle.line2}`;
         ctx.fillText(`${deg}°`, cx + Math.cos(rad) * radius * 0.48, cy + Math.sin(rad) * radius * 0.48);
       });
 
-      if (series.points.length > 1) {
-        ctx.beginPath();
-        series.points.forEach((p, index) => {
-          const rad = deg2rad(normalizeDeg(p.az) - 90);
-          const r = radius * (0.18 + 0.78 * p.ratio);
-          const x = cx + Math.cos(rad) * r;
-          const y = cy + Math.sin(rad) * r;
-          if (index === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.strokeStyle = "rgba(0, 149, 184, 0.98)";
-        ctx.lineWidth = 2.4;
-        ctx.shadowColor = "rgba(0, 149, 184, 0.22)";
-        ctx.shadowBlur = 4;
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-      }
-
-      const graphNowVisible = lookNow && lookNow.elDeg >= TRACKING_DISPLAY_MIN_ELEVATION_DEG;
+      const graphNowVisible = lookNow && lookNow.elDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG;
       if (graphNowVisible) {
         const rad = deg2rad(normalizeDeg(lookNow.azDeg) - 90);
         const endX = cx + Math.cos(rad) * radius * 0.92;
@@ -5246,7 +5760,7 @@ ${tle.line2}`;
 
       const satrec = orbitMapState.satrec;
       const gs = getGroundStationSetting();
-      const now = new Date();
+      const now = getOrbitMapDisplayDate();
       const lookNow = satrec ? getLookAnglesFromTle(satrec, now, gs) : null;
       const series = buildGraphSeriesData(satrec, gs, now);
 
@@ -5408,7 +5922,7 @@ ${tle.line2}`;
     function drawAzelGraphs() {
       const lookNowAz = drawSingleTimeSeriesGraph(azGraphCanvas, azGraphContainer, "az");
       const lookNowEl = drawSingleTimeSeriesGraph(elGraphCanvas, elGraphContainer, "el");
-      const graphNowVisible = lookNowAz && lookNowAz.elDeg >= TRACKING_DISPLAY_MIN_ELEVATION_DEG;
+      const graphNowVisible = lookNowAz && lookNowAz.elDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG;
       if (graphAzLabel) graphAzLabel.textContent = graphNowVisible ? `${lookNowAz.azDeg.toFixed(1)}°` : "--";
       if (graphElLabel) graphElLabel.textContent = (lookNowEl && lookNowEl.elDeg >= TRACKING_DISPLAY_MIN_ELEVATION_DEG) ? `${lookNowEl.elDeg.toFixed(1)}°` : "--";
     }
@@ -5444,6 +5958,8 @@ ${tle.line2}`;
       orbitMapState.track = [];
       orbitMapState.periodMin = null;
       orbitMapState.lastTrackUpdate = 0;
+      orbitMapState.displayDate = null;
+      orbitMapState.displayRealStartMs = null;
       orbitMapState.message = "TLE再計算中";
 
       clearTrackingLabels();
@@ -5474,6 +5990,8 @@ ${tle.line2}`;
       track: [],
       periodMin: null,
       lastTrackUpdate: 0,
+      displayDate: null,
+      displayRealStartMs: null,
       message: "TLE読込待ち"
     };
 
@@ -5566,14 +6084,23 @@ ${tle.line2}`;
       return (2 * Math.PI) / satrec.no;
     }
 
-    function buildGroundTrack(satrec) {
+    function getOrbitMapDisplayDate() {
+      if (!orbitMapState.displayDate) {
+        return new Date();
+      }
+
+      const startRealMs = orbitMapState.displayRealStartMs || Date.now();
+      const elapsedMs = Date.now() - startRealMs;
+      return new Date(orbitMapState.displayDate.getTime() + elapsedMs);
+    }
+
+    function buildGroundTrack(satrec, baseDate = new Date()) {
       const periodMin = getOrbitPeriodMinutes(satrec);
-      const now = new Date();
       const samples = 180;
       const track = [];
 
       for (let i = 0; i <= samples; i++) {
-        const t = new Date(now.getTime() + (periodMin * 60 * 1000) * (i / samples));
+        const t = new Date(baseDate.getTime() + (periodMin * 60 * 1000) * (i / samples));
         const p = propagateToLatLon(satrec, t);
         if (p && Number.isFinite(p.lat) && Number.isFinite(p.lon)) {
           track.push(p);
@@ -5599,13 +6126,15 @@ ${tle.line2}`;
         orbitMapState.satrec = satrec;
         orbitMapState.message = "";
         resetAzelGraphWindowCache();
-        buildGroundTrack(satrec);
+        buildGroundTrack(satrec, getOrbitMapDisplayDate());
         drawTrackingDisplays();
       } catch (error) {
         console.error(error);
         orbitMapState.satrec = null;
         orbitMapState.track = [];
         orbitMapState.periodMin = null;
+        orbitMapState.displayDate = null;
+        orbitMapState.displayRealStartMs = null;
         orbitMapState.message = "TLE/SGP4エラー";
         resetAzelGraphWindowCache();
         clearTrackingLabels();
@@ -5659,6 +6188,30 @@ ${tle.line2}`;
       return Math.max(0, (Math.acos(acosArg) - elevationRad) * 180 / Math.PI);
     }
 
+    function unwrapLonLatRing(points) {
+      if (!points || points.length === 0) return [];
+
+      const unwrapped = [];
+      let offset = 0;
+      let prevLon = points[0].lon;
+
+      points.forEach((point, index) => {
+        if (index > 0) {
+          const delta = point.lon - prevLon;
+          if (delta > 180) offset -= 360;
+          else if (delta < -180) offset += 360;
+        }
+
+        unwrapped.push({
+          lon: point.lon + offset,
+          lat: point.lat
+        });
+        prevLon = point.lon;
+      });
+
+      return unwrapped;
+    }
+
     function drawVisibilityFootprint(ctx, width, height, gs, satAltKm) {
       const centralAngleDeg = getVisibilityCentralAngleDeg(
         satAltKm,
@@ -5674,24 +6227,13 @@ ${tle.line2}`;
         ring.push(destinationLonLat(gs.lon, gs.lat, i * 360 / samples, centralAngleDeg));
       }
 
-      const segments = [];
-      let currentSegment = [];
-      let prev = null;
-
-      ring.forEach(point => {
-        const p = lonLatToMapXY(point.lon, point.lat, width, height);
-        if (prev && Math.abs(p.x - prev.x) > width * 0.5) {
-          if (currentSegment.length > 1) segments.push(currentSegment);
-          currentSegment = [p];
-        } else {
-          currentSegment.push(p);
-        }
-        prev = p;
-      });
-
-      if (currentSegment.length > 1) segments.push(currentSegment);
+      const unwrappedRing = unwrapLonLatRing(ring);
 
       ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, width, height);
+      ctx.clip();
+
       ctx.fillStyle = "rgba(28, 180, 82, 0.12)";
       ctx.strokeStyle = "rgba(8, 145, 62, 0.78)";
       ctx.lineWidth = 1.5;
@@ -5699,23 +6241,52 @@ ${tle.line2}`;
       ctx.shadowColor = "rgba(8, 145, 62, 0.22)";
       ctx.shadowBlur = 4;
 
-      segments.forEach(segment => {
-        ctx.beginPath();
-        const center = lonLatToMapXY(gs.lon, gs.lat, width, height);
-        ctx.moveTo(center.x, center.y);
-        segment.forEach((p, index) => {
-          if (index === 0) ctx.lineTo(p.x, p.y);
-          else ctx.lineTo(p.x, p.y);
-        });
-        ctx.closePath();
-        ctx.fill();
+      [-360, 0, 360].forEach(shift => {
+        const projected = unwrappedRing.map(point =>
+          lonLatToMapXYContinuous(point.lon + shift, point.lat, width, height)
+        );
+        const minX = Math.min(...projected.map(p => p.x));
+        const maxX = Math.max(...projected.map(p => p.x));
+        const minY = Math.min(...projected.map(p => p.y));
+        const maxY = Math.max(...projected.map(p => p.y));
+
+        if (maxX < 0 || minX > width || maxY < 0 || minY > height) return;
+
+        const fullyInView = minX >= 0 && maxX <= width && minY >= 0 && maxY <= height;
+        if (fullyInView) {
+          ctx.beginPath();
+          projected.forEach((p, index) => {
+            if (index === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+          });
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          return;
+        }
 
         ctx.beginPath();
-        segment.forEach((p, index) => {
-          if (index === 0) ctx.moveTo(p.x, p.y);
-          else ctx.lineTo(p.x, p.y);
+        let drawing = false;
+        projected.forEach((p, index) => {
+          const prev = index > 0 ? projected[index - 1] : null;
+          const inView = p.x >= 0 && p.x <= width && p.y >= 0 && p.y <= height;
+          const prevInView = prev && prev.x >= 0 && prev.x <= width && prev.y >= 0 && prev.y <= height;
+
+          if (inView && prevInView) {
+            if (!drawing) {
+              ctx.moveTo(prev.x, prev.y);
+              drawing = true;
+            }
+            ctx.lineTo(p.x, p.y);
+          } else {
+            if (drawing) {
+              ctx.stroke();
+              ctx.beginPath();
+              drawing = false;
+            }
+          }
         });
-        ctx.stroke();
+        if (drawing) ctx.stroke();
       });
 
       ctx.shadowBlur = 0;
@@ -6004,7 +6575,8 @@ ${tle.line2}`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, width, height);
 
-      const satForView = orbitMapState.satrec ? propagateToLatLon(orbitMapState.satrec, new Date()) : null;
+      const displayDate = getOrbitMapDisplayDate();
+      const satForView = orbitMapState.satrec ? propagateToLatLon(orbitMapState.satrec, displayDate) : null;
       setOrbitMapView(width, mapHeight, satForView);
       drawWorldMap(ctx, width, mapHeight);
 
@@ -6037,9 +6609,9 @@ ${tle.line2}`;
         return;
       }
 
-      // Recalculate one-orbit ground track occasionally so the leading point follows current time.
+      // Recalculate one-orbit ground track occasionally so it follows the live or selected pass time.
       if (Date.now() - orbitMapState.lastTrackUpdate > 30000) {
-        buildGroundTrack(orbitMapState.satrec);
+        buildGroundTrack(orbitMapState.satrec, displayDate);
       }
 
       const sat = satForView;
@@ -6082,36 +6654,69 @@ ${tle.line2}`;
 
 
     function getSelectedTleSource() {
-      const checked = document.querySelector('input[name="tle-source"]:checked');
-      return checked ? checked.value : "sat1";
+      const active = document.querySelector("[data-tle-tab].active");
+      return active ? active.dataset.tleTab : "sat1";
     }
 
     function setTleSource(source) {
       const isSat1 = source === "sat1";
-
-      tleInput.readOnly = isSat1;
-      applyTleButton.disabled = isSat1;
+      setActiveTleTab(isSat1 ? "sat1" : "custom");
 
       if (isSat1) {
+        pendingCustomTle = null;
+        selectedPassIndex = -1;
         generateSat1Tle();
       } else {
-        tleInput.readOnly = false;
-        applyTleButton.disabled = false;
         tleInput.value = "";
-
+        pendingCustomTle = null;
+        selectedPassIndex = -1;
         currentTle = { name: "CUSTOM-TLE", line1: "", line2: "" };
         setPassTimes(null, null);
+        renderPassList([], "TLEを反映してください", "custom");
         resetTrackingForTleChange();
+        orbitMapState.message = "Custom TLEを入力してください";
+        drawOrbitMap();
 
         tleStatus.textContent = "";
       }
     }
 
-    tleSourceRadios.forEach((radio) => {
-      radio.addEventListener("change", () => {
-        setTleSource(getSelectedTleSource());
+    tleTabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        setTleSource(button.dataset.tleTab);
       });
     });
+
+    if (passListBody) {
+      passListBody.addEventListener("click", (event) => {
+        const row = event.target.closest("tr[data-pass-index]");
+        if (!row) return;
+        selectCustomPassForOrbit(Number(row.dataset.passIndex));
+      });
+    }
+
+    if (sat1PassListBody) {
+      sat1PassListBody.addEventListener("click", (event) => {
+        const row = event.target.closest("tr[data-pass-index]");
+        if (!row) return;
+        selectCustomPassForOrbit(Number(row.dataset.passIndex));
+      });
+    }
+
+    if (applySat1TleButton) {
+      applySat1TleButton.addEventListener("click", async () => {
+        const { line1, line2 } = extractTleLines(sat1TleDisplay ? sat1TleDisplay.value : "");
+
+        if (!line1 || !line2) {
+          setPassTimes(null, null);
+          renderPassList([], "TLEを反映してください", "sat1");
+          setPassStatus("SAT1 TLEを生成できませんでした。", "red");
+          return;
+        }
+
+        await applyTleForPassSelection("sat1", line1, line2, "SAT1");
+      });
+    }
 
 
     applyTleButton.addEventListener("click", async () => {
@@ -6119,46 +6724,13 @@ ${tle.line2}`;
 
       if (!line1 || !line2) {
         setPassTimes(null, null);
+        renderPassList([], "TLEを反映してください");
         setPassStatus("TLEの1行目・2行目を入力してください。", "red");
         alert("TLEの形式を確認してください。1行目は「1 」、2行目は「2 」から始まる必要があります。");
         return;
       }
 
-      currentTle = {
-        name: "CUSTOM-TLE",
-        line1,
-        line2
-      };
-
-      resetTrackingForTleChange();
-
-      setPassTimesCalculating();
-      setPassStatus("SGP4でAOS/LOSを計算中...", "cyan");
-      console.log("Current TLE:", currentTle);
-
-      try {
-        await waitForSatelliteJs();
-
-        const gs = getGroundStationSetting();
-        const result = findNextPassBySgp4(line1, line2, gs);
-
-        setPassTimes(result.aosDate, result.losDate);
-        setPassStatus(
-          `TLE反映完了：El ${AOS_LOS_ELEVATION_THRESHOLD_DEG}° / 最大El ${PASS_MIN_MAX_ELEVATION_DEG}°以上 / ${gs.name} (${gs.lat.toFixed(4)}, ${gs.lon.toFixed(4)})`,
-          "green"
-        );
-        await refreshOrbitMap();
-      } catch (error) {
-        console.error(error);
-        setPassTimes(null, null);
-        orbitMapState.satrec = null;
-        orbitMapState.track = [];
-        orbitMapState.periodMin = null;
-        orbitMapState.message = "TLE/SGP4エラー";
-        resetAzelGraphWindowCache();
-        clearTrackingLabels();
-        setPassStatus(`エラー：${error.message}`, "red");
-      }
+      await applyTleForPassSelection("custom", line1, line2, "CUSTOM-TLE");
     });
 
     /* =========================
