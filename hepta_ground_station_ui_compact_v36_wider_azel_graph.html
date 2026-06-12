@@ -196,7 +196,7 @@
       right: 8px;
       bottom: 7px;
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 6px;
       pointer-events: none;
     }
@@ -2092,7 +2092,6 @@
               <div class="orbit-map-chip">GS <span id="orbit-map-gs-label">--</span></div>
               <div class="orbit-map-chip">SAT <span id="orbit-map-sat-label">--</span></div>
               <div class="orbit-map-chip">Period <span id="orbit-map-period-label">--</span></div>
-              <div class="orbit-map-chip">AOS/LOS <span>El ≥ 5° / Max ≥ 70°</span></div>
             </div>
           </div>
 
