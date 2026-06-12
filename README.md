@@ -1,20 +1,22 @@
 # HEPTA_GSApp
 
-HEPTA ground station UIです。
+HEPTA ground station UIです。WindowsではNode.jsをインストールしなくても、zipを展開して `start.bat` を実行するだけで起動できます。
 
 ## いちばん簡単な起動方法
 
 GitHubの「Download ZIP」で取得して展開したら、展開したフォルダの中にある `start.bat` をダブルクリックしてください。
 
+Windows用のポータブルNode.jsを同梱しているため、通常はNode.js / npm / Python / VS Codeのインストールは不要です。
+
 ## コマンドで起動する方法
 
-`npm start` は、必ず `package.json` があるフォルダで実行してください。
+`npm start` は通常不要です。コマンドで起動したい場合も、基本は `start.bat` を実行してください。
 
 例:
 
 ```bat
 cd /d C:\Users\User\Downloads\HEPTA_GSApp-main
-npm.cmd start
+start.bat
 ```
 
 フォルダ名は、実際にzipを展開した場所に合わせて変更してください。
@@ -25,11 +27,10 @@ npm.cmd start
 C:\>npm start
 ```
 
-この場合、npmは `C:\package.json` を探すため、`ENOENT Could not read package.json` になります。
+この場合、npmは `C:\package.json` を探すため、`ENOENT Could not read package.json` になります。`start.bat` を使うと、この問題を避けられます。
 
 ## 必要なもの
 
-- Node.js / npm
 - Chrome または Edge
 - XBee / USBシリアルドライバ
 
@@ -43,4 +44,5 @@ C:\>npm start
 
 - `node_modules/` はGitHub zipには含めません。
 - UIで必要なブラウザ用ライブラリは `vendor/` とルート直下のJSファイルに同梱しています。
-- `npm install` は通常不要です。依存関係を更新したい場合だけ実行してください。
+- Windows用の同梱Node.jsは `tools/node/win-x64/node.exe` にあります。
+- `npm install` は不要です。
