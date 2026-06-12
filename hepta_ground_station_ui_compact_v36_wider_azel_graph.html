@@ -4841,20 +4841,25 @@ ${tle.line2}`;
     let antenna3dSceneState = null;
     let antenna3dAnimationStarted = false;
 
-    Promise.all([
-      import("./vendor/three/build/three.module.min.js"),
-      import("./vendor/three/examples/jsm/controls/OrbitControls.js")
-    ])
-      .then(([threeModule, controlsModule]) => {
+    import("./vendor/three/build/three.module.min.js")
+      .then((threeModule) => {
         THREE_LIB = threeModule;
-        ORBIT_CONTROLS_CLASS = controlsModule.OrbitControls;
         window.THREE_LIB = threeModule;
-        window.ORBIT_CONTROLS_CLASS = ORBIT_CONTROLS_CLASS;
         startAntenna3DAnimation();
         drawTrackingDisplays();
+        import("./vendor/three/examples/jsm/controls/OrbitControls.js")
+          .then((controlsModule) => {
+            ORBIT_CONTROLS_CLASS = controlsModule.OrbitControls;
+            window.ORBIT_CONTROLS_CLASS = ORBIT_CONTROLS_CLASS;
+            attachAntenna3DControls();
+            drawTrackingDisplays();
+          })
+          .catch((error) => {
+            console.warn("Three.js controls were not loaded; 3D view remains available without drag controls.", error);
+          });
       })
       .catch((error) => {
-        console.error("Failed to load Three.js controls", error);
+        console.error("Failed to load Three.js module", error);
       });
 
     function resizeCanvasToContainer(canvas, container) {
@@ -5024,6 +5029,26 @@ ${tle.line2}`;
       return mesh;
     }
 
+    function configureAntenna3DControls(controls) {
+      controls.target.set(0, 0.95, 0);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.rotateSpeed = 0.72;
+      controls.zoomSpeed = 0.85;
+      controls.panSpeed = 0.42;
+      controls.minDistance = 3.5;
+      controls.maxDistance = 16;
+      controls.maxPolarAngle = Math.PI * 0.49;
+      controls.update();
+    }
+
+    function attachAntenna3DControls() {
+      if (!ORBIT_CONTROLS_CLASS || !antenna3dSceneState || antenna3dSceneState.controls) return;
+      const controls = new ORBIT_CONTROLS_CLASS(antenna3dSceneState.camera, antennaVisualCanvas);
+      configureAntenna3DControls(controls);
+      antenna3dSceneState.controls = controls;
+    }
+
     function ensureAntenna3DScene(width, height) {
       if (!THREE_LIB || !antennaVisualCanvas) return null;
       const THREE = THREE_LIB;
@@ -5047,16 +5072,7 @@ ${tle.line2}`;
           ? new ORBIT_CONTROLS_CLASS(camera, antennaVisualCanvas)
           : null;
         if (controls) {
-          controls.target.set(0, 0.95, 0);
-          controls.enableDamping = true;
-          controls.dampingFactor = 0.08;
-          controls.rotateSpeed = 0.72;
-          controls.zoomSpeed = 0.85;
-          controls.panSpeed = 0.42;
-          controls.minDistance = 3.5;
-          controls.maxDistance = 16;
-          controls.maxPolarAngle = Math.PI * 0.49;
-          controls.update();
+          configureAntenna3DControls(controls);
         }
 
         scene.add(new THREE.AmbientLight(0xc7dcf6, 1.35));
