@@ -462,29 +462,26 @@ def maybe_write_packet_from_sample(timestamp: str) -> None:
 		print("[WARN] failed to write data.json")
 
 
-def write_text_telemetry_state(timestamp: str) -> None:
-	if telemetry_state["voltage"] is None:
-		return
-
-	temperature = telemetry_state.get("temperature") or 0.0
+def write_text_telemetry_state(timestamp: str, source_text: str) -> None:
+	text_hex = source_text.encode("utf-8").hex(" ")
 	data_obj = {
 		"timestamp": timestamp,
-		"text": "text telemetry sample",
-		"hex": "",
-		"packet_text": "text telemetry sample",
+		"text": source_text,
+		"hex": text_hex,
+		"packet_text": source_text,
 		"rssi": telemetry_state.get("rssi"),
 		"telemetry": {
-			"voltageV": telemetry_state["voltage"],
-			"temperatureC": temperature,
-			"accX": telemetry_state.get("ax") or 0.0,
-			"accY": telemetry_state.get("ay") or 0.0,
-			"accZ": telemetry_state.get("az") or 0.0,
-			"gyroX": telemetry_state.get("gx") or 0.0,
-			"gyroY": telemetry_state.get("gy") or 0.0,
-			"gyroZ": telemetry_state.get("gz") or 0.0,
-			"magX": telemetry_state.get("mx") or 0.0,
-			"magY": telemetry_state.get("my") or 0.0,
-			"magZ": telemetry_state.get("mz") or 0.0,
+			"voltageV": telemetry_state.get("voltage"),
+			"temperatureC": telemetry_state.get("temperature"),
+			"accX": telemetry_state.get("ax"),
+			"accY": telemetry_state.get("ay"),
+			"accZ": telemetry_state.get("az"),
+			"gyroX": telemetry_state.get("gx"),
+			"gyroY": telemetry_state.get("gy"),
+			"gyroZ": telemetry_state.get("gz"),
+			"magX": telemetry_state.get("mx"),
+			"magY": telemetry_state.get("my"),
+			"magZ": telemetry_state.get("mz"),
 		},
 	}
 	attach_recent_command_ack(data_obj)
@@ -798,8 +795,7 @@ def main() -> None:
 					if field_name == "rssi":
 						write_received_data(timestamp, payload, formatted, field_value)
 					else:
-						write_text_telemetry_state(timestamp)
-						maybe_write_packet_from_sample(timestamp)
+						write_text_telemetry_state(timestamp, line)
 					warn_if_sample_looks_suspicious(timestamp)
 				else:
 					write_received_data(timestamp, payload, formatted)

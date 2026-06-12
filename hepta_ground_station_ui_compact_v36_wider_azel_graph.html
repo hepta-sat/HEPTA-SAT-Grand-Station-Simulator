@@ -2406,6 +2406,7 @@
       magZ: null,
       receivedNumber: null
     };
+    let lastBackendRawHexKey = "";
 
     function byteToHex(byte) {
       return Number(byte & 0xFF).toString(16).toUpperCase().padStart(2, "0");
@@ -2754,6 +2755,18 @@
         packetUi.checkResult.className = "packet-meta-value";
       }
       if (packetUi.lastTime) packetUi.lastTime.textContent = formatTime(new Date());
+    }
+
+    function updateRawSerialHexDisplay(hexText, ok = true) {
+      const parts = String(hexText || "").split(/\s+/).filter(Boolean);
+      const bytes = parts
+        .map(h => parseInt(h, 16))
+        .filter(value => Number.isFinite(value) && value >= 0 && value <= 0xFF);
+      if (!bytes.length) return;
+
+      const normalizedHex = bytesToHex(bytes);
+      addPacketLog({ hex: normalizedHex, ok });
+      updateRawPacketSummary(bytes);
     }
 
     function updatePacketDisplay(packet) {
@@ -6865,8 +6878,10 @@ ${tle.line2}`;
           if (!obj) return;
           if (typeof isTelemetryDisplayAllowed === 'function' && !isTelemetryDisplayAllowed()) return;
 
-          // If hex payload available, convert to bytes and pass to byte handler
-          const packetHex = obj.packet_hex || obj.hex;
+          // Only packet_hex is treated as a binary telemetry packet. Plain
+          // text lines may still carry hex for logging, but must not be decoded
+          // as HK telemetry.
+          const packetHex = obj.packet_hex;
           const rssi = obj.rssi ?? obj.telemetry?.rssi;
           if (typeof updateRssiDisplay === 'function') {
             const rssiDbm = normalizeRssiDbm(rssi);
@@ -6883,6 +6898,14 @@ ${tle.line2}`;
 
           if (obj.telemetry && !obj.packet_hex && typeof updateTelemetryDisplayFromObject === 'function') {
             updateTelemetryDisplayFromObject(obj.telemetry);
+          }
+
+          if (!obj.packet_hex && obj.hex && typeof updateRawSerialHexDisplay === 'function') {
+            const rawHexKey = `${obj.timestamp || ""}|${obj.hex}`;
+            if (rawHexKey !== lastBackendRawHexKey) {
+              lastBackendRawHexKey = rawHexKey;
+              updateRawSerialHexDisplay(obj.hex, true);
+            }
           }
 
           if (packetHex) {
