@@ -396,6 +396,9 @@
       --beam-angle: -34deg;
       --beam-length: 132px;
       --dish-angle: -28deg;
+      background:
+        radial-gradient(circle at 54% 34%, rgba(43, 224, 95, 0.13), transparent 30%),
+        radial-gradient(circle at 50% 66%, rgba(0, 91, 216, 0.14), transparent 42%);
     }
 
     .antenna-dom-visual.hidden {
@@ -460,12 +463,14 @@
       position: absolute;
       left: 50%;
       top: 68%;
-      width: 3px;
-      height: 42px;
+      width: 5px;
+      height: 50px;
       transform: translate(-50%, -30px);
-      background: linear-gradient(180deg, rgba(220, 232, 242, 0.86), #4c6f7e);
+      background: linear-gradient(90deg, #456b8e, #ffffff 48%, #4a6a88);
       border-radius: 99px;
-      box-shadow: 0 0 10px rgba(40, 217, 232, 0.18);
+      box-shadow:
+        0 0 10px rgba(40, 217, 232, 0.18),
+        10px 18px 16px rgba(0, 33, 55, 0.12);
     }
 
     .antenna-dom-mast::before,
@@ -492,17 +497,18 @@
       position: absolute;
       left: 50%;
       top: 68%;
-      width: 46px;
-      height: 22px;
+      width: 62px;
+      height: 28px;
       transform: translate(-50%, -50%);
       border: 1px solid rgba(40, 217, 232, 0.75);
       border-radius: 50%;
       background:
-        radial-gradient(ellipse at 50% 45%, rgba(40, 217, 232, 0.46), rgba(10, 53, 62, 0.78) 70%),
+        radial-gradient(ellipse at 50% 34%, rgba(255, 255, 255, 0.88), rgba(40, 217, 232, 0.46) 42%, rgba(10, 53, 62, 0.78) 75%),
         rgba(40, 217, 232, 0.22);
       box-shadow:
-        0 0 14px rgba(40, 217, 232, 0.22),
-        0 12px 0 -8px rgba(40, 217, 232, 0.20);
+        0 0 18px rgba(40, 217, 232, 0.24),
+        0 15px 0 -8px rgba(40, 217, 232, 0.20),
+        0 22px 28px rgba(0, 50, 72, 0.16);
     }
 
     .antenna-dom-base::after {
@@ -522,16 +528,19 @@
       position: absolute;
       left: 50%;
       top: calc(68% - 24px);
-      width: 46px;
-      height: 20px;
-      transform: translate(-50%, -50%) rotate(var(--dish-angle));
+      width: 52px;
+      height: 72px;
+      transform: translate(-50%, -50%) rotate(var(--dish-angle)) perspective(90px) rotateY(-55deg);
       border: 1px solid rgba(220, 232, 242, 0.82);
-      border-top-width: 2px;
-      border-radius: 50% 50% 46% 46%;
+      border-left-width: 3px;
+      border-radius: 50%;
       background:
-        radial-gradient(ellipse at 50% 55%, rgba(40, 217, 232, 0.12), transparent 58%),
-        rgba(2, 8, 12, 0.18);
-      box-shadow: 0 0 10px rgba(220, 232, 242, 0.10);
+        radial-gradient(ellipse at 35% 50%, rgba(255, 255, 255, 0.88), rgba(40, 217, 232, 0.20) 48%, transparent 62%),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.72), rgba(72, 133, 181, 0.28));
+      box-shadow:
+        inset 10px 0 18px rgba(255, 255, 255, 0.50),
+        inset -8px 0 18px rgba(0, 91, 216, 0.12),
+        0 8px 18px rgba(0, 45, 76, 0.18);
     }
 
     .antenna-dom-dish::before {
@@ -539,13 +548,13 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 30px;
-      height: 12px;
+      width: 35px;
+      height: 52px;
       transform: translate(-50%, -50%);
       border-radius: 50%;
       border-top: 1px solid rgba(220, 232, 242, 0.45);
       border-bottom: 1px solid rgba(40, 217, 232, 0.18);
-      background: transparent;
+      background: radial-gradient(ellipse at 50% 50%, transparent 48%, rgba(7, 52, 116, 0.18) 50%, transparent 54%);
     }
 
     .antenna-dom-dish::after {
@@ -553,8 +562,8 @@
       position: absolute;
       left: 50%;
       top: 51%;
-      width: 7px;
-      height: 7px;
+      width: 9px;
+      height: 9px;
       transform: translate(-50%, -50%);
       border-radius: 50%;
       background: #28d9e8;
@@ -566,25 +575,43 @@
       left: 50%;
       top: calc(68% - 24px);
       width: var(--beam-length);
-      height: 2px;
+      height: 4px;
       transform-origin: left center;
       transform: rotate(var(--beam-angle));
-      background: linear-gradient(90deg, rgba(43, 224, 95, 0.92), rgba(43, 224, 95, 0.38), transparent);
-      box-shadow: 0 0 10px rgba(43, 224, 95, 0.34);
-      opacity: 0.86;
+      background:
+        linear-gradient(90deg, rgba(43, 224, 95, 0.96), rgba(43, 224, 95, 0.46), transparent);
+      box-shadow:
+        0 0 10px rgba(43, 224, 95, 0.34),
+        0 0 24px rgba(43, 224, 95, 0.18);
+      opacity: 0.92;
+    }
+
+    .antenna-dom-beam::after {
+      content: "";
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      width: min(96px, var(--beam-length));
+      height: 44px;
+      transform: translateY(-50%);
+      clip-path: polygon(0 48%, 100% 0, 100% 100%);
+      background: linear-gradient(90deg, rgba(43, 224, 95, 0.18), rgba(43, 224, 95, 0.03));
+      filter: blur(0.2px);
     }
 
     .antenna-dom-sat {
       position: absolute;
       left: var(--sat-x);
       top: var(--sat-y);
-      width: 11px;
-      height: 11px;
+      width: 14px;
+      height: 14px;
       transform: translate(-50%, -50%);
       border: 1px solid rgba(223, 255, 232, 0.96);
       border-radius: 50%;
-      background: #2be05f;
-      box-shadow: 0 0 14px rgba(43, 224, 95, 0.62);
+      background: radial-gradient(circle at 35% 32%, #eafff0, #2be05f 46%, #0c9e3d 100%);
+      box-shadow:
+        0 0 0 8px rgba(43, 224, 95, 0.10),
+        0 0 18px rgba(43, 224, 95, 0.68);
     }
 
     .antenna-dom-sat::after {
@@ -4895,8 +4922,7 @@ ${tle.line2}`;
       })
       .catch((error) => {
         console.error("Failed to load Three.js module", error);
-        if (antennaStatusLabel) antennaStatusLabel.textContent = "3D読込失敗";
-        showStartupWarning("衛星・アンテナの3Dライブラリを読み込めませんでした。zipをすべて展開し、展開後フォルダ内の start.bat から起動してください。");
+        if (antennaStatusLabel) antennaStatusLabel.textContent = "2D fallback";
       });
 
     function resizeCanvasToContainer(canvas, container) {
@@ -5545,7 +5571,7 @@ ${tle.line2}`;
         if (antennaAzLabel) antennaAzLabel.textContent = look ? `${look.azDeg.toFixed(1)}°` : "--";
         if (antennaElLabel) antennaElLabel.textContent = look ? `${look.elDeg.toFixed(1)}°` : "--";
         if (antennaRangeLabel) antennaRangeLabel.textContent = look ? `${look.rangeKm.toFixed(0)} km` : "--";
-        if (antennaStatusLabel) antennaStatusLabel.textContent = look ? "3D読込中" : "--";
+        if (antennaStatusLabel) antennaStatusLabel.textContent = "2D fallback";
         return;
       }
 
