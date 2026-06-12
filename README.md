@@ -1,48 +1,64 @@
 # HEPTA_GSApp
 
-HEPTA ground station UIです。WindowsではNode.jsをインストールしなくても、zipを展開して `start.bat` を実行するだけで起動できます。
+HEPTA Ground Station Simulator です。
+GitHub の Download ZIP などで取得して展開したあと、OS に合った起動ファイルをダブルクリックしてください。
 
-## いちばん簡単な起動方法
+## 起動方法
 
-GitHubの「Download ZIP」で取得して展開したら、展開したフォルダの中にある `start.bat` をダブルクリックしてください。
+### Windows
 
-Windows用のポータブルNode.jsを同梱しているため、通常はNode.js / npm / Python / VS Codeのインストールは不要です。
+展開したフォルダ内の `start.bat` をダブルクリックしてください。
 
-## コマンドで起動する方法
+Windows 用 Node.js は `tools/node/win-x64/node.exe` に同梱しています。
+通常は Node.js / npm / Python / VS Code のインストールは不要です。
 
-`npm start` は通常不要です。コマンドで起動したい場合も、基本は `start.bat` を実行してください。
+### macOS
 
-例:
+展開したフォルダ内の `start.command` をダブルクリックしてください。
 
-```bat
-cd /d C:\Users\User\Downloads\HEPTA_GSApp-main
-start.bat
+macOS 用 Node.js は次の場所に同梱しています。
+
+- Apple Silicon Mac: `tools/node/darwin-arm64/node`
+- Intel Mac: `tools/node/darwin-x64/node`
+
+そのため、通常は macOS 側に Node.js や Python をインストールしていなくても起動できます。
+
+もし「開発元を検証できません」などの警告が出る場合は、Finder で `start.command` を右クリックして「開く」を選んでください。
+もし「権限がありません」と表示される場合は、ターミナルで展開したフォルダへ移動して次を1回だけ実行してください。
+
+```sh
+chmod +x start.command
 ```
 
-フォルダ名は、実際にzipを展開した場所に合わせて変更してください。
+GitHub の Download ZIP から取得した場合は、通常この操作は不要です。
 
-悪い例:
+## コマンドで起動する場合
 
-```bat
-C:\>npm start
+通常は `start.bat` または `start.command` を使ってください。
+コマンドで起動する場合は、必ず展開したフォルダに移動してから実行します。
+
+```sh
+npm start
 ```
 
-この場合、npmは `C:\package.json` を探すため、`ENOENT Could not read package.json` になります。`start.bat` を使うと、この問題を避けられます。
+ただし、`npm start` はローカルに Node.js が入っている場合だけ使えます。
+環境構築なしで起動したい場合は、同梱 Node.js を使う `start.bat` / `start.command` を使ってください。
 
 ## 必要なもの
 
 - Chrome または Edge
-- XBee / USBシリアルドライバ
+- XBee / USB シリアルドライバ
 
 ## 接続方法
 
-起動するとブラウザが開きます。開かない場合は、コマンドプロンプトに表示されるURLをChromeまたはEdgeで開いてください。
+起動するとブラウザが開きます。
+開かない場合は、ターミナルまたはコマンドプロンプトに表示された URL を Chrome または Edge で開いてください。
 
-ブラウザが開いたら、画面下部の接続ボタンからXBeeのシリアルポートを選択してください。
+画面下部の「ポート選択」から XBee のシリアルポートを選び、「接続」を押してください。
 
 ## 補足
 
-- `node_modules/` はGitHub zipには含めません。
-- UIで必要なブラウザ用ライブラリは `vendor/` とルート直下のJSファイルに同梱しています。
-- Windows用の同梱Node.jsは `tools/node/win-x64/node.exe` にあります。
-- `npm install` は不要です。
+- `node_modules/` は不要です。
+- UI で必要なブラウザ用ライブラリは、`vendor/` とルート直下の JS ファイルに同梱しています。
+- Windows / macOS 用の Node.js 実行ファイルは `tools/node/` に同梱しています。
+- macOS の `start.command` は、CPU 種別に合わせて同梱 Node.js を自動選択します。
