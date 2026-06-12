@@ -711,6 +711,17 @@ def write_rssi_data(timestamp: str, rssi: float) -> None:
 		print("[WARN] failed to write data.json")
 
 
+def poll_and_write_xbee_rssi(timestamp: str, ser: serial.Serial, interval_s: float) -> None:
+	with CommandApiHandler.serial_lock:
+		rssi_value = maybe_poll_xbee_rssi(ser, interval_s)
+	if rssi_value is None:
+		return
+
+	telemetry_state["rssi"] = rssi_value
+	write_rssi_data(timestamp, rssi_value)
+	print(f"[rssi] {rssi_value:.0f} dBm")
+
+
 def main() -> None:
 	args = parse_args()
 	args.port = resolve_port(args.port)
@@ -753,11 +764,7 @@ def main() -> None:
 				payload = ser.readline()
 				if not payload:
 					timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-					with CommandApiHandler.serial_lock:
-						rssi_value = maybe_poll_xbee_rssi(ser, args.rssi_atdb_interval)
-					if rssi_value is not None:
-						telemetry_state["rssi"] = rssi_value
-						write_rssi_data(timestamp, rssi_value)
+					poll_and_write_xbee_rssi(timestamp, ser, args.rssi_atdb_interval)
 					continue
 
 				timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
