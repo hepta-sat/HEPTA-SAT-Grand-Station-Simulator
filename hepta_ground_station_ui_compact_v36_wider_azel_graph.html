@@ -84,12 +84,23 @@
     .header {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       padding: 0 12px;
       border: 1px solid #1d2c35;
       background: #081219;
       font-size: 15px;
       font-weight: 600;
       letter-spacing: 0.04em;
+    }
+
+    .build-badge {
+      border: 1px solid rgba(43, 224, 95, 0.42);
+      border-radius: 999px;
+      padding: 2px 8px;
+      color: #2be05f;
+      background: rgba(43, 224, 95, 0.08);
+      font-size: 11px;
+      letter-spacing: 0;
     }
 
     .main {
@@ -1884,7 +1895,8 @@
   <div class="app">
 
     <header class="header">
-      HEPTA Ground Station Simulator
+      <span>HEPTA Ground Station Simulator</span>
+      <span class="build-badge">3D vendor build c17e642+</span>
     </header>
 
     <main class="main">
@@ -2185,11 +2197,15 @@
        Internal Ground Station
     ========================= */
 
-    if (window.location.protocol === "file:") {
+    function showStartupWarning(message) {
       const warning = document.createElement("div");
       warning.className = "startup-warning";
-      warning.textContent = "このHTMLを直接開くと、衛星・アンテナの3D表示が簡易表示になることがあります。展開したフォルダの start.bat をダブルクリックして、http://localhost から開いてください。";
+      warning.textContent = message;
       document.body.appendChild(warning);
+    }
+
+    if (window.location.protocol === "file:") {
+      showStartupWarning("このHTMLを直接開くと、衛星・アンテナの3D表示が簡易表示になることがあります。展開したフォルダの start.bat をダブルクリックして、http://localhost から開いてください。");
     }
 
     const INTERNAL_GROUND_STATION = {
@@ -4845,6 +4861,7 @@ ${tle.line2}`;
       .then((threeModule) => {
         THREE_LIB = threeModule;
         window.THREE_LIB = threeModule;
+        if (antennaStatusLabel) antennaStatusLabel.textContent = "3D OK";
         startAntenna3DAnimation();
         drawTrackingDisplays();
         import("./vendor/three/examples/jsm/controls/OrbitControls.js")
@@ -4860,6 +4877,8 @@ ${tle.line2}`;
       })
       .catch((error) => {
         console.error("Failed to load Three.js module", error);
+        if (antennaStatusLabel) antennaStatusLabel.textContent = "3D読込失敗";
+        showStartupWarning("衛星・アンテナの3Dライブラリを読み込めませんでした。zipをすべて展開し、展開後フォルダ内の start.bat から起動してください。");
       });
 
     function resizeCanvasToContainer(canvas, container) {
@@ -5528,7 +5547,7 @@ ${tle.line2}`;
         if (antennaAzLabel) antennaAzLabel.textContent = "--";
         if (antennaElLabel) antennaElLabel.textContent = "--";
         if (antennaRangeLabel) antennaRangeLabel.textContent = "--";
-        if (antennaStatusLabel) antennaStatusLabel.textContent = "--";
+        if (antennaStatusLabel) antennaStatusLabel.textContent = "3D OK";
         state.renderer.render(state.scene, state.camera);
         return;
       }
