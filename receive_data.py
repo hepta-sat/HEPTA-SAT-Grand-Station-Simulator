@@ -15,9 +15,14 @@ TELEMETRY_PACKET_HEADER = 0x7E
 TELEMETRY_PACKET_SAT_ID = 0x01
 TELEMETRY_PACKET_TYPE_HK = 0x10
 TELEMETRY_PACKET_TYPES = (0x10, 0x11, 0x12, 0x20, 0x30)
+TELEMETRY_PACKET_POWER_SAVE_PAYLOAD_LENGTH = 3
 TELEMETRY_PACKET_BASIC_PAYLOAD_LENGTH = 5
 TELEMETRY_PACKET_PAYLOAD_LENGTH = 23
-TELEMETRY_PACKET_PAYLOAD_LENGTHS = (TELEMETRY_PACKET_BASIC_PAYLOAD_LENGTH, TELEMETRY_PACKET_PAYLOAD_LENGTH)
+TELEMETRY_PACKET_PAYLOAD_LENGTHS = (
+	TELEMETRY_PACKET_POWER_SAVE_PAYLOAD_LENGTH,
+	TELEMETRY_PACKET_BASIC_PAYLOAD_LENGTH,
+	TELEMETRY_PACKET_PAYLOAD_LENGTH,
+)
 COMMAND_PACKET_PARAMETER = 0x00
 COMMAND_PACKET_IDS = {
 	"a": 0x11,
@@ -771,6 +776,7 @@ def is_telemetry_packet(payload: bytes) -> bool:
 
 def write_received_data(timestamp: str, payload: bytes, formatted: str, rssi: float | None = None) -> None:
 	packet_hex = payload.hex(" ")
+	rssi_value = rssi if rssi is not None else telemetry_state.get("rssi")
 	remember_command_ack(timestamp, formatted)
 	data_obj = {
 		"timestamp": timestamp,
@@ -780,8 +786,8 @@ def write_received_data(timestamp: str, payload: bytes, formatted: str, rssi: fl
 	}
 	if is_telemetry_packet(payload):
 		data_obj["packet_hex"] = packet_hex
-	if rssi is not None:
-		data_obj["rssi"] = rssi
+	if rssi_value is not None:
+		data_obj["rssi"] = rssi_value
 	attach_recent_command_ack(data_obj)
 	try:
 		tmp_path = os.path.join(os.path.dirname(__file__), "data.json.tmp")
