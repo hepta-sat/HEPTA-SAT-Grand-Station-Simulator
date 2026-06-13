@@ -2172,7 +2172,7 @@
         </div>
 
         <div class="panel">
-          <div class="panel-title">受信パケット（16進データ）</div>
+          <div class="panel-title">受信データ</div>
           <div class="panel-body packet-body">
             <div class="packet-log">
               <div class="packet-log-header">受信HEXログ（1パケット1行）</div>
@@ -2184,7 +2184,7 @@
         </div>
 
         <div class="panel">
-          <div class="panel-title">テレメトリ</div>
+          <div class="panel-title">テレメトリ値</div>
           <div class="panel-body tm-value-body">
             <div class="tm-value-grid">
               <div class="tm-status-card">
@@ -2246,7 +2246,7 @@
         </div>
 
         <div class="panel">
-          <div class="panel-title">テレメトリ　リアルタイムグラフ</div>
+          <div class="panel-title">テレメトリ推移</div>
           <div class="panel-body telemetry-graph-body">
             <div class="telemetry-graph-grid" id="telemetry-graph-grid"></div>
           </div>
@@ -2377,7 +2377,7 @@
     const COMMAND_API_URL = "http://127.0.0.1:8765/send-command";
     const COMMAND_API_HEALTH_URL = "http://127.0.0.1:8765/health";
     const DIRECT_SERIAL_COMMAND_LINE_ENDING = "";
-    const USE_SIMULATED_RSSI = true;
+    const USE_SIMULATED_RSSI = false;
     const RSSI_SIM_REFERENCE_RANGE_KM = 500;
     const RSSI_SIM_REFERENCE_DBM = -45;
     const RSSI_SIM_NO_SIGNAL_DBM = -98;

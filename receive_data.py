@@ -599,8 +599,8 @@ def parse_args() -> argparse.Namespace:
 	parser.add_argument(
 		"--rssi-atdb-interval",
 		type=float,
-		default=5.0,
-		help="Poll local XBee ATDB RSSI every N seconds. 0 disables polling.",
+		default=0.0,
+		help="Poll local XBee ATDB RSSI every N seconds. 0 disables polling. ATDB polling may interrupt telemetry.",
 	)
 	parser.add_argument(
 		"--command-api-host",
