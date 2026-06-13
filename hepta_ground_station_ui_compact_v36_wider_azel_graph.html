@@ -1218,7 +1218,7 @@
     .packet-log-list {
       min-height: 0;
       overflow-y: auto;
-      overflow-x: hidden;
+      overflow-x: auto;
       flex: 1;
       background:
         repeating-linear-gradient(
@@ -1238,8 +1238,8 @@
       font-size: 10px;
       line-height: 1.35;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      width: max-content;
+      min-width: 100%;
       background: rgba(2, 8, 12, 0.82);
     }
 
@@ -2461,6 +2461,7 @@
       header: 0x7E,
       satId: 0x01,
       typeHk: 0x10,
+      powerSavePayloadLength: 3,
       basicPayloadLength: 5,
       missionPayloadLength: 23,
       telemetryTypes: [0x10, 0x11, 0x12, 0x20, 0x30],
@@ -2596,7 +2597,8 @@
     }
 
     function isTelemetryPayloadLength(payloadLength) {
-      return payloadLength === TELEMETRY_PACKET.basicPayloadLength
+      return payloadLength === TELEMETRY_PACKET.powerSavePayloadLength
+        || payloadLength === TELEMETRY_PACKET.basicPayloadLength
         || payloadLength === TELEMETRY_PACKET.missionPayloadLength;
     }
 
@@ -2627,12 +2629,13 @@
       // Payload[5-10] : 加速度XYZ 0.01 m/s^2, int16 x3
       // Payload[11-16]: 角速度XYZ 0.1 deg/s, int16 x3
       // Payload[17-22]: 地磁気XYZ 0.1 uT, int16 x3
-      if (!payload || payload.length < TELEMETRY_PACKET.basicPayloadLength) return null;
+      if (!payload || payload.length < TELEMETRY_PACKET.powerSavePayloadLength) return null;
 
       const packetTypeMode = decodePacketTypeMode(packetType);
       const mode = packetTypeMode || decodeMode(payload[0]);
       const voltageRaw = ((payload[1] & 0xFF) << 8) | (payload[2] & 0xFF);
-      const temperatureRaw = readInt16BE(payload[3], payload[4]);
+      const hasBasicTelemetry = payload.length >= TELEMETRY_PACKET.basicPayloadLength;
+      const temperatureRaw = hasBasicTelemetry ? readInt16BE(payload[3], payload[4]) : null;
       const hasMissionTelemetry = payload.length >= TELEMETRY_PACKET.missionPayloadLength;
 
       const accXRaw = hasMissionTelemetry ? readInt16BE(payload[5], payload[6]) : null;
@@ -2661,8 +2664,8 @@
         voltageHex: `${byteToHex(payload[1])} ${byteToHex(payload[2])}`,
 
         temperatureRaw,
-        temperatureC: temperatureRaw / 10,
-        temperatureHex: `${byteToHex(payload[3])} ${byteToHex(payload[4])}`,
+        temperatureC: temperatureRaw === null ? null : temperatureRaw / 10,
+        temperatureHex: temperatureRaw === null ? "--" : `${byteToHex(payload[3])} ${byteToHex(payload[4])}`,
 
         accX: accXRaw === null ? null : accXRaw / 512 * 9.8,
         accY: accYRaw === null ? null : accYRaw / 512 * 9.8,
@@ -2706,8 +2709,8 @@
 
       setTelemetryText(packetUi.tmVoltageValue, `${decoded.voltageV.toFixed(2)} V`);
       setTelemetryText(packetUi.tmVoltageRaw, `raw: ${decoded.voltageHex} = ${decoded.voltageRaw} ADC`);
-      setTelemetryText(packetUi.tmTempValue, `${decoded.temperatureC.toFixed(1)} °C`);
-      setTelemetryText(packetUi.tmTempRaw, `raw: ${decoded.temperatureHex} = ${decoded.temperatureRaw} /10`);
+      setTelemetryText(packetUi.tmTempValue, decoded.temperatureC === null ? "--" : `${decoded.temperatureC.toFixed(1)} °C`);
+      setTelemetryText(packetUi.tmTempRaw, decoded.temperatureRaw === null ? "raw: --" : `raw: ${decoded.temperatureHex} = ${decoded.temperatureRaw} /10`);
 
       setTelemetryText(packetUi.tmAccXValue, decoded.accX === null ? "--" : decoded.accX.toFixed(2) + " m/s2");
       setTelemetryText(packetUi.tmAccYValue, decoded.accY === null ? "--" : decoded.accY.toFixed(2) + " m/s2");
@@ -7118,8 +7121,7 @@ ${tle.line2}`;
         drawPoint(ctx, satPos.x, satPos.y, 5.5, "#f2a400", "#fff3c7", currentTle.name || "SAT");
 
         if (orbitMapSatLabel) {
-          const modeLabel = orbitMapViewMode === "follow" ? "追尾" : "全体";
-          orbitMapSatLabel.textContent = `${sat.lat.toFixed(2)}, ${sat.lon.toFixed(2)} / ${modeLabel}`;
+          orbitMapSatLabel.textContent = `${sat.lat.toFixed(2)}, ${sat.lon.toFixed(2)}`;
         }
       }
 
