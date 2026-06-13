@@ -2252,7 +2252,7 @@
         </div>
 
         <div class="panel">
-          <div class="panel-title">コマンドログ</div>
+          <div class="panel-title">コマンド送信ログ</div>
           <div class="panel-body command-body">
             <div class="command-input-area">
               <input id="command-input" class="command-input" type="text" placeholder="コマンド入力欄 例: a / b" autocomplete="off">
@@ -4403,15 +4403,12 @@
     const PASS_LIST_MAX_ROWS = 24;
     const PASS_START_BEFORE_AOS_MS = 3 * 60 * 1000;
 
-    // Az/Elグラフは、パスの見え始め・見え終わりを少し広く見るため、
-    // 仰角5degを描画開始・終了の基準にする。
-    const AZEL_GRAPH_EDGE_ELEVATION_DEG = TRACKING_DISPLAY_MIN_ELEVATION_DEG;
-
     let azelGraphWindowCache = {
       key: "",
       startDate: null,
       endDate: null
     };
+    const AZEL_GRAPH_EDGE_ELEVATION_DEG = TRACKING_DISPLAY_MIN_ELEVATION_DEG;
 
     function pad2(n) {
       return String(n).padStart(2, "0");
@@ -6087,6 +6084,14 @@ ${tle.line2}`;
     }
 
     function getAzelGraphTimeWindow(satrec, gs, now) {
+      const passRange = getPassGraphTimeRange(15 * 60 * 1000, now.getTime());
+      if (passRange.passBounded) {
+        return {
+          startMs: passRange.startMs,
+          endMs: passRange.endMs
+        };
+      }
+
       if (!satrec) {
         return {
           startMs: now.getTime() - 5 * 60 * 1000,
@@ -6385,11 +6390,11 @@ ${tle.line2}`;
       ctx.fillStyle = CANVAS_THEME.textMuted;
       ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText(formatUtcTimeShort(new Date(series.startMs)), leftPad, height - 3);
+      ctx.fillText(formatJstTimeShort(new Date(series.startMs)), leftPad, height - 3);
       ctx.textAlign = "center";
-      ctx.fillText(`${formatUtcTimeShort(new Date((series.startMs + series.endMs) / 2))} UTC`, leftPad + plotW / 2, height - 3);
+      ctx.fillText(`${formatJstTimeShort(new Date((series.startMs + series.endMs) / 2))} JST`, leftPad + plotW / 2, height - 3);
       ctx.textAlign = "right";
-      ctx.fillText(formatUtcTimeShort(new Date(series.endMs)), leftPad + plotW, height - 3);
+      ctx.fillText(formatJstTimeShort(new Date(series.endMs)), leftPad + plotW, height - 3);
       ctx.restore();
 
       if (!satrec) {
