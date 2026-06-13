@@ -2373,7 +2373,8 @@
     let serialPortSelectionInProgress = false;
 
     const XBEE_BAUD_RATE = 9600;
-    const USE_BACKEND_COMMAND_API = false;
+    const USE_BACKEND_COMMAND_API = true;
+    const RECEIVER_START_API_URL = "/start-receiver";
     const COMMAND_API_URL = "http://127.0.0.1:8765/send-command";
     const COMMAND_API_HEALTH_URL = "http://127.0.0.1:8765/health";
     const DIRECT_SERIAL_COMMAND_LINE_ENDING = "";
@@ -4000,6 +4001,8 @@
     async function connectBackendReceiver() {
       try {
         updatePortStatus("selected", "接続確認中");
+        await fetch(RECEIVER_START_API_URL, { method: "POST", cache: "no-store" });
+        await new Promise(resolve => setTimeout(resolve, 900));
         const response = await fetch(COMMAND_API_HEALTH_URL, { cache: "no-store" });
         if (!response.ok) throw new Error(`health ${response.status}`);
 
@@ -7269,6 +7272,8 @@ ${tle.line2}`;
             obj.packet_hex || "",
             obj.hex || "",
             obj.text || "",
+            obj.rssi ?? "",
+            obj.telemetry?.rssi ?? "",
             JSON.stringify(obj.telemetry || {})
           ].join("|");
           if (backendDataKey === lastBackendDataKey) return;
