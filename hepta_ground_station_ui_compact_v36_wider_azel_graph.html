@@ -196,7 +196,7 @@
       right: 8px;
       bottom: 7px;
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: 1fr 1fr 1fr 1fr;
       gap: 6px;
       pointer-events: none;
     }
@@ -1218,7 +1218,7 @@
     .packet-log-list {
       min-height: 0;
       overflow-y: auto;
-      overflow-x: auto;
+      overflow-x: hidden;
       flex: 1;
       background:
         repeating-linear-gradient(
@@ -1238,8 +1238,8 @@
       font-size: 10px;
       line-height: 1.35;
       white-space: nowrap;
-      width: max-content;
-      min-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
       background: rgba(2, 8, 12, 0.82);
     }
 
@@ -2092,6 +2092,7 @@
               <div class="orbit-map-chip">GS <span id="orbit-map-gs-label">--</span></div>
               <div class="orbit-map-chip">SAT <span id="orbit-map-sat-label">--</span></div>
               <div class="orbit-map-chip">Period <span id="orbit-map-period-label">--</span></div>
+              <div class="orbit-map-chip">AOS/LOS <span>El ≥ 5° / Max ≥ 70°</span></div>
             </div>
           </div>
 
@@ -2252,7 +2253,7 @@
         </div>
 
         <div class="panel">
-          <div class="panel-title">コマンド送信ログ</div>
+          <div class="panel-title">コマンドログ</div>
           <div class="panel-body command-body">
             <div class="command-input-area">
               <input id="command-input" class="command-input" type="text" placeholder="コマンド入力欄 例: a / b" autocomplete="off">
@@ -2461,7 +2462,6 @@
       header: 0x7E,
       satId: 0x01,
       typeHk: 0x10,
-      powerSavePayloadLength: 3,
       basicPayloadLength: 5,
       missionPayloadLength: 23,
       telemetryTypes: [0x10, 0x11, 0x12, 0x20, 0x30],
@@ -2597,8 +2597,7 @@
     }
 
     function isTelemetryPayloadLength(payloadLength) {
-      return payloadLength === TELEMETRY_PACKET.powerSavePayloadLength
-        || payloadLength === TELEMETRY_PACKET.basicPayloadLength
+      return payloadLength === TELEMETRY_PACKET.basicPayloadLength
         || payloadLength === TELEMETRY_PACKET.missionPayloadLength;
     }
 
@@ -2629,13 +2628,12 @@
       // Payload[5-10] : 加速度XYZ 0.01 m/s^2, int16 x3
       // Payload[11-16]: 角速度XYZ 0.1 deg/s, int16 x3
       // Payload[17-22]: 地磁気XYZ 0.1 uT, int16 x3
-      if (!payload || payload.length < TELEMETRY_PACKET.powerSavePayloadLength) return null;
+      if (!payload || payload.length < TELEMETRY_PACKET.basicPayloadLength) return null;
 
       const packetTypeMode = decodePacketTypeMode(packetType);
       const mode = packetTypeMode || decodeMode(payload[0]);
       const voltageRaw = ((payload[1] & 0xFF) << 8) | (payload[2] & 0xFF);
-      const hasBasicTelemetry = payload.length >= TELEMETRY_PACKET.basicPayloadLength;
-      const temperatureRaw = hasBasicTelemetry ? readInt16BE(payload[3], payload[4]) : null;
+      const temperatureRaw = readInt16BE(payload[3], payload[4]);
       const hasMissionTelemetry = payload.length >= TELEMETRY_PACKET.missionPayloadLength;
 
       const accXRaw = hasMissionTelemetry ? readInt16BE(payload[5], payload[6]) : null;
@@ -2664,8 +2662,8 @@
         voltageHex: `${byteToHex(payload[1])} ${byteToHex(payload[2])}`,
 
         temperatureRaw,
-        temperatureC: temperatureRaw === null ? null : temperatureRaw / 10,
-        temperatureHex: temperatureRaw === null ? "--" : `${byteToHex(payload[3])} ${byteToHex(payload[4])}`,
+        temperatureC: temperatureRaw / 10,
+        temperatureHex: `${byteToHex(payload[3])} ${byteToHex(payload[4])}`,
 
         accX: accXRaw === null ? null : accXRaw / 512 * 9.8,
         accY: accYRaw === null ? null : accYRaw / 512 * 9.8,
@@ -2709,8 +2707,8 @@
 
       setTelemetryText(packetUi.tmVoltageValue, `${decoded.voltageV.toFixed(2)} V`);
       setTelemetryText(packetUi.tmVoltageRaw, `raw: ${decoded.voltageHex} = ${decoded.voltageRaw} ADC`);
-      setTelemetryText(packetUi.tmTempValue, decoded.temperatureC === null ? "--" : `${decoded.temperatureC.toFixed(1)} °C`);
-      setTelemetryText(packetUi.tmTempRaw, decoded.temperatureRaw === null ? "raw: --" : `raw: ${decoded.temperatureHex} = ${decoded.temperatureRaw} /10`);
+      setTelemetryText(packetUi.tmTempValue, `${decoded.temperatureC.toFixed(1)} °C`);
+      setTelemetryText(packetUi.tmTempRaw, `raw: ${decoded.temperatureHex} = ${decoded.temperatureRaw} /10`);
 
       setTelemetryText(packetUi.tmAccXValue, decoded.accX === null ? "--" : decoded.accX.toFixed(2) + " m/s2");
       setTelemetryText(packetUi.tmAccYValue, decoded.accY === null ? "--" : decoded.accY.toFixed(2) + " m/s2");
@@ -4401,14 +4399,17 @@
     let orbitMapState = null;
     const PASS_LIST_LOOKAHEAD_HOURS = 96;
     const PASS_LIST_MAX_ROWS = 24;
-    const PASS_START_BEFORE_AOS_MS = 3 * 60 * 1000;
+    const PASS_START_BEFORE_AOS_MS = 10 * 1000;
+
+    // Az/Elグラフは、パスの見え始め・見え終わりを少し広く見るため、
+    // 仰角5degを描画開始・終了の基準にする。
+    const AZEL_GRAPH_EDGE_ELEVATION_DEG = TRACKING_DISPLAY_MIN_ELEVATION_DEG;
 
     let azelGraphWindowCache = {
       key: "",
       startDate: null,
       endDate: null
     };
-    const AZEL_GRAPH_EDGE_ELEVATION_DEG = TRACKING_DISPLAY_MIN_ELEVATION_DEG;
 
     function pad2(n) {
       return String(n).padStart(2, "0");
@@ -6084,14 +6085,6 @@ ${tle.line2}`;
     }
 
     function getAzelGraphTimeWindow(satrec, gs, now) {
-      const passRange = getPassGraphTimeRange(15 * 60 * 1000, now.getTime());
-      if (passRange.passBounded) {
-        return {
-          startMs: passRange.startMs,
-          endMs: passRange.endMs
-        };
-      }
-
       if (!satrec) {
         return {
           startMs: now.getTime() - 5 * 60 * 1000,
@@ -6390,11 +6383,11 @@ ${tle.line2}`;
       ctx.fillStyle = CANVAS_THEME.textMuted;
       ctx.font = "8px Segoe UI, Noto Sans JP, sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText(formatJstTimeShort(new Date(series.startMs)), leftPad, height - 3);
+      ctx.fillText(formatUtcTimeShort(new Date(series.startMs)), leftPad, height - 3);
       ctx.textAlign = "center";
-      ctx.fillText(`${formatJstTimeShort(new Date((series.startMs + series.endMs) / 2))} JST`, leftPad + plotW / 2, height - 3);
+      ctx.fillText(`${formatUtcTimeShort(new Date((series.startMs + series.endMs) / 2))} UTC`, leftPad + plotW / 2, height - 3);
       ctx.textAlign = "right";
-      ctx.fillText(formatJstTimeShort(new Date(series.endMs)), leftPad + plotW, height - 3);
+      ctx.fillText(formatUtcTimeShort(new Date(series.endMs)), leftPad + plotW, height - 3);
       ctx.restore();
 
       if (!satrec) {
@@ -7126,7 +7119,8 @@ ${tle.line2}`;
         drawPoint(ctx, satPos.x, satPos.y, 5.5, "#f2a400", "#fff3c7", currentTle.name || "SAT");
 
         if (orbitMapSatLabel) {
-          orbitMapSatLabel.textContent = `${sat.lat.toFixed(2)}, ${sat.lon.toFixed(2)}`;
+          const modeLabel = orbitMapViewMode === "follow" ? "追尾" : "全体";
+          orbitMapSatLabel.textContent = `${sat.lat.toFixed(2)}, ${sat.lon.toFixed(2)} / ${modeLabel}`;
         }
       }
 
