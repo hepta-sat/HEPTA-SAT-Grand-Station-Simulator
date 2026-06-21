@@ -82,9 +82,9 @@
     }
 
     .header {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      justify-content: space-between;
       padding: 0 12px;
       border: 1px solid #1d2c35;
       background: #081219;
@@ -93,14 +93,21 @@
       letter-spacing: 0.04em;
     }
 
-    .build-badge {
-      border: 1px solid rgba(43, 224, 95, 0.42);
-      border-radius: 999px;
-      padding: 2px 8px;
-      color: #2be05f;
-      background: rgba(43, 224, 95, 0.08);
-      font-size: 11px;
+    .header-title {
+      grid-column: 2;
+      justify-self: center;
+      white-space: nowrap;
+    }
+
+    .simulation-time-value {
+      grid-column: 3;
+      justify-self: end;
+      color: #ffffff;
+      font-family: Consolas, Menlo, monospace;
+      font-size: 14px;
+      font-weight: 700;
       letter-spacing: 0;
+      white-space: nowrap;
     }
 
     .main {
@@ -1533,7 +1540,7 @@
     }
 
     .tle-radio-option {
-      display: inline-flex;
+      display: none;
       align-items: center;
       gap: 5px;
       color: #c8d8e3;
@@ -2005,8 +2012,8 @@
   <div class="app">
 
     <header class="header">
-      <span>HEPTA Ground Station Simulator</span>
-      <span class="build-badge">3D vendor build c17e642+</span>
+      <span class="header-title">HEPTA Ground Station Simulator</span>
+      <span class="simulation-time-value" id="simulation-time-value">--:--:--</span>
     </header>
 
     <main class="main">
@@ -2024,8 +2031,8 @@
             <div class="panel-body tle-body">
 
               <div class="tle-tabs">
-                <button class="tle-tab-button" type="button" data-tle-tab="custom">Custom</button>
-                <button class="tle-tab-button active" type="button" data-tle-tab="sat1">SAT1</button>
+                <button class="tle-tab-button" type="button" data-tle-tab="custom">Custom TLE</button>
+                <button class="tle-tab-button active" type="button" data-tle-tab="sat1">Hepta Demo SAT1</button>
               </div>
 
               <div class="tle-tab-page custom-panel" id="tle-tab-custom">
@@ -4388,6 +4395,7 @@
     const aosTimeEl = document.getElementById("aos-time");
     const currentTimeEl = document.getElementById("current-time");
     const losTimeEl = document.getElementById("los-time");
+    const simulationTimeValue = document.getElementById("simulation-time-value");
 
     let currentTle = {
       name: "SAT1",
@@ -4555,6 +4563,7 @@
       const passStartDate = new Date(pass.aosDate.getTime() - PASS_START_BEFORE_AOS_MS);
       orbitMapState.displayDate = passStartDate;
       orbitMapState.displayRealStartMs = Date.now();
+      updateCurrentClock();
       setPassStatus("", "");
       await refreshOrbitMap();
     }
@@ -4603,6 +4612,7 @@
         orbitMapState.periodMin = null;
         orbitMapState.displayDate = null;
         orbitMapState.displayRealStartMs = null;
+        updateCurrentClock();
         orbitMapState.message = "TLE/SGP4エラー";
         resetAzelGraphWindowCache();
         clearTrackingLabels();
@@ -4714,10 +4724,16 @@
       });
     }
 
+    function getVirtualOrbitDate() {
+      if (!orbitMapState || !orbitMapState.displayDate) return null;
+      return getOrbitMapDisplayDate();
+    }
+
     function updateCurrentClock() {
-      if (currentTimeEl) {
-        currentTimeEl.textContent = formatTime(getOrbitMapDisplayDate());
-      }
+      const virtualDate = getVirtualOrbitDate();
+      const timeText = virtualDate ? formatTime(virtualDate) : "--:--:--";
+      if (currentTimeEl) currentTimeEl.textContent = timeText;
+      if (simulationTimeValue) simulationTimeValue.textContent = timeText;
     }
 
     setInterval(updateCurrentClock, 1000);
@@ -6212,17 +6228,46 @@ ${tle.line2}`;
         ctx.fillText(`${deg}°`, cx + Math.cos(rad) * radius * 0.48, cy + Math.sin(rad) * radius * 0.48);
       });
 
+      if (series && Array.isArray(series.points) && series.points.length > 1) {
+        const points = series.points.map(point => {
+          const radial = radius * (0.18 + clamp(point.ratio, 0, 1) * 0.74);
+          const rad = deg2rad(normalizeDeg(point.az) - 90);
+          return {
+            x: cx + Math.cos(rad) * radial,
+            y: cy + Math.sin(rad) * radial,
+            visible: point.visible
+          };
+        });
+
+        ctx.save();
+        ctx.lineWidth = 2.0;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        for (let i = 1; i < points.length; i++) {
+          const prev = points[i - 1];
+          const point = points[i];
+          ctx.beginPath();
+          ctx.moveTo(prev.x, prev.y);
+          ctx.lineTo(point.x, point.y);
+          ctx.strokeStyle = point.visible
+            ? "rgba(11, 99, 216, 0.72)"
+            : "rgba(142, 163, 175, 0.58)";
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
       if (lookNow) {
         const rad = deg2rad(normalizeDeg(lookNow.azDeg) - 90);
-        const endX = cx + Math.cos(rad) * radius * 0.92;
-        const endY = cy + Math.sin(rad) * radius * 0.92;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(endX, endY);
-        ctx.strokeStyle = lookNow.elDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG ? "#0b63d8" : "rgba(142, 163, 175, 0.92)";
-        ctx.lineWidth = 2.8;
-        ctx.stroke();
-
+        const durationMs = series && Number.isFinite(series.endMs - series.startMs)
+          ? series.endMs - series.startMs
+          : 0;
+        const currentRatio = durationMs > 0
+          ? clamp((series.nowMs - series.startMs) / durationMs, 0, 1)
+          : 1;
+        const currentRadial = radius * (0.18 + currentRatio * 0.74);
+        const endX = cx + Math.cos(rad) * currentRadial;
+        const endY = cy + Math.sin(rad) * currentRadial;
         ctx.beginPath();
         ctx.arc(endX, endY, 5.0, 0, Math.PI * 2);
         ctx.fillStyle = lookNow.elDeg >= AOS_LOS_ELEVATION_THRESHOLD_DEG ? "#28d9e8" : "#8ea3af";
@@ -6454,6 +6499,7 @@ ${tle.line2}`;
       orbitMapState.lastTrackUpdate = 0;
       orbitMapState.displayDate = null;
       orbitMapState.displayRealStartMs = null;
+      updateCurrentClock();
       orbitMapState.message = "";
 
       clearTrackingLabels();
@@ -6629,6 +6675,7 @@ ${tle.line2}`;
         orbitMapState.periodMin = null;
         orbitMapState.displayDate = null;
         orbitMapState.displayRealStartMs = null;
+        updateCurrentClock();
         orbitMapState.message = "TLE/SGP4エラー";
         resetAzelGraphWindowCache();
         clearTrackingLabels();
