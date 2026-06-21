@@ -14,6 +14,7 @@ import os
 TELEMETRY_PACKET_HEADER = 0x7E
 TELEMETRY_PACKET_SAT_ID = 0x01
 TELEMETRY_PACKET_TYPE_HK = 0x10
+TELEMETRY_PACKET_TYPE_MISSION = 0x11
 TELEMETRY_PACKET_TYPES = (0x10, 0x11, 0x12, 0x20, 0x30)
 TELEMETRY_PACKET_BASIC_PAYLOAD_LENGTH = 5
 TELEMETRY_PACKET_PAYLOAD_LENGTH = 23
@@ -50,6 +51,7 @@ last_rssi_poll_time = 0.0
 last_command_send_time = 0.0
 last_command_ack: dict | None = None
 last_command_tx: dict | None = None
+current_sensor_mode = "OFF"
 COMMAND_ACK_TTL_S = 30.0
 COMMAND_ACK_RSSI_GUARD_S = 4.0
 
@@ -59,6 +61,10 @@ SENSOR_FIELD_NAMES = ("ax", "ay", "az", "gx", "gy", "gz", "mx", "my", "mz")
 def clear_sensor_telemetry_state() -> None:
 	for key in SENSOR_FIELD_NAMES:
 		telemetry_state[key] = None
+
+
+def get_sensor_mode_display() -> tuple[str, str]:
+	return ("Mission", "mission") if current_sensor_mode == "ON" else ("Standby", "normal")
 
 
 def to_int16(value: int) -> int:
@@ -91,14 +97,19 @@ def is_packet_checksum_ok(packet: bytes) -> bool:
 def build_hk_packet(voltage_v: float, ax: float, ay: float, az: float,
                     temperature_c: float = 0.0,
                     gx: float = 0.0, gy: float = 0.0, gz: float = 0.0,
-                    mx: float = 0.0, my: float = 0.0, mz: float = 0.0) -> bytes:
+                    mx: float = 0.0, my: float = 0.0, mz: float = 0.0,
+                    sensor_mode: str | None = None) -> bytes:
 	global telemetry_sequence
+
+	mode = str(sensor_mode or current_sensor_mode).upper()
+	mode_byte = 0x01 if mode == "ON" else 0x00
+	packet_type = TELEMETRY_PACKET_TYPE_MISSION if mode == "ON" else TELEMETRY_PACKET_TYPE_HK
 
 	# Payload layout (23 bytes):
 	# mode(1) | voltage mV(2) | temp(2) | accX(2) | accY(2) | accZ(2)
 	# gyroX(2) | gyroY(2) | gyroZ(2) | magX(2) | magY(2) | magZ(2)
 	payload: list[int] = [
-		0x00,
+		mode_byte,
 		*encode_u16(round(voltage_v * 1000)),
 		*encode_i16(round(temperature_c * 10)),
 		*encode_i16(round(ax * 100)),
@@ -116,7 +127,7 @@ def build_hk_packet(voltage_v: float, ax: float, ay: float, az: float,
 	sequence_bytes = [(telemetry_sequence >> 8) & 0xFF, telemetry_sequence & 0xFF]
 	packet_body = [
 		TELEMETRY_PACKET_SAT_ID,
-		TELEMETRY_PACKET_TYPE_HK,
+		packet_type,
 		*sequence_bytes,
 		TELEMETRY_PACKET_PAYLOAD_LENGTH,
 		*payload,
@@ -152,7 +163,14 @@ def build_command_packet_info(command: str) -> dict | None:
 		"sequence": sequence,
 		"checksum": checksum,
 		"label": COMMAND_PACKET_LABELS.get(command_key, command_key.upper()),
+		"bytes": packet,
 	}
+
+
+def command_packet_json(packet_info: dict | None) -> dict | None:
+	if not packet_info:
+		return None
+	return {key: value for key, value in packet_info.items() if key != "bytes"}
 
 
 def parse_telemetry_line(line: str) -> tuple[str | None, float | None]:
@@ -249,13 +267,18 @@ def maybe_poll_xbee_rssi(ser: serial.Serial, interval_s: float) -> float | None:
 
 
 def remember_command_ack(timestamp: str, line: str) -> None:
-	global last_command_ack
+	global current_sensor_mode, last_command_ack
 
-	match = re.match(r"^SENSOR_MODE\s*=?\s*(ON|OFF)$", line.strip(), re.IGNORECASE)
-	if not match:
+	normalized_line = line.strip().strip("\"'`“”‘’")
+	match = re.match(r"^SENSOR_MODE\s*=?\s*(ON|OFF)$", normalized_line, re.IGNORECASE)
+	compact_match = re.search(r"\b(MISSION|STANDBY)_ACK\b", normalized_line, re.IGNORECASE)
+	if match:
+		mode = match.group(1).upper()
+	elif compact_match:
+		mode = "ON" if compact_match.group(1).upper() == "MISSION" else "OFF"
+	else:
 		return
-
-	mode = match.group(1).upper()
+	current_sensor_mode = mode
 	expected_ack = f"SENSOR_MODE = {mode}"
 	now = time.monotonic()
 	if (
@@ -277,7 +300,7 @@ def remember_command_ack(timestamp: str, line: str) -> None:
 	print(f"[ack] SENSOR_MODE={mode}")
 
 
-def remember_command_tx(command: str, payload: bytes) -> None:
+def remember_command_tx(command: str, payload: bytes, packet_info: dict | None = None) -> None:
 	global last_command_tx
 
 	expected_ack = None
@@ -286,7 +309,6 @@ def remember_command_tx(command: str, payload: bytes) -> None:
 		expected_ack = "SENSOR_MODE = ON"
 	elif command_key == "b":
 		expected_ack = "SENSOR_MODE = OFF"
-	packet_info = build_command_packet_info(command)
 
 	last_command_tx = {
 		"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -294,7 +316,7 @@ def remember_command_tx(command: str, payload: bytes) -> None:
 		"hex": payload.hex(" "),
 		"packet_hex": packet_info.get("packet_hex") if packet_info else "",
 		"packet_label": packet_info.get("label") if packet_info else "",
-		"packet": packet_info,
+		"packet": command_packet_json(packet_info),
 		"expected_ack": expected_ack,
 		"ack_received": False,
 		"sent_monotonic": time.monotonic(),
@@ -435,6 +457,7 @@ def maybe_write_packet_from_sample(timestamp: str) -> None:
 		telemetry_state["az"],
 		temperature,
 		gx, gy, gz, mx, my, mz,
+		current_sensor_mode,
 	)
 	packet_hex = packet.hex(" ")
 	data_obj = {
@@ -445,6 +468,8 @@ def maybe_write_packet_from_sample(timestamp: str) -> None:
 		"packet_text": "HK telemetry sample",
 		"rssi": telemetry_state.get("rssi"),
 		"telemetry": {
+			"modeText": get_sensor_mode_display()[0],
+			"modeClassName": get_sensor_mode_display()[1],
 			"voltageV": telemetry_state["voltage"],
 			"temperatureC": temperature,
 			"accX": telemetry_state["ax"],
@@ -472,6 +497,7 @@ def maybe_write_packet_from_sample(timestamp: str) -> None:
 
 
 def write_text_telemetry_state(timestamp: str, source_text: str) -> None:
+	remember_command_ack(timestamp, source_text)
 	text_hex = source_text.encode("utf-8").hex(" ")
 	data_obj = {
 		"timestamp": timestamp,
@@ -480,6 +506,8 @@ def write_text_telemetry_state(timestamp: str, source_text: str) -> None:
 		"packet_text": source_text,
 		"rssi": telemetry_state.get("rssi"),
 		"telemetry": {
+			"modeText": get_sensor_mode_display()[0],
+			"modeClassName": get_sensor_mode_display()[1],
 			"voltageV": telemetry_state.get("voltage"),
 			"temperatureC": telemetry_state.get("temperature"),
 			"accX": telemetry_state.get("ax"),
@@ -508,6 +536,8 @@ def write_text_telemetry_state(timestamp: str, source_text: str) -> None:
 
 def build_text_telemetry_object() -> dict:
 	return {
+		"modeText": get_sensor_mode_display()[0],
+		"modeClassName": get_sensor_mode_display()[1],
 		"voltageV": telemetry_state.get("voltage"),
 		"temperatureC": telemetry_state.get("temperature"),
 		"accX": telemetry_state.get("ax"),
